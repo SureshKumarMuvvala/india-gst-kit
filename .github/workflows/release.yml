@@ -50,8 +50,7 @@ jobs:
       - uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
           version: pnpm exec changeset version
-          publish: >-
-            sh -c 'if [ -z "$NODE_AUTH_TOKEN" ]; then echo "::error title=NPM_TOKEN missing::Add the NPM_TOKEN repository secret, then re-run."; exit 1; fi; pnpm exec changeset publish'
+          publish: sh .github/scripts/publish.sh
           title: "Version Packages"
           commit: "chore: version packages"
         env:
