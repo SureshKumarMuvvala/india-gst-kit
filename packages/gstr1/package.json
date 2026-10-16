@@ -1,0 +1,37 @@
+{
+  "name": "@india-gst-kit/gstr1",
+  "version": "0.0.0",
+  "description": "GSTR-1 builder for India GST: classification, aggregation, API save payload (v5.0) and offline-upload JSON.",
+  "license": "MIT",
+  "author": "Suresh Kumar Muvvala",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@india-gst-kit/model": "workspace:^",
+    "decimal.js": "^10.6.0"
+  },
+  "peerDependencies": {
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "ajv": "^8.20.0",
+    "zod": "4.5.4"
+  }
+}
