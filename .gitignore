@@ -5,3 +5,4 @@ coverage/
 .turbo/
 # local-only GSTIN lists for scripts/verify-gstin.mjs — never commit real GSTINs
 scripts/local/
+.vitest/
