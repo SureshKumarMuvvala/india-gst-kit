@@ -1,0 +1,8 @@
+﻿Recipient GSTIN/UIN,Recipient Name,Document Number,Document Date,Value of supplies made,Place Of Supply,Document type,Rate,Taxable Value,Cess Amount
+[REDACTED-GSTIN],abcdef,100zz,02-Mar-2024,50000,33-Tamil Nadu,Regular,6,45000,756
+[REDACTED-GSTIN],abcdef,100zz,02-Mar-2024,50000,33-Tamil Nadu,Regular,1,45000,756
+[REDACTED-GSTIN],abcdef,1002,02-Mar-2024,50000,33-Tamil Nadu,Regular,6,45000,756
+[REDACTED-GSTIN],abcdef,1002,02-Mar-2024,50000,33-Tamil Nadu,Regular,1,45000,756
+[REDACTED-GSTIN],abcdef,1007,02-Mar-2024,50000,33-Tamil Nadu,Regular,28,45000,756
+[REDACTED-GSTIN],abcdef,1009,02-Mar-2024,50000,33-Tamil Nadu,Regular,18,45000,756
+[REDACTED-GSTIN],abcdef,1009,02-Mar-2024,50000,33-Tamil Nadu,Regular,18,45000,756

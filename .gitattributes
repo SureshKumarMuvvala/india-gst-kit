@@ -1,0 +1,2 @@
+# Official files captured verbatim: keep bytes (CRLF etc.) so SHA-256 matches the original.
+sources/gstr1/offline-tool/** -text

@@ -32,3 +32,12 @@ Not captured: the Port Code table (1,062 rows) on the master-codes page — only
 9. **Tolerance:** the portal accepts tax and totals within about ±1 rupee of the calculated value. That tolerance belongs in the `einvoice` package, not in the model.
 
 Sources **F** (rate notifications) and **G** (UTGST definition of union territory) are on cbic-gst.gov.in, which the build environment can reach; they are fetched by the build session.
+
+## GSTR-1 (Track A)
+
+Captured 2026-10-16 from this machine (India); see **`sources/gstr1/README.md`** for files, URLs and SHA-256. Summary:
+
+- The authoritative format is the GSTN API schema "GSTR1 – Save GSTR1 data" v1.1 on https://developer.gst.gov.in/apiportal/taxpayer/returns (named by GSTN's own troubleshooting guide). It sits behind a bot challenge and **is not captured yet** — attach it by hand as `sources/gstr1/gstr1-save-v1.1-schema.json`.
+- Captured instead: the official **GST Offline Tool** (zip from tutorial.gst.gov.in, release 3.2.4): Excel template V2.2 help and master sheets, per-section CSV templates (sample GSTINs and two real-looking company names redacted), the tool's data JSON files, and file:line excerpts of the code that writes the upload JSON.
+- Finding: the offline tool validates recipient GSTINs with a PAN-structured pattern **and a mod-36 check character** (`sources/gstr1/offline-tool/code-excerpts.md` §4). This is the first official artefact implementing the check digit the model uses (still UNVERIFIED — it is code, not a published specification).
+- Finding: the tool's UQC drop-down (45 codes) is identical to the e-invoice master list (`sources/einvoice/master-codes/uqc.csv`).
