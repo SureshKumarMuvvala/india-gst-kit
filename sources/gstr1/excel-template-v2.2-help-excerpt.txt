@@ -1,0 +1,156 @@
+Source: GSTR1_Excel_Workbook_Template_V2.2.xlsx, worksheet "Help Instruction", inside
+        https://tutorial.gst.gov.in/offlineutilities/returns/gst_offline_tool.zip
+        (linked from https://www.gst.gov.in/download/returns)
+Retrieved: 2026-10-16
+xlsx SHA-256: 425084547928a31eab53123b9247bad9ded1ee421fbc9202d009260e5d9b18e5
+Status: UNVERIFIED â€” needs CA
+Excerpt: only the rows relevant to sections b2b, b2cl, b2cs, cdnr, cdnur, exp, exemp (nil), hsn(b2b)/hsn(b2c), docs,
+plus the general and "Special Instructions" rows. Each line = "<Excel row number> <cells joined by ' | '>";
+in-cell line breaks shown as " / ". Text verbatim (converted from cp1252 to UTF-8; typos are the publisher's).
+---
+1 Invoice & other data upload for creation of GSTR 1
+2 Introduction to Excel based template for data upload in Java offline  tool
+3 s The Offline tool comes bundled with MS Excel Template and a java  tool. This Excel workbook template has 19 data entry worksheets, 1 master sheet and 1 Help Instruction sheet i.e. total 21 worksheets. The 19 data entry worksheets are named: b2b, sez, de, b2ba,b2cl,b2cla, b2cs,b2csa, cdnr, cdra,cdnur,cdnura, exp,expa, at,ata, atadj, atadja, exemp, hsn and doc in which day-to-day business transaction required to be reported in GSTR 1 can be recorded or entered by the taxpayers.  At desired interval, the data entered in the MS-Excel worksheet can be uploaded on the GST Portal using the java offline tool which will import the data from excel workbook and convert the same into a Json file which is understood by GST portal. (www.gst.gov.in)    / s  It  has been designed to enable taxpayers to prepare GSTR 1  in  offline mode (without Internet). It can also be used to carry out bulk upload of invoice/other details to GST portal.    / s  The appearance and functionalities of the Offline  tool screens are similar to that  of the returns filing  screens on the GST Portal. / s  Approximately 19,000 line items can be uploaded in one go using the java tool. In case a taxpayer has more invoice data, he can use the tool multiple times to upload the invoice data. /  / Data can be uploaded/entered to the offline tool in four ways: /  / 1.  Importing the entire excel workbook to the java  tool where data in all sections (worksheets) of the excel file will be imported in the tool in one go. / 2.  Line by line  data entry  by return preparer on the java offline tool.  / 3.  Copy from the  excel  worksheets from the top row  including the summary and  header  and pasting it in the designated box in the import screen of the  java offline tool.  Precaution: All the columns including headers should be in the same format  and have the same header as of the java offline tool.   / 4. Section by section of a particular return - using a .CSV file as per the format given along with the java tool. Many accounting software packages generate .CSV file in the specified format and the same can be imported in the tool.
+5 Understanding the Excel  Workbook Template
+6 a) It is always recommended to download the excel workbook template from the GST portal only.
+7 b) The taxpayer can fill the excel workbook template with different worksheet for the applicable sections of the return and then import the excel file to the java tool. Data has to be filled in the sections (worksheets) applicable to him and the others may be left blank.  / Note: Quarterly taxpayers opting to furnish invoices using invoice furnishing facility (IFF) can import details only for following tables: / 1. Table 4A, 4B, 6B, 6C - B2B, SEZ, DE invoices / 2. Table 9B – Credit/ Debit notes (Registered) – CDNR / 3. Table 9A - Amended B2B invoices / 4. Table 9C - Amended Credit/Debit notes (Registered)
+8 5. Table 15 - Supplies U/s 9(5) - B2B / 6. Table 15 - Supplies U/s 9(5) - URP2B / 7. Table 15A - Amended Supplies U/s 9(5) - B2B / 8. Table 15A - Amended Supplies U/s 9(5) - URP2B /  / Note: Table 15 is applicable from Oct 2022 and Table 15A is applicable from Nov 2022.
+9 c) The data in the excel file should be in the format specified below in respective sections.
+10 d) In a case where the taxpayer does not have data applicable for all sections, those sections may be left blank and the java tool  will automatically take care of the data to be filled in the applicable sections only.
+11 e) For Group import (all worksheets of workbook) taxpayer need to fill all the details into downloaded standard format GSTR1_Excel_Workbook_Template-V.xlsx file
+12 f) User can export  Data from local accounting software loaded in the above format as .CSV file and import it in the java tool to generate the file in  .Json  format  for bulk. Warning: Your accounting software should generate .CSV file in the format specified by GST Systems.
+13 g) In all the worksheets except hsn, the central tax, integrated tax, and state tax are not required to be furnished in the excel worksheets but would be computed on the furnished rate and taxable value in the java offline tool. The taxpayer can edit the tax amounts calculated in the java tool if the tax collected values are different.
+14 h) In the "doc's worksheet, the net issued column has not been provided, this value will be computed in the java offline tool based on the total number of documents and the number of cancelled  documents furnished in this worksheet.
+16 The table below provides the name, full form and detailed description for each  field of the worksheets followed by a detailed instruction for filling the applicable worksheets. The fields marked with asterisk or star are mandatory.
+17 Worksheet Name | Reference | Field name | Help Instruction
+18 b2b,sez,de | B2B, SEZ, DE Supplies | Details of invoices of Taxable supplies made to other registered taxpayers /  /  /  /  /
+19 1. GSTIN/UIN of Recipient* | Enter the GSTIN or UIN of the receiver. E.g. [REDACTED-GSTIN]. Check that the registration is active on the date of the invoice from GST portal
+20 2. Name of Recipient | Enter the name of the receiver
+21 3. Invoice  number * | Enter the Invoice number of invoices issued to  registered recipients. Ensure that the format is alpha-numeric with  allowed special characters of slash(/) and dash(-) .The total number of characters should not be more than 16.
+22 4. Invoice Date*  | Enter date of invoice in DD-MMM-YYYY. E.g. 24-May-2017.
+23 5. Invoice value* | Enter the total value indicated in the invoice  of the supplied  goods or services- with 2 decimal Digits.
+24 6. Place of Supply(POS)* | Select the code of the state from drop down list for the place of supply.
+25 7. Applicable % of Tax Rate | If the supply is eligible to be taxed at 65% of the existing rate of tax, select '65%' from dropdown; else blank.
+26 8. Reverse Charge* | Please select Y or N , if the supplies/services are subject to tax as per reverse charge mechanism.
+27 9. Invoice Type* | Select from the dropdown whether the supply is regular B2B, or to a SEZ unit/developer with or without payment of tax or deemed export.
+28 10. E-Commerce GSTIN* | Enter the GSTIN of the e-commerce company if the supplies are made through an e-Commerce operator.
+29 11. Rate* | Enter the combined  (State tax + Central tax) or the integrated tax, as applicable.
+30 12. Taxable Value* | Enter the taxable value of the supplied  goods or services for each rate line item - with 2 decimal Digits, The taxable value has to be computed as per GST valuation provisions.
+31 13. Cess Amount | Enter the total Cess amount collected/payable.
+48 B2C Large | Invoices for Taxable outward supplies to consumers where / a)The place of supply is outside the state where the supplier is registered and / b)The total invoice value should be more than INR100000  / Note : Value should be more than INR 100000 from August 2024 return period onwards.  /            Value should be more than INR 250000 upto July 2024 return period.
+49 1. Invoice  number*  | Enter the Invoice number of invoices issued  to Unregistered Recipient of the  other State with invoice value more than 1 lakh. / Note : Value should be more than 1 lakh from August 2024 return period    onwards. Value should be more than 2.5 lakh upto July 2024 return period.. Ensure that the format is alpha-numeric with  allowed special characters of slash(/) and dash(-) with maximum length of 16 characters.
+50 2. Invoice Date  | Enter date of invoice in DD-MMM-YYYY. E.g. 24-May-2017.
+51 3. Invoice value* | Invoice value should be more than Rs 100,000 and up to two decimal digits. / Note : Value should be more than 1 lakh from August 2024 return period    onwards. Value should be more than 2.5 lakh upto July 2024 return period..
+52 4. Applicable % of Tax Rate | If the supply is eligible to be taxed at 65% of the existing rate of tax, select '65%' from dropdown; else blank.
+53 5. Place of Supply(POS)* | Select the code of the state from drop down list for the applicable place of supply.
+54 6. Rate* | Enter the combined  (State tax + Central tax) or the integrated tax rate, as applicable.
+55 7. Taxable Value* | Enter the taxable value of the supplied  goods or services for each rate line item -2 decimal digits, The taxable value has to be computed as per GST valuation provisions.
+56 8. Cess Amount | Enter the total  Cess amount collected/payable.
+57 8. E-Commerce GSTIN | Enter the GSTIN of the e-commerce company if the supplies are made through an e-Commerce operator.
+70 b2cs | B2C Small | Supplies made to consumers and unregistered persons of the following nature / a) Intra-State: any value / b) Inter-State: Invoice value Rs 1.0 lakh or less / Note : Value should be INR 100000 or less from August 2024 return period onwards.  /            Value should be  INR 250000 or less upto July 2024 return period.
+71 1. Type* | In the Type column, enter E if the supply is done through E-Commerce or else enter OE (other than E-commerce).
+72 2. Place of Supply(POS)* | Select the code of the state from drop down list for the applicable place of supply.
+73 3. Applicable % of Tax Rate | If the supply is eligible to be taxed at 65% of the existing rate of tax, select '65%' from dropdown; else blank.
+74 4. Rate* | Enter the combined  (State tax + Central tax) or the integrated tax rate.
+75 5. Taxable Value* | Enter the taxable value of the supplied  goods or services for each rate line item -2 decimal Digits, The taxable value has to be computed as per GST valuation provisions.
+76 6. Cess Amount | Enter the total  Cess amount collected/payable.
+77 7. E-Commerce GSTIN | Enter the GSTIN of the e-commerce company if the supplies are made through an e-Commerce operator.
+89 cdnr | Credit/ Debit Note | Credit/ Debit Notes issued to the registered taxpayers during the tax period. Debit or credit note issued against invoice will be reported here against original invoice, hence fill the details of original invoice also which was furnished in B2B,B2CL section of earlier/current period tax period.
+90 1. GSTIN/UIN* | Receiver GSTIN/UIN
+91 2. Name of Recipient | Enter the name of the receiver
+92 3. Note Number* | Enter the credit/debit note number. Ensure that the format is alpha-numeric with  allowed special characters of slash(/) and dash(-) of maximum length of 16 characters.
+93 4. Note date* | Enter credit/debit note date in  DD-MMM-YYYY. E.g. 24-May-2017.
+94 5. Note Type* | In the Note Type column, enter "D" if the note is Debit note, enter "C" if note is credit note or enter "R" for refund voucher.
+95 6. Place of Supply* | Declare the place of supply based on the original document.
+96 7. Reverse charge* | Please select Y or N , if the supplies/services are subject to tax as per reverse charge mechanism.
+97 8. Note Supply Type* | Select from the dropdown whether the supply is regular B2B, or to a SEZ unit/developer with or without payment of tax or deemed export.
+98 9. Note value* | Amount should be with only up to 2 decimal digits.
+99 10. Applicable % of Tax Rate | If the supply is eligible to be taxed at 65% of the existing rate of tax, select '65%' from dropdown; else blank.
+100 11. Rate* | Enter the combined  (State tax + Central tax) or the integrated tax.
+101 12.Taxable value* | Enter the taxable value of the supplied  goods or services for each rate line item -2 decimal Digits, The taxable value has to be computed as per GST valuation provisions.
+102 13. Cess Amount | Enter the total  Cess amount.
+119 cdnur | Credit/ Debit Note for unregistered Persons | Credit/ Debit Notes issued to the unregistered persons against interstate invoice value is  more than Rs 1.0 lakh / Note : Value should be more than INR 100000 from August 2024 return period onwards.  /            Value should be be more than INR 250000 upto July 2024 return period.
+120 1. UR Type* | Select the type of  supply to Unregistered Taxpayers (UR) against which the document has been issued.Select "EXPWP" or "EXPWOP" for export /"B2CL" for supplies to consumers for dropdown based on original invoice. / "EXPWP" represents Export with payment and "EXPWOP" represent Export without payment.
+121 2. Note Number* | Enter the credit/debit note number. Ensure that the format is alpha-numeric with  allowed special characters of slash(/) and dash(-) of maximum length of 16 characters.
+122 3. Note date* | Enter credit/debit note date in  DD-MMM-YYYY. E.g. 24-May-2017.
+123 4. Note Type* | In the Note Type column, enter "D" if the note is Debit note, enter "C" if note is credit note or enter "R" for refund voucher.
+124 5. Place of Supply | Declare the place of supply based on the original document.
+125 6. Note value* | Amount should be up to 2 decimal digits.
+126 7. Applicable % of Tax Rate | If the supply is eligible to be taxed at 65% of the existing rate of tax, select '65%' from dropdown; else blank.
+127 8. Rate* | Enter the combined  (State tax + Central tax) or the integrated tax rate.
+128 9.Taxable value | Enter the taxable value of the supplied  goods or services for each rate line item -up to 2 decimal Digits, The taxable value has to be computed as per GST valuation provisions.
+129 10. Cess Amount | Enter the total  Cess amount.
+143 exp | Export | Exports supplies including supplies to SEZ/SEZ Developer or deemed exports
+144 1.Export Type* | In the Type column, enter WPAY if the Export  is with payment of tax or else enter WOPAY.
+145 2. Invoice  number*  | Enter the Invoice number issued to the registered receiver.  Ensure that the format is alpha-numeric with  allowed special characters of slash(/) and dash(-) with maximum length of sixteen characters.
+146 3. Invoice Date*  | Enter date of invoice in DD-MMM-YYYY. E.g. 24-May-2017.
+147 4. Invoice value* | Enter the invoice  value of the goods or services- up to 2 decimal Digits.
+148 5. Port Code | Enter the six digit code of port through which goods were exported. Please refer to the list of port codes available on the GST common portal. This is not required in case of export of services.
+149 6. Shipping Bill Number | Enter the unique reference number of shipping bill. This information if not available at the timing of submitting the return the same may be left blank and provided later.
+150 7. Shipping Bill Date | Enter the date of shipping bill. This information if not available at the timing of submitting the return the same may be left blank and provided later. This is not required in case of export of services.
+151 8. Applicable % of Tax Rate | If the supply is eligible to be taxed at 65% of the existing rate of tax, select '65%' from dropdown; else blank.
+152 9. Rate | Enter the applicable integrated tax rate.
+153 10. Taxable Value | Enter the taxable value of the supplied  goods or services for each rate line item -up to 2 decimal Digits, The taxable value has to be computed as per GST valuation provisions.
+233 exemp | Nil Rated, Exempted and Non GST supplies | Details of Nil Rated, Exempted and Non GST Supplies made during the tax period
+234 1. Description | Indicates the type of supply.
+235 2.Nil rated supplies | Declare the value of supplies made under the "Nil rated" category for the supply type selected in  1. above. The amount to be declared here should exclude amount already declared in B2B and B2CL table as line items in tax invoice.
+236 3.Exempted / (Other than Nil rated/non-GST / supply) | Declare the value of supplies made under the "Exempted "category for the supply type selected in  1. above.
+237 4.Non GST Supplies | Declare the value of supplies made under the "Non GST" category for the supply type selected in  1. above. This column is to capture all the supplies made by the taxpayer which are out of the purview of GST
+238 hsn(b2b) | HSN Summary of B2B Supplies | HSN wise summary of goods /services supplied during the tax period
+239 1. HSN* | Enter the HSN Code  for the supplied goods or Services. Minimum digit required to be mentioned in the tax invoice and consequently to be reported as per notifications. HSN is mandatory for period May'21 and onwards.
+240 2. Description | Enter the description of the supplied goods or Services. Description becomes a mandatory field if HSN code is not provided above. Description is optional for period May'21 and onwards.
+241 3. UQC* | Select the applicable Unit Quantity Code from the drop down. For period May’21 and onwards for services,i.e. HSN starting with 99, this field may be left blank.
+242 4. Total Quantity* | Enter the total quantity of the supplied goods or Services- up to 2 decimal Digits. For period May’21 and onwards for services, i.e. HSN starting with 99, this field may be left blank.
+243 5. Total Value | Enter the invoice  value of the goods or services-up to 2 decimal Digits. This field is mandatory and applicable only till April'21 . The values,if enetered, in this field shall be ignored upon import in tool for period May'21 and onwards.
+244 6. Rate | Select the Rate of Tax for the HSN selected from the dropdown. This field is mandatory and applicable for period May'21 and onwards.
+245 6. Taxable Value* | Enter the total taxable value of the supplied goods or services- up to 2 decimal Digits.
+246 7. Integrated Tax Amount | Enter the total  Integrated tax amount collected/payable.
+247 8. Central Tax Amount | Enter the total  Central tax amount collected/payable.
+248 9. State/UT Tax Amount | Enter the total State/UT tax amount collected/payable.
+249 10. Cess Amount | Enter the total  Cess amount collected/payable.
+250 hsn(b2c) | HSN Summary of B2C Supplies | HSN wise summary of goods /services supplied during the tax period
+251 1. HSN* | Enter the HSN Code  for the supplied goods or Services. Minimum digit required to be mentioned in the tax invoice and consequently to be reported as per notifications. HSN is mandatory for period May'21 and onwards.
+252 2. Description | Enter the description of the supplied goods or Services. Description becomes a mandatory field if HSN code is not provided above. Description is optional for period May'21 and onwards.
+253 3. UQC* | Select the applicable Unit Quantity Code from the drop down. For period May’21 and onwards for services,i.e. HSN starting with 99, this field may be left blank.
+254 4. Total Quantity* | Enter the total quantity of the supplied goods or Services- up to 2 decimal Digits. For period May’21 and onwards for services, i.e. HSN starting with 99, this field may be left blank.
+255 5. Total Value | Enter the invoice  value of the goods or services-up to 2 decimal Digits. This field is mandatory and applicable only till April'21 . The values,if enetered, in this field shall be ignored upon import in tool for period May'21 and onwards.
+256 6. Rate | Select the Rate of Tax for the HSN selected from the dropdown. This field is mandatory and applicable for period May'21 and onwards.
+257 6. Taxable Value* | Enter the total taxable value of the supplied goods or services- up to 2 decimal Digits.
+258 7. Integrated Tax Amount | Enter the total  Integrated tax amount collected/payable.
+259 8. Central Tax Amount | Enter the total  Central tax amount collected/payable.
+260 9. State/UT Tax Amount | Enter the total State/UT tax amount collected/payable.
+261 10. Cess Amount | Enter the total  Cess amount collected/payable.
+262 docs | List of Documents issued | Details of various documents issued by the taxpayer during the tax period
+263 1. Nature of Document* | Select the applicable document type  from the drop down.
+264 2. Sr. No From* | Enter the invoice/document series start number.
+265 3. Sr. No To* | Enter the invoice/document series end number.
+266 5.Total Number* | Enter the total no of documents in this particular series.
+267 6.Cancelled | No of documents cancelled in the particular series.
+376 Common mistakes in filling Excel template
+377 1. GSTIN of supplier/E-commerce  should be a valid one. State code of supplier GSTIN and E-Commerce GSTIN should be the same.
+378 2. Duplication of invoices with the same tax rate shouldn’t be there-otherwise System throws error as "Non duplicated invoices were added & these invoices are duplicated" at the time of import.
+379 3. Amount should be only up to  2 decimal digits
+380 4  Ensure that filling of excel should be strictly as per sample data to avoid errors.
+381 5. Copy  paste data from the excel template not including the header rows 1 to 4 will throw an error.
+382 6. The work sheet name in the excel file of return data prepared by the return preparer should be the same as mentioned in the sample excel template.
+383 7. Master data sheet provides the inputs allowed in the mentioned data field. Inputs in the master data sheet have been used for the drop down lists in the worksheets.
+385 Special Instructions
+386 1) To facilitate the declaration of date in the specified format "dd-mmm-yyyy",  ensure the system date format of your computer is "dd/mm/yyyy or dd-mm-yyyy".
+387 2) For invoices containing multiple line items invoice level details like GSTIN/UIN, Invoice Number, Invoice Date and Place of Supply should be repeated for all the line items, in the absence of the same system will not accept those items
+388 3) Taxable Value, Rate and cess amount as applicable to the line items may be different in the same invoice.
+389 4) On successful import of the data from the excel file to the offline utility tool, the tool takes care of proper placement of the same in the return format
+390 5) In the worksheets on the combined (central tax+state tax) tax  or integrated tax  rate has to be mentioned. The java tool will calculate the  central tax, state tax or integrated tax.  The tax payer can edit these amounts in the java tool if the collected value is different.
+391 6) In this first version worksheets are not being provided for uploading amendment details as these are not expected in the first GST return. Those will be provided in the next version.
+392 7) In the top of  each excel worksheet , there is a summary row which gives the count or total of  the key columns to help in reconciliation.
+393 8) The worksheets for furnishing exempt supplies details and issued documents details are being provided in this excel workbook template however the data cannot be imported from the excel to the java tool in this version. The tax payer can enter the few exempt supplies detail  values and details of documents issued directly in the screens available on GST portal .
+394 9) The worksheets have some data as example. Please delete the data from all worksheets before use.
+395 10) The number mentioned in bracket in the top most row in each data entry worksheet refer to the corresponding table number in the notified GSTR 1 format. For example in b2b worksheet "Summary For B2B(4)" here "4" refers to the table number 4 of GSTR 1 format.
+396 11) This excel workbook template works best with Microsoft Excel 2007 and above.
+397 12) Ensure that there are no stray entries in any cell of the sheets other than return related declaration under the indicated column headers.
+398 13) It is advisable that separate excel sheets be prepared for each month with the name having month name  as a part of it's name. In case of multiple uploads for a  month, the file name may be classified as Part A, Part B etc  to avoid confusion.
+399 14) In case of JSON files  created by the offline tool , if the taxpayer is frequently importing  invoice data in a tax period, he should name the different created JSON file of a part of a month/tax period by including the name of month and the part number.
+400 15)Before importing the excel file in the offline tool for a particular tax period, it is advisable that the taxpayer should delete if any existing data of that tax period by clicking "Delete All Data"  tab in the  Java Offline Tool. If  any data remains in the tool will overwrite the existing data.
+401 16) If one uploads the JSON file for a tax period with  the same invoice number but differing  details again,  the later invoice details will overwrite the earlier details.
+402 17) In case of other sections where the consolidated details have to be furnished, the details of whole section furnished earlier would be overwritten by the later uploaded details.
+403 18) In case of b2b worksheet, if the invoice has been selected as subject to reverse charge, the top summary row excludes the value of cess amount as it is not collected by the supplier.
+404 19) HSN Summary is bifurcated into two sheets – one for B2B supplies and one for B2C supplies. Taxpayer would be required to provide details accordingly.
