@@ -1,15 +1,17 @@
 import { z } from "zod";
 import {
-  convertNumbers,
+  arrayElement,
   getAt,
+  isNumberLeaf,
+  objectShape,
   parseJsonLossless,
   pathStartsWith,
   zodPath,
   type ZodIssue,
-} from "./lossless.js";
+} from "@india-gst-kit/model";
+import { convertIrnNumbers } from "./numbers.js";
 import { IrnRequestSchema, TEXT_MESSAGE, type IrnRequest } from "./schema.js";
 import { issue, hasErrors, type IrnIssue } from "./types.js";
-import { arrayElement, isNumberLeaf, objectShape } from "./zod-walk.js";
 
 export type IrnParseResult = { ok: boolean; value?: IrnRequest; issues: IrnIssue[] };
 
@@ -131,7 +133,7 @@ export function parseIrnRequestJson(text: string): IrnParseResult {
     throw e;
   }
   const typeIssues: IrnIssue[] = [];
-  const converted = convertNumbers(raw, IrnRequestSchema, [], typeIssues);
+  const converted = convertIrnNumbers(raw, IrnRequestSchema, typeIssues);
   const parsed = IrnRequestSchema.safeParse(converted);
   const schemaIssues = parsed.success
     ? []

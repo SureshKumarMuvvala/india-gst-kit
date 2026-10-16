@@ -14,9 +14,9 @@
 // Amounts, quantities, rates and PINs are JSON numbers on the wire and strings in memory (spec §2).
 import { z } from "zod";
 import { D } from "./decimal.js";
-import { markNumber } from "./zod-walk.js";
+import { markNumber } from "@india-gst-kit/model";
 
-export { isNumberLeaf } from "./zod-walk.js";
+export { isNumberLeaf } from "@india-gst-kit/model";
 
 export const IRN_DECIMAL_PATTERN = /^-?(0|[1-9]\d*)(\.\d+)?$/;
 export const IRN_INT_PATTERN = /^(0|[1-9]\d*)$/;
