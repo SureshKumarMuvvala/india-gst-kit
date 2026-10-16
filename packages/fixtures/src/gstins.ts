@@ -19,6 +19,8 @@ export const GSTINS = {
   spareKa: "29GGGGG6666G1ZG",
   /** Andaman and Nicobar (35) — spare */
   spareAn: "35HHHHH7777H1Z8",
+  /** Chandigarh (04) — spare, a second UTGST-territory GSTIN for intra-UT tests */
+  spareCh: "04IIIII8888I1ZV",
 } as const;
 
 export const ALLOWED_FIXTURE_GSTINS: readonly string[] = Object.values(GSTINS);

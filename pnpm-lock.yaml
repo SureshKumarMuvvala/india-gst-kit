@@ -39,6 +39,19 @@ importers:
         specifier: ^5.0.4
         version: 5.0.4(@types/node@26.6.5)(vite@8.3.4(@types/node@26.6.5)(yaml@2.9.1))
 
+  packages/einvoice:
+    dependencies:
+      '@india-gst-kit/model':
+        specifier: workspace:^
+        version: link:../model
+      decimal.js:
+        specifier: ^10.6.0
+        version: 10.6.0
+    devDependencies:
+      zod:
+        specifier: 4.5.4
+        version: 4.5.4
+
   packages/fixtures:
     devDependencies:
       decimal.js:
