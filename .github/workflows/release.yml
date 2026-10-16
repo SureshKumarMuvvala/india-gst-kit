@@ -21,15 +21,6 @@ jobs:
       pull-requests: write # open/update the "Version Packages" PR
       id-token: write # npm provenance (OIDC)
     steps:
-      - name: Require NPM_TOKEN
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          if [ -z "$NPM_TOKEN" ]; then
-            echo "::error title=NPM_TOKEN missing::The NPM_TOKEN repository secret is not set. Add it under Settings > Secrets and variables > Actions, then re-run this workflow."
-            exit 1
-          fi
-
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # changesets/action pushes the version branch with these credentials.
@@ -59,7 +50,8 @@ jobs:
       - uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
           version: pnpm exec changeset version
-          publish: pnpm exec changeset publish
+          publish: >-
+            sh -c 'if [ -z "$NODE_AUTH_TOKEN" ]; then echo "::error title=NPM_TOKEN missing::Add the NPM_TOKEN repository secret, then re-run."; exit 1; fi; pnpm exec changeset publish'
           title: "Version Packages"
           commit: "chore: version packages"
         env:
