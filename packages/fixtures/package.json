@@ -1,0 +1,19 @@
+{
+  "name": "@india-gst-kit/fixtures",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Synthetic GST documents for tests. Contains no real company data.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "zod": "4.5.4",
+    "decimal.js": "^10.6.0"
+  }
+}

@@ -1,5 +1,7 @@
 # Official sources needed before Track 0 can be built
 
+> **Status (2026-10-16):** A–C and E/D resolved in `sources/README.md` (E and D do not exist publicly); G in `sources/acts/README.md`; F (rate notifications) deferred — see `docs/specs/model.md` §12. Kept for history.
+
 The planning session could not reach any official GST source: `www.gst.gov.in`, `einvoice1.gst.gov.in`, `tutorial.gst.gov.in`, `cbic-gst.gov.in`, `einv-apisandbox.nic.in` failed (DNS ENOTFOUND / connection closed) and `docs.ewaybillgst.gov.in` returned HTTP 403 (checked 2026-10-16).
 
 Per project rules, no legal/official list is filled from memory. Download the files below and commit them under `sources/` (or attach them to the build session). Record the page URL and the download date for each — that goes into the source comment and `docs/legal-facts.md`.
