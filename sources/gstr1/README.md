@@ -2,11 +2,26 @@
 
 Captured **2026-10-16** from this machine in India. Status of every fact taken from these files: **UNVERIFIED — needs CA**, until signed off in `docs/legal-facts.md`.
 
-## What the portal validates against, and what we could get
+## Authoritative schema: GSTR1 – Save GSTR1 data, v5.0
 
-GSTN's own troubleshooting guide (`portal-faq-excerpts.txt`, Return Issue No. 11) says an offline-tool JSON is checked against the developer portal's **"GSTR1 - Save GSTR1 data", version v1.1 → Request Payload → Download Schema** at https://developer.gst.gov.in/apiportal/taxpayer/returns. That schema is the authoritative JSON format.
+| File | Official page | Version / published | Downloaded | SHA-256 |
+|---|---|---|---|---|
+| `gstr1-save-v5.0-schema.json` | https://developer.gst.gov.in/apiportal/taxpayer/returns → View API List → "GSTR1 - Save GSTR1 data" → v5.0 → Request Payload → Download Schema | **v5.0 (FINAL), published 23-02-2026** — as shown on the portal page; the file itself carries no version or date | 2026-10-16, by hand in a browser (the page is behind a bot challenge) by the owner | `51c7381fb50688a8b1796dabe0ec57d85da06be4287ed61f50c592cfdf2ca1e5` |
+| `gstr1-save-v4.1-schema.json` | same page → "GSTR1 - Save GSTR1 data" → v4.1 → Request Payload → Download Schema | **v4.1, published 04-02-2025** (portal page); superseded by v5.0, kept for comparison | 2026-10-16, by hand, by the owner | `db2c0313b8596a1fe88832202374cf2889595ad8dceb5f4730d3ab2b03543457` |
 
-**Not captured (attach by hand):** the page's API list is loaded by script behind an F5 bot challenge (audio CAPTCHA), so neither `curl` nor an automated fetch can reach it. To complete this folder, open the URL above in a browser, follow the four clicks, and save the schema as `sources/gstr1/gstr1-save-v1.1-schema.json` (plus, if offered, the sample request payload as `gstr1-save-v1.1-sample.json`). Until then, the JSON layout in `docs/specs/gstr1.md` is taken from the **official GST Offline Tool** — the tool GSTN distributes to produce exactly that upload file — and is marked "pending schema".
+- Both files are verbatim, with LF line endings, marked `-text` in `.gitattributes`. Sizes: v5.0 354,390 bytes (byte-identical to the browser download `GSTR1 - Save GSTR1 data request_schema.json`); v4.1 206,868 bytes.
+- **No GSTINs** in either file: the only 15-character digit runs are the numeric maximums `999999999999999…`. Nothing to redact.
+- **v5.0 is authoritative** for `docs/specs/gstr1.md`. v4.1 and v1.1 (the version named by the troubleshooting guide, `portal-faq-excerpts.txt` Issue No. 11; not captured) are superseded. The v4.1 → v5.0 differences are summarised in the spec §4.2.
+- **No sample payload** was offered on the portal for either version.
+- Publisher quirks, kept as published (v4.1 has the same `if`/`then` quirk):
+  - `properties` contains keys named `"if"` and `"then"`. They look like a misplaced conditional for `hsn` with `flag: "D"`. As written, they only declare two optional top-level properties called `if`/`then`.
+  - `b2cl[].inv` carries `additionalProperties` on an array.
+  - `doc_issue.doc_det_new[].doc_num` has `minimum`/`maximum` on a string.
+  - The GSTIN/`ctin` patterns have no `^…$` anchors; `minLength = maxLength = 15` makes them whole-string in effect.
+
+## Offline tool (secondary source)
+
+The JSON produced by the **official GST Offline Tool 3.2.4** was the interim source before the schema was attached. It is kept because the classification rules, thresholds and value conventions come from it and from the Excel template help. Where its output differs from v5.0, v5.0 wins (`docs/specs/gstr1.md` §11). The tool's output is **v4.1-shaped**: `doc_issue.doc_det` with an integer `doc_num`, and `etin` allowed (spec §4.3).
 
 ## Files
 

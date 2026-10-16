@@ -2,7 +2,7 @@
 
 - Source: `GST Offline Tool.exe` inside https://tutorial.gst.gov.in/offlineutilities/returns/gst_offline_tool.zip (zip SHA-256 `f0a7d6f66bf71b30e9ecd045a664dda428c8fac239f51127d656e6faac60e312`; tool release 3.2.4). Unpacked with `innoextract` 1.9, read only, never run.
 - Retrieved: 2026-10-16
-- Status: **UNVERIFIED — needs CA**, and **pending the GSTN API schema** "GSTR1 – Save GSTR1 data v1.1" (see `../README.md`). The tool's output is what GSTN ships for upload, but the schema is what the portal validates against.
+- Status: **UNVERIFIED — needs CA**. Secondary source: the authoritative schema is `../gstr1-save-v5.0-schema.json` (GSTR1 – Save GSTR1 data v5.0). Where the tool's output differs from it, v5.0 wins (`docs/specs/gstr1.md` §11).
 - Hashes of the files quoted: `app/utility/returnStructure.js` `b29f8951…f645c`, `app/service/offline.js` `5ab8d3d9…53962`, `app/utility/common.js` (not hashed separately; same installer), `app/utility/constants.js` `73465d57…a3fe8`. Full hashes in `../README.md`.
 
 Short fragments only; the tool's code is not redistributed. Line numbers refer to the files as unpacked. "**[infer]**" marks a conclusion drawn from reading the code, not something it shows directly.

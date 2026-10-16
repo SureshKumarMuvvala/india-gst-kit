@@ -1,2 +1,3 @@
 # Official files captured verbatim: keep bytes (CRLF etc.) so SHA-256 matches the original.
 sources/gstr1/offline-tool/** -text
+sources/gstr1/gstr1-save-*.json -text
