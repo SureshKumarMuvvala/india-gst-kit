@@ -1,0 +1,63 @@
+Overview
+This API is used to generate the e-waybill using Invoice Registration Number (IRN). The details and parameters of the requests and responses are explained.
+The format and details of EWB Generation by IRN API request is depicted in following table.
+URL
+<URL>api/einvewb/ewaybill
+Content-Type
+application/json
+Method
+POST
+Request Payload
+Request Header
+Attributes
+Description
+client_id
+Client id to be provided by e-invoice system
+client_secret
+Client secret to be provided by e-invoice system
+Gstin
+GSTIN of authenticated user
+sup_gstin
+(Optional) Supplier GSTIN, only in case E Comm. operator is generating the E Way Bill. For RCM invoices recipient GSTIN to be passed
+user_name
+User name of the authenticated user
+AuthToken
+Authentication token returned by the e-invoice system
+Request Payload
+Attributes
+Description
+Data
+Base 64 encoded string of encrypted invoice JSON using SEK
+Response Payload
+Attributes
+Description
+Status
+Status of the generate IRN request (values 1- Success and 0-Failure)
+Data
+If Status is "1"
+ErrorDetails
+If Status is "0"
+InfoDtls
+Any additional message to be conveyed would be passed.
+If Status is ‘1’
+Data
+Base 64 encoded string of decrypted invoice JSON using Sek.
+After decrypting Data the following attributes are obtained as below.
+Attributes
+Description
+EwbNo
+e-waybill Number
+EwbDt
+e-waybill date
+EwbValidTill
+e-waybill validity
+Remarks
+Additional information such as, If distance is passed is 0, shows actual distance calculated for the pair of PIN codes
+If Status is ‘0’
+ErrorDetails
+Base 64 encoded string.
+On decoding ErrorDetals the following attributes from JSON array are obtained as follows.
+ErrorCode
+Unique error code
+ErrorMessage
+Error Description

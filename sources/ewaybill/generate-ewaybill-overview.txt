@@ -1,0 +1,38 @@
+Overview
+The format and details of a Generate E-way bill  API request is depicted in following table.
+URL
+<URL>/ewayapi/
+Content-Type
+application/json
+Method
+POST
+Request Payload
+Request Header
+Attributes
+Description
+client-id
+Client-id to be provided by E-WAY BILL SYSTEM
+client-secret
+Secret to be provided by E-WAY BILL SYSTEM
+gstin
+GSTIN of  Requester(Tax payer or Transporter)
+authtoken
+Authentication token returned by the E-way bill system
+Request Payload
+Attributes
+Description
+Values
+action
+GENEWAYBILL
+Encrypt (Base64(Request JSON),sek)
+Encrypted E-way bill JSON string
+Response Payload
+Attributes
+Description
+Value
+status
+Status of request
+0 – for Failure ;1 – for Success
+Encrypt(Base64(
+Response JSON),sek)
+Response of E-way bill JSON string, The response will have eway bill number and generated date if it is successfully generated. Otherwise the response will have error codes

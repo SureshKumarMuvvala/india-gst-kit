@@ -1,0 +1,156 @@
+Release Notes
+Updated (dtd:30/07/2026)
+Updates (30/07/2026)
+Recent changes related to e-Way Bill, including the EWB Closure functionality and mandatory Ship-to GSTIN, have been kept on hold. For further details, please refer
+Advisory by GSTN : Click here for GSTN Advisory.
+Updates (22/05/2026) (Withdrawn)
+- Mandatory capture of “Ship-To GSTIN” in Bill-To Ship-To transactions
+- In case of Bill to - Ship to, 3 different parties should be involved.otherwise, it should be treated as a Regular Transaction.
+- Introduction of EWB Closure functionality to enable taxpayers to voluntarily close E-Way Bills in specified scenarios.
+Advisory by GSTN : Click here for GSTN Advisory.
+- An additional field added in the e-Waybill generation schema. Please refer
+Generate ewaybill API details.
+- For Closure E-waybill API Details Please refer
+Closure API Details.
+FAQs on Ship-TO Field by GSTN : Click here for GSTN Advisory.
+FAQs on Closure e-waybill by GSTN : Click here for GSTN Advisory.
+Updates (23/01/2026)
+Relaxation of validation on Total Invoice Amount for certain RSP HSNs
+As per the notification Notification No. 20/2025–Central Tax | Dated: 31st December, 2025 ,
+the validation on the
+Total Invoice Amount
+which checks for the sum of
+Total Taxable Amount
+and
+Total Tax Amount
+can not be more than
+Total Invoice Amount
+has been relaxed. This relaxation applies only for those E Way Bills where HSN of at least one of the line items belongs to the HSNs mentioned in the said notification for which RSP based tax calculation is applicable.
+This relaxation suppresses the error Code for these E Way Bills effective from
+01/02/2026 *
+Notification 20/2025 : Click here for Notification.
+Advisory by GSTN : Click here for GSTN Advisory.
+error code 620 : Total invoice value cannot be less than the sum of total assessable value and tax values
+* In the Sandbox environment, the document date has been updated to a date later than 22/01/2026 for testing purposes.
+Updates (02/12/2025)
+1) Additional validation has been added in ewaybill generation.GSTINs registered as TDS/TCS cannot be used as Supplier GSTIN.
+2) While updating transportation details if mode is Rail, then RR number to be provided as "tansDocNo" should be mandatorily prefixxed with P/F/L depending
+on the railway system where RR number is generated as given below:
+- P – PMS
+- F – FOIS
+- L – Leased Wagons
+Updates (18/12/2024)
+New Validations for E Way Bill APIs with respect to the following, effective from 01/01/2025
+- Limiting generation of E Way Bill within 180 days of Document Date.
+- Restriction of extension of E Way Bills beyond 360 days of generation of E Way Bill
+- Railways integration for validating Trans Document NO,
+Click here for details.
+Note: These validations can be tested from the testing environment.
+Interoperable Services (dtd:18/07/2024))
+Updates (18/07/2024)
+-
+Some of the services of eInvoice & E Way Bill can be used across the two instances
+(E Way Bill 1 & E Way Bill 2 and eInvoice1 & eInvoice2).
+Please refer to the general information on E Way Bill Interoperable services
+Click Here
+and for eInvoice
+Click here.
+-
+For the API related information,
+click here
+-
+To enable testing the Interoperable services through APIs,
+2 separate instances each for E Way Bill and eInvoice are created.
+Please login into
+https://einv-apisandbox.nic.in
+to get the URLs of the four instances.
+-
+In view of the introduction of the above new Test environments, current Test URLs will be withdrawn shortly.
+Changes in 1.03 Version (dtd:05.04.2021))
+Updates (06/06/2021)
+-
+E Way Bills can be generated only if the status of the Supplier GSTNs is 'Active'. E Way Bill cannot be generated if the status of Supplier GSTINs is 'Suspended' or ‘Provisional’ or ‘Inactive’ or ‘Cancelled’. However, E Way Bill can be generated if the Recipient GSTIN is 'Active' or 'Suspended' but not 'Provisional' or 'Inactive' or 'Cancelled'
+- If the GSTIN is blocked for non filing of GSTR3B / CMP08, the GSTIN can not generate E Way Bills as a supplier, however E Way Bills can be generated when the respective GSTIN is of the recipient or the transporter
+- Authentication: New authentication API has been released with end point as The request payload has been changed, complete payload needs to be encrypted using the public key. Click here for details of the API. The old authentication API is deprecated, will be removed shortly
+- Generation of E Way Bill: Following validations have been added / updated
+- There should be at least one item with HSN code (goods). E Way Bill cannot be generated with documents having only SAC code (services)
+- PIN code 999999 is allowed for state code 97 (Other territory)
+- If the ‘TransMode’ is ‘4’ (Ship), then ‘VehicleType’ can be ‘O’ (ODC) and Vehicle Number has to be provided
+- Get E Way Bills for transportation: New API has been provided for transporters to download the E Way Bills assigned to them by passing their state code and date of assignment of E Way Bill. Click here for details of the API.
+- Multi-Vehicle Initialize: UQC Code while Initializing multi-vehicle movement UQC value is not validating against the UQC provided while generating E-waybill
+Changes in 1.03 Version (dtd:30.12.2020))
+- As per the notification dated 22 December 2020, No. 94 /2020. the validity period of e-waybill is changed from 100 KM per day to 200 KM per day.
+Changes in 1.03 Version (dtd:21.11.2020))
+- E Way Bill generation directly through the E Way Bill System is blocked for those GSTINs who is eligible for e Invoicing and document date is later than 1st Oct. 2020 , Transaction types are B2B or Export and document type is "INV"
+- E Way Bill can be generated for cancelled other party GSTIN provided the GSTIN was active at the time of the date specified in the document date
+- If the PIN Code does not exist in the master database of the E Way Bill System and the first 3 digits of the PIN code matches with the respective State as per the pattern of PIN code-to-State mapping pattern defined by postal department, then E Way Bill gets generated
+- While generating E Way Bill, distance can be set as ‘0’ (Zero) which indicates that the system should put the appropriate distance between the PIN codes provided
+- If the distance is passed, it should be between the distance available in E Way Bill system ±10%
+- If the actual distance between the two PIN codes is less than 100, the distance provided can be up to the actual distance plus 10%.
+Changes in 1.03 Version (dtd:03.12.2019))
+i) Blocking / Unblocking:
+- E-waybill generation facility is blocked for a consignor or consignee and transporter, with respect to those GSTIN who have not filed GSTR 3B return for last two consecutive months
+- Once the taxpayers filed their returns,the system shall automaticaly update the status in the portal on next day
+-
+In case taxpayers who have filed the Returns, but system shows as not filed, then they may update the status by clicking on
+the following link :
+https://ewaybillgst.gov.in --> Search --> ‘Update Block Status’.
+Changes in 1.03 Version (dtd:23.04.2019))
+ii) Generation of E-waybill:
+-
+The distance between two locations is automatically calculated based on fromPincode and toPincode, with a grace of 10% extra
+distance, otherwise appropriate error is responded without generating the E-waybill. If the distance provided is less than the distance in the database then, E-waybill will be generated without any alert message.
+- If the distance between the two pin-codes provided is not available in our database, E-waybill will be generated with an alert message as "The distance between the given pincodes are not available in the system ." and its a responsibility of the generator to provide correct distance in such cases.
+- If fromPincode and toPincode are same then, maximum distance allowed is 100 km.
+- Generation of duplicate E-waybills for the same document by Consignee and Transporter is not allowed hence forth, hence now onwards neither Consignor nor Consignee nor Transporter can generate duplicate E-waybills for the same document.
+iii) Extend Validity API:
+-
+To distinguish between the goods either on Road or in transit, new parameter transitType ( R- Road, W - Warehouse, O-Others) are introduced for Extend E-waybill API.
+- If transmode is 1 to 4 then consignmentStatus value should be M and transitType should be blank ("transitType":"").
+- If transmode is 5 then consignmentStatus value should be T and transitType value can be either R or W or O.
+Changes in 1.03 Version (dtd:24.09.2018))
+- Tax rates are being validated. Only the standard tax rates will be accepted (Please refer to STD Tax Rates).
+- Document type is validated against the supply and sub supply type. Accordingly the type of Consigner and Consignee is allowed. (Please refer to the Supply Type-Doc Type Mapping for the mapping of the supply, sub-supply and document types).
+-
+The system checks for the duplicate e-way bill on the same document number of the consignor. If already one e-way bill exists with same document number, the system will not allow generating one more e-way bill on the same number. That is, if the consignor is trying to generate multiple e-way bills based on one document number, the system throws error.
+However, if consignee or transporter tries to generate the multiple e-way bills on the same document number of the consignor, the system will generate and alert through API to the consignee or transporter that already there is one e-way bill with that document number.
+- To identify the type of movement of goods, type of transaction is being captured.
+- Passing transporterId is mandatory for generating Part A Slip, and transDocNo, transMode and vehicleNo should be blank.
+- Get E Way Bill Response will have additional parameter transactionType indicating the Transaction type.
+- GSTR1 related data parameters are being made mandatory while generating the e-way bill.
+- Master codes list updated.
+- API Error code list updated.
+Changes in Version 1.02.01 (Dated 10.05.2018)
+Some changes in the request and response JSONs, some data structure items and schema are updated in the document to sync. with the application.
+Changes in this Version (1.02 dtd:27.04.2018))
+- Incorporation of new features in e-way bill generation
+- New API to update transporter ID
+- New API to extend validity
+- New API to regenerate consolidated E Way Bill API
+- New API to get details of GSTIN for a given GSTIN
+- New API to get enrolled transporter’s details for given Transin
+-	New API to get HSN details for a given HSN code
+- Master codes list updated
+- API Error code list updated
+- Validations are provided for each of the APIs
+Changes in this Version (1.01)
+- The ‘Generate e-way bill’ and ‘update Vehicle Number’ APIs respond with the additional information of Validity of the e-way bill.
+- The additional information ‘Vehicle Type’ (Regular -R or Over Dimensional Cargo-O) needs to be passed in ‘Generate e-way bill’ API.
+-
+The Get APIs (except Get Cons. EWB) will have additional columns
+- Valid Upto – Validity of the e-way bill
+- Reject Status – Y in case other party has rejected the e-way bill
+- Extended times – No of times the e–way bill has got the extension
+- delPlace – Delivery Place of the e-way bill
+- Status – whether e-way bill is Active (ACT) or Cancelled (CNL)
+- Schema for the JSON data has been provided
+- Valid Upto – Validity of the e-way bill
+- Sample .NET CODE for Encryption and Decryption functions have been provided
+- Sample Java Code for Encryption and Decryption functions have been provided
+-
+Changed Master codes for Unit Quantity Code, State Code, and Document Type have been provided.
+They match with the GSTN Codes.
+- New master codes have been added.
+- Error Codes have been improved.
+- URL and version has been changed.
+- Compulsory fields are limited to Web page.

@@ -1,0 +1,93 @@
+Validations
+- Generation of E Way Bill using the E Way Bill API System will be blocked for the following scenarios where the Supplier is enabled for E Invoice. Such E Way Bills need to be generated either along with the IRN generation or with reference to the IRN using E Invoice System only
+•	B2B and Export transactions where document date is equal to or greater than 01/10/2020
+•	Document type -
+Tax Invoice
+-	If the other party GSTIN is cancelled, generation of E Way Bill is allowed if the document date is within the period during which the GSTIN was active
+-	If the distance is passed as ‘0’ (Zero) and the distance between the PIN codes provided is available in E Way Bill database, the system will replace the distance as per the database. Passing ‘0’ is an indication that the user wants the system to take the distance as per the E Way Bill database
+-	If the distance is passed and is differing by more than ±10% of the pin to pin distance stored in system, the response will have corresponding error code
+-	If the distance is passed and the actual distance in database is less that 100 kms, the distance passed has to be less than distance in database plus 10% of the distance. (Ex. If the distance is 60 kms, distance up to 66kms is allowed)
+-	If the distance between the two pin-codes provided is not available in E Way Bill database, E-waybill will be generated with an alert message as "The distance between the given PIN codes are not available in the system." and it’s a responsibility of the generator to provide correct distance in such cases.
+-	If fromPincode and toPincode are same then, maximum distance allowed is 100 kms. If the supply type is ‘Line Sales’, it can be up to 300 kms
+-	The actual distance from source to destination cannot be greater than 4000.
+-	PIN Codes are validated against the State they belong to, actFromStateCode- fromPincode and actToStateCode- toPincod
+-	If the PIN Code does not exist in the master database of the E Way Bill System and the first 3 digits of the PIN code matches with the respective State as per the pattern of PIN code-to-State mapping pattern defined by postal department, then E Way Bill gets generated
+-	For ‘Other Country’, State code as 96 as well as 99 are accepted but system stores the state code as 99
+-	Generation of duplicate E-waybills for the same document by Consignee and Transporter is not allowed hence forth, hence now onwards neither Consignor nor Consignee nor Transporter can generate duplicate E-waybills for the same document.
+-	For SKD/CKD/Lots movement in multiple vehicles, you have to generate a delivery challan for each of the vehicle containing the items being moved in the respective vehicles, the last vehicle should carry the original invoice.
+-	Regeneration of e-waybill is possible for the cancelled e-waybill as well as for the E-waybill having status "DIS".
+-	For Outward, if Bill To GSTIN(toGstin) belongs to SEZ, Bill To state(toState) should be Other Country and ship to statecode (actTostatecode) should be the actual state code.
+-	Similarly for Inward, if Bill From GSTIN(fromGstin) belongs to SEZ, Bill From state(fromState) should be Other Country and Dispatch from statecode (actFromstatecode) should be the actual state code.
+-	Tax rates are being validated. Only the allowed tax rates will be accepted.
+-	Document type is validated against the supply and sub supply type. Accordingly, the type of Consigner and Consignee is allowed.
+-	The system checks for the duplicate e-way bill on the same document number of the consignor. If already one e-way bill exists with same document number, the system will not allow generating one more e-way bill on the same number. That is, if the consignor is trying to generate multiple e-way bills based on one document number, the system throws error. Even if the consignee or transporter tries to generate an E Way Bill for the same document number, system will not allow generation of E Way Bill as consigner himself has used the document number for generation of E Way Bill.
+However, if consignee or transporter tries to generate the multiple e-way bills on the same document number of the consignor, provided the consigner has not used the document number already to generate E Way Bill, the system will generate E Way Bill and alert through API to the consignee or transporter that already there is one e-way bill with that document number.
+-	To identify the type of movement of goods, type of transaction is being captured.
+-	Additional fields for cessNonAdvolValue and otherValue have been introduced to enter CESS Non Advol amount and any other charges (+/-) written in invoice.
+-	Sum of totalValue, cgstValue, sgstValue, igstValue, cessValue , otherValue and cessNonAdvolValue should be equal to or less than totInvValue with a grace value of Rs. 2.00.
+(Relaxation of validation on Total Invoice Amount for certain RSP HSNs
+As per Notification No. 20/2025, validation related to the above calculations
+has been relaxed for specific HSNs while validating the Total Invoice Amount).
+-	We have added a new Status DIS for such E Way bills that have been generated with only Part A and Part B is not updated even after 15 days of generation of this temporary number.
+-	Passing transporterId is mandatory for generating Part A Slip and transDocNo, transMode and vehicleNo should be blank.
+-	Alerting the generator of the E-Way Bill through SMS message, in case the total invoice value is more than Rs. 10 Crores.
+-	GSTR1 fields (cgstValue, sgstValue, igstValue, cessValue, totalValue, otherValue and totInvValue in main object and cgstRate, sgstRate, igstRate, cessRate, cessNonAdvol, taxableAmount) are mandatory as per the intrastate or interstate transaction.
+-	Maximum number of items in each invoice should not exceed more than 250 items.
+-	In case of tax payer generating as supplier, the GSTIN of the requesting tax payer should be fromGstin
+-	In case of tax payer generating as recipient, the GSTIN of the requesting tax payer should be - toGstin
+-	In case of transporter(enrolled transporter / GSTIN updated as transporter in e-way bill portal) generating e-way bill, the GSTIN/TRANSIN of the requesting person should be -transporterId
+-	Enrolled transporter(TRANSIN) cannot be supplier (- fromGstin) or buyer (- toGstin)
+-	The following fields should have the one of the values given in the master codes
+1.	Supply Type
+2.	Sub Supply Type
+3.	Document Type
+4.	Transportation Mode
+5.	Unit Quantity Code
+-	The Document Date should be less than or equal to current date
+-	The Transport document Date should be greater than equal to document date
+-	- fromGstin and - toGstin should be valid GSTIN number of the supplier and recipient. In case of unregistered person involved in the transaction, pass URP in these fields.
+-	In case of ‘Bill to – ship to’ transaction, - toGstin,- toTrdName and - toStateCode should be passed with ‘Bill To’ party and - toAddr1, - toAddr2, - toPlace, - toPincode and - actToStateCode values should be passed with ‘Ship To’ party.
+-	In case of ‘Bill From – Dispatch From’ transaction, - fromGstin, - fromTrdName and - fromStateCode should be passed with ‘Bill From’ party and - fromAddr1, - fromAddr2, - fromPlace, - fromPincode and - actFromStateCode values should be passed with ‘Dispatch from’ party.
+- e-Way Bill cannot be generated with only SAC codes(99) for Services, minimum one HSN code belonging to Goods is mandatory.
+-	HSN Code should be valid as per the GST master
+-	In case of intra-state transaction, where both - fromGstin and - toGstin belong to same state(fromStateCode and toStateCode should be same), the SGST and CGST tax rate and value has to be passed
+-	In case of inter-state transaction, where both - fromGstin and - toGstin belong to different states(fromStateCode and toStateCode should be different), the IGST tax rate and value has to be passed
+-	In case of one of the party is SEZ unit, then IGST tax rate and value has to be passed
+-	In case of road is a transportation mode , the vehicle number should be passed and transport document number is optional
+-	In case of rail, air or ship is a transportation mode, the transport document number is must
+-	If the transportation is done through the transporter, trans_id field should have valid TRANSID or GSTIN
+-	In case of road transportation, if the vehicle is ‘over dimension cargo’, pass O, otherwise R (regular).
+- Vehicle type ODC is provisioned for transport mode 'Ship'
+- If Mode transportation is selected has ship, the vehicle type can be ODC and Vehicle Number has to be provided
+- UQC Code while Initializing multi-vehicle movement UQC value is not validating against the UQC provided while generating Eway bill
+- If vehicle number is passed, the format of the vehicle should be valid and as per the format
+-	For temporary registered vehicles, the registration number format should be ‘TMXXXXXX’
+-	In case of sub supply type is others, then pass the - subSupplyDesc accordingly.
+-	In case of import or export, the actual distance being travelled in the country has to be passed.
+-	Limiting generation of E Way Bill within 180 days of Document Date.
+-
+Railways integration for validating Trans Document number.While updating transportation details if mode is Rail,
+then RR number to be provided as "tansDocNo" should be mandatorily prefixxed with P/F/L depending
+on the railway system where RR number is generated
+Category
+Format
+Example
+Parcel System
+P<station code><PWB>
+PSBC1234567890, where SBC is the station code
+FOIS System
+F<station code><RR>
+FSBC123456789, where SBC is the station code
+Leased Wagon
+L<RR No.>
+LABCD1234567890
+-	TDS/TCS cannot be used as supplier GSTINs during e-way bill generation.
+
+Frequently Asked Questions
+- Is there any limit for the number of items in a E Way Bill?
+A. Yes, Number of items per E Way Bill is limited to 250.
+- How to handle a scenario where goods are to be transported in multiple vehicles
+A. Delivery Challans may be created for the goods being carried in each of the vehicles and using the respective delivery challan, one E Way Bill per vehicle can be generated. Last vehicle can carry the Invoice.
+- While calling Get E Way Bill API version 1.03, since -1 is not a valid tax rates but we are getting tax rates as -1.
+A. while calling get E Way Bill API version 1.03, if you get -1 as any tax rates, it has to be treated as the user has not provided any tax value while generating E Way bill through the E-waybill portal.
+But in case of generation E Way Bill through API version 1.03, the applicable tax rates have to be sent depending on whether it is a intra-state transaction or inter-state transaction as per the tax rates shared earlier.

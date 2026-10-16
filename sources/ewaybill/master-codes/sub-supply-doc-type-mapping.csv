@@ -1,0 +1,29 @@
+Transaction Type,Transaction Sub-Type,Document Type,From GSTIN (Supplier),To GSTIN (Buyer)
+Outward,Supply,Tax Invoice,Self,Other GSTIN/URP
+Outward,Supply,Bill of Supply,Self,Other GSTIN/URP
+Outward,Export,Tax Invoice,Self,Other GSTIN/URP
+Outward,Export,Bill of Supply,Self,Other GSTIN/URP
+Outward,Job Work,Delivery Challan,Self,Other GSTIN/URP
+Outward,SKD/CKD/Lots,Tax Invoice,Self,Other GSTIN/URP
+Outward,SKD/CKD/Lots,Bill of Supply,Self,Other GSTIN/URP
+Outward,SKD/CKD/Lots,Delivery Challan,Self,Other GSTIN/URP
+Outward,Recipient not known,Delivery Challan,Self,Self
+Outward,Recipient not known,Others,Self,Self
+Outward,For own Use,Delivery Challan,Self,Self
+Outward,Exhibition or fairs,Delivery Challan,Self,Self
+Outward,Line Sales,Delivery Challan,Self,Self
+Outward,Others,Delivery Challan,Self,Self/Other/URP
+Outward,Others,Others,Self,Self/Other/URP
+Inward,Supply,Tax Invoice,Other GSTIN/URP,Self
+Inward,Supply,Bill of Supply,Other GSTIN/URP,Self
+Inward,Import,Bill of Entry,Other GSTIN/URP,Self
+Inward,SKD/CKD/Lots,Bill of Entry,URP,Self
+Inward,SKD/CKD/Lots,Tax Invoice,Other GSTIN/URP,Self
+Inward,SKD/CKD/Lots,Bill of Supply,Other GSTIN/URP,Self
+Inward,SKD/CKD/Lots,Delivery Challan,Other GSTIN/URP,Self
+Inward,Job Work Returns,Delivery Challan,Other GSTIN/URP,Self
+Inward,Sales Return,Delivery Challan,Other GSTIN/URP,Self
+Inward,Exhibition or fairs,Delivery Challan,Self,Self
+Inward,For own Use,Delivery Challan,Self,Self
+Inward,Others,Delivery Challan,Self/Other/URP,Self
+Inward,Others,Others,Self/Other/URP,Self

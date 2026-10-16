@@ -1,0 +1,175 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "Irn": {
+    "type": "string",
+    "minLength": 64,
+    "maxLength": 64,
+    "description": "Irn Number"
+  },
+  "TransId": {
+    "type": "string",
+    "minLength": 15,
+    "maxLength": 15,
+    "pattern": "([0-9]{2}[0-9A-Z]{13})",
+    "description": "Transin/GSTIN"
+  },
+  "TransName": {
+    "type": "string",
+    "minLength": 3,
+    "maxLength": 100,
+    "pattern": "^([^\\\"])*$",
+    "description": "Name of the transporter"
+  },
+  "TransMode": {
+    "type": "string",
+    "maxLength": 1,
+    "minLength": 1,
+    "enum": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "pattern": "^([1-4]{1})?$",
+    "description": "Mode of transport (Road-1, Rail-2, Air-3, Ship-4)"
+  },
+  "Distance": {
+    "type": "number",
+    "minimum": 0,
+    "maximum": 4000,
+    "description": "Distance between source and destination PIN codes"
+  },
+  "TransDocNo": {
+    "type": "string",
+    "minLength": 1,
+    "maxLength": 15,
+    "pattern": "^([a-zA-Z0-9/-]{1,15})$",
+    "description": "Transport Document Number"
+  },
+  "TransDocDt": {
+    "type": "string",
+    "minLength": 10,
+    "maxLength": 10,
+    "pattern": "^[a-zA-Z0-9]{1}[a-zA-Z0-9-/]*$",
+    "description": "Transport Document Date"
+  },
+  "VehNo": {
+    "type": "string",
+    "minLength": 4,
+    "maxLength": 20,
+    "pattern": "^([A-Z|a-z|0-9]{4,20})$",
+    "description": "Vehicle Number"
+  },
+  "VehType": {
+    "type": "string",
+    "minLength": 1,
+    "maxLength": 1,
+    "enum": [
+      "O",
+      "R"
+    ],
+    "pattern": "^([O|R]{1})$",
+    "description": "Whether O-ODC or R-Regular "
+  },
+  "ExpShipDtls": {
+    "type": "object",
+    "properties": {
+      "Addr1": {
+        "type": "string",
+        "minLength": 3,
+        "maxLength": 100,
+        "pattern": "^([^\\\"])*$",
+        "description": "Address1 of the entity to whom the supplies are shipped to. (Building/Flat no.,Road/Street etc.)"
+      },
+      "Addr2": {
+        "type": "string",
+        "minLength": 3,
+        "maxLength": 100,
+        "pattern": "^([^\\\"])*$",
+        "description": "Address 2 of the entity to whom the supplies are shipped to. (Floor no., Name of the premises/building)."
+      },
+      "Loc": {
+        "type": "string",
+        "minLength": 3,
+        "maxLength": 100,
+        "pattern": "^([^\\\"])*$",
+        "description": "Place (City,Town,Village) entity to whom the supplies are shipped to."
+      },
+      "Pin": {
+        "type": "number",
+        "minimum": 100000,
+        "maximum": 999999,
+        "description": "Pincode"
+      },
+      "Stcd": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2,
+        "pattern": "^(?!0+$)([0-9]{1,2})$",
+        "description": "State Code to which supplies are shipped to. Refer the master"
+      }
+    },
+    "required": [
+      "Addr1",
+      "Loc",
+      "Pin",
+      "Stcd"
+    ]
+  },
+  "DispDtls": {
+    "type": "object",
+    "properties": {
+      "Nm": {
+        "type": "string",
+        "minLength": 3,
+        "maxLength": 100,
+        "pattern": "^([^\\\"])*$",
+        "description": "Name of the company from which the goods are dispatched"
+      },
+      "Addr1": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100,
+        "pattern": "^([^\\\"])*$",
+        "description": "Address 1 of the entity from which goods are dispatched. (Building/Flat no.Road/Street etc.)"
+      },
+      "Addr2": {
+        "type": "string",
+        "minLength": 3,
+        "maxLength": 100,
+        "pattern": "^([^\\\"])*$",
+        "description": "Address 2 of the entity from which goods are dispatched. (Floor no., Name of the premises/building)"
+      },
+      "Loc": {
+        "type": "string",
+        "minLength": 3,
+        "maxLength": 100,
+        "pattern": "^([^\\\"])*$",
+        "description": "Location"
+      },
+      "Pin": {
+        "type": "number",
+        "minimum": 100000,
+        "maximum": 999999,
+        "description": "Pincode"
+      },
+      "Stcd": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2,
+        "pattern": "^(?!0+$)([0-9]{1,2})$",
+        "description": "State Code. Refer the master"
+      }
+    },
+    "required": [
+      "Nm",
+      "Addr1",
+      "Loc",
+      "Pin",
+      "Stcd"
+    ]
+  },
+  "required": [
+    "Distance"
+  ]
+}
