@@ -93,10 +93,11 @@ Refinements: `gstin` absent ⇔ `registrationType ∈ {UNREGISTERED, OVERSEAS}`.
 | Field | Type | Rule |
 |---|---|---|
 | `taxableValue`, `cgst`, `sgst`, `igst`, `cess`, `lineDiscount` | Money | each = Σ of the line field |
-| `documentDiscount` | Money, opt, default `"0.00"` | invoice-level discount applied after tax (not part of the tax base) |
 | `otherCharges` | Money, default `"0.00"` | |
 | `roundOff` | SignedMoney, default `"0.00"` | \|roundOff\| < 1.00 |
-| `grandTotal` | Money | = Σ lineTotal + otherCharges − documentDiscount + roundOff; must be ≥ 0 |
+| `grandTotal` | Money | = Σ lineTotal + otherCharges + roundOff; must be ≥ 0 |
+
+Invoice-level discounts are not modelled: the caller must apportion them into each line's `discount` before building the document.
 
 ### 5.6 `GstDocumentSchema`
 | Field | Type | Req | Rule | Why |
@@ -203,7 +204,6 @@ All helpers are pure; inputs normalised with `trim().toUpperCase()` where releva
 8. **Zero-value lines / 100 % discount:** allowed.
 9. **Dates:** `2028-02-29` valid, `2026-02-29` invalid.
 10. **Large values:** up to 15 integer digits; strings + decimal.js, no overflow.
-11. **Document discount:** reduces `grandTotal` only; does not change taxable value or tax.
 
 ## 9. Legal-facts process
 Each official list/rule lives in its own source file with a header comment:
@@ -224,7 +224,7 @@ Facts tracked: state codes; UQC codes; GST rates offered and legacy with effecti
 **supply** — same state DOMESTIC → INTRA; different → INTER; same state + SEZ/EXPORT/DEEMED_EXPORT → INTER; `usesUtgst` true for each UT-without-legislature in source G, false for states and UTs with legislature.
 **money / computeLineTax** — half-up at `.005` boundaries (`0.005 → 0.01`, `0.0049 → 0.00`); exact sums over many lines; **odd-paisa cases under both conventions**, e.g. taxable `100.10` @ 5 % (`5.005` → T = `5.01`): remainder-to-sgst → cgst `2.51` (`round2(2.505)`), sgst `2.50`; equal-halves → `2.50` / `2.50` (`100.10 × 2.5 % = 2.5025`, sum `5.00`); INTER → igst `5.01`. Both INTRA results pass validation.
 **line schema** — taxable = gross − discount; discount > gross rejected; goods line without qty rejected; service line with non-99 SAC rejected; unit without qty rejected; cess arithmetic; INTRA line passes under each convention; `|cgst − sgst| = 0.02` rejected; cgst + sgst off by 0.02 rejected.
-**document schema** — valid: intra tax invoice, inter tax invoice, B2C unregistered, bill of supply, credit note, debit note, composition bill of supply, composition credit note, UT place of supply, document with documentDiscount, document with a legacy rate. Invalid (each asserts the issue `path`): note without originalDocument; invoice with originalDocument; original date after note date; IGST on intra; CGST on inter; totals off by 0.01; roundOff ≥ 1; documentDiscount not reflected in grandTotal; supplier without GSTIN; GSTIN/state mismatch; composition supplier issuing TAX_INVOICE; composition supplier charging tax on a credit note; same GSTIN both sides; non-contiguous lineNo; empty lines; export-without-payment with non-zero tax.
+**document schema** — valid: intra tax invoice, inter tax invoice, B2C unregistered, bill of supply, credit note, debit note, composition bill of supply, composition credit note, UT place of supply, document with a legacy rate. Invalid (each asserts the issue `path`): note without originalDocument; invoice with originalDocument; original date after note date; IGST on intra; CGST on inter; totals off by 0.01; roundOff ≥ 1; supplier without GSTIN; GSTIN/state mismatch; composition supplier issuing TAX_INVOICE; composition supplier charging tax on a credit note; same GSTIN both sides; non-contiguous lineNo; empty lines; export-without-payment with non-zero tax.
 **fixtures** — every document in `packages/fixtures` parses; fixtures contain only source-E sample GSTINs (a test scans for any other 15-char GSTIN-shaped string).
 **api surface** — no default exports (lint rule + test asserting `!("default" in module)`).
 
@@ -236,4 +236,4 @@ Facts tracked: state codes; UQC codes; GST rates offered and legacy with effecti
 - `pnpm check` can't be made green without weakening strictness or lint rules → stop and report.
 
 ## 12. Deferred (TODO after v0.1)
-`UIN_HOLDER` registration type; export details (port, shipping bill, currency); other document kinds; enforcing `rateInForceOn` by document date; e-invoice/GSTR-1 mappings (other packages).
+`UIN_HOLDER` registration type; export details (port, shipping bill, currency); other document kinds; invoice-level discount — needs CA; enforcing `rateInForceOn` by document date; e-invoice/GSTR-1 mappings (other packages).
