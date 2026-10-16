@@ -9,7 +9,7 @@ Captured **2026-10-16** from this machine in India. Status of every fact taken f
 | `gstr1-save-v5.0-schema.json` | https://developer.gst.gov.in/apiportal/taxpayer/returns → View API List → "GSTR1 - Save GSTR1 data" → v5.0 → Request Payload → Download Schema | **v5.0 (FINAL), published 23-02-2026** — as shown on the portal page; the file itself carries no version or date | 2026-10-16, by hand in a browser (the page is behind a bot challenge) by the owner | `51c7381fb50688a8b1796dabe0ec57d85da06be4287ed61f50c592cfdf2ca1e5` |
 | `gstr1-save-v4.1-schema.json` | same page → "GSTR1 - Save GSTR1 data" → v4.1 → Request Payload → Download Schema | **v4.1, published 04-02-2025** (portal page); superseded by v5.0, kept for comparison | 2026-10-16, by hand, by the owner | `db2c0313b8596a1fe88832202374cf2889595ad8dceb5f4730d3ab2b03543457` |
 
-- Both files are verbatim, with LF line endings, marked `-text` in `.gitattributes`. Sizes: v5.0 354,390 bytes (byte-identical to the browser download `GSTR1 - Save GSTR1 data request_schema.json`); v4.1 206,868 bytes.
+- Both files are verbatim, with CRLF line endings as downloaded, marked `-text` in `.gitattributes`. Sizes: v5.0 354,390 bytes (byte-identical to the browser download `GSTR1 - Save GSTR1 data request_schema.json`); v4.1 206,868 bytes.
 - **No GSTINs** in either file: the only 15-character digit runs are the numeric maximums `999999999999999…`. Nothing to redact.
 - **v5.0 is authoritative** for `docs/specs/gstr1.md`. v4.1 and v1.1 (the version named by the troubleshooting guide, `portal-faq-excerpts.txt` Issue No. 11; not captured) are superseded. The v4.1 → v5.0 differences are summarised in the spec §4.2.
 - **No sample payload** was offered on the portal for either version.
