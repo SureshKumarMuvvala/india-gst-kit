@@ -1,0 +1,37 @@
+{
+  "name": "@india-gst-kit/ewaybill",
+  "version": "0.0.0",
+  "description": "GST e-way bill request mapping and validation (India): Generate E-way Bill, EWB by IRN and the e-invoice EwbDtls block.",
+  "license": "MIT",
+  "author": "Suresh Kumar Muvvala",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@india-gst-kit/einvoice": "workspace:^",
+    "@india-gst-kit/model": "workspace:^",
+    "decimal.js": "^10.6.0"
+  },
+  "peerDependencies": {
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "zod": "4.5.4"
+  }
+}
