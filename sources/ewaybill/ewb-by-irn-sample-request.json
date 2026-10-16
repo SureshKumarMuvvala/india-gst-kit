@@ -1,0 +1,26 @@
+{
+  "Irn": "",
+  "Distance": 100,
+  "TransMode": "1",
+  "TransId": "12XXXXXX",
+  "TransName": "trans name",
+  "TransDocDt": "01/08/2020",
+  "TransDocNo": "TRAN/DOC/11",
+  "VehNo": "KA12ER1234",
+  "VehType": "R",
+  "ExpShipDtls": {
+    "Addr1": "7th block, kuvempu layout",
+    "Addr2": "kuvempu layout",
+    "Loc": "Banagalore",
+    "Pin": 562160,
+    "Stcd": "29"
+  },
+  "DispDtls": {
+    "Nm": "ABC company pvt ltd",
+    "Addr1": "7th block, kuvempu layout",
+    "Addr2": "kuvempu layout",
+    "Loc": "Banagalore",
+    "Pin": 562160,
+    "Stcd": "29"
+  }
+}

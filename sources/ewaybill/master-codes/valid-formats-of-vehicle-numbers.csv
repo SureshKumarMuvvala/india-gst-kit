@@ -1,0 +1,11 @@
+format
+AB121234 (First 2 char are State Code)
+AB12A1234 (First 2 char are State Code)
+AB12AB1234 (First 2 char are State Code)
+ABC1234
+AB123A1234 (First 2 char are State Code)
+AB12ABC1234 (First 2 char are State Code)
+DFXXXXXX (Defence Vehicle)
+TMXXXXXXXXXXXXX (Temp RC) At least 7 characters
+BPXXXXXXXXXXXXX (Bhutan Vehicle) At least 7 characters
+NPXXXXXXXXXXXXX (Nepal Vehicle) At least 7 characters

@@ -1,0 +1,18 @@
+Validations
+- E-waybill can be generated only if E-way Bill related details are passed where distance is mandatory.
+- E-way Bill is not generated for document types of Debit Note and Credit Note and Services.
+- E Way Bill can be generated provided at least HSN of one item belongs to goods.
+- If only Transporter Id is provided, then only Part-A is generated. Transport Mode, Vehicle Type, Vehicle No, Transportation document number and date should be null or attributes should not have been passed.
+- If mode of transportation is "Road", then the Vehicle number and vehicle type should be passed. If mode of transportation is Ship, Air, Rail, then the transport document number and date should be passed. Vehicle type and vehicle number should be null or attributes should not have been passed.
+- The Vehicle no. should match with specified format and exist in Vahan database.
+- E-Waybill will not be generated if the Supplier or Recipient GSTIN is blocked due to non-filing of Returns.
+- Pincode of Recipient GSTIN is mandatory if Ship-To details are not entered.
+- The distance of transportation is validated against the auto-calculated PIN-PIN distance stored in the system. The allowed distance for transportation should be between +/- 10 % of auto-calculated PIN-PIN distance. . If the auto-calculated distance is less than 100 KMs, then The allowed distance for transportation should be between 1 and +10 % of auto-calculated PIN-PIN distance.
+- If the distance of transportation is passed as 0 (zero), then the system will consider it as request made by the tax payer, to consider the auto-calculated PIN-PIN distance for the generation of e-way bill and generate the e-way bill along with IRN. The actual distance is passed in “Info. Message” Column for reference.
+- If the PIN-PIN distance is not available in the system, the passed value of distance will be taken for generation of e-way bill and distance value can not be more than 4000.
+- The actual distance has to be passed in case the source and destination PIN codes are same and the allowed range of value is from 1 to 100.
+- In case of export of goods, if e-way bill has to be generated, then the address of port should have been passed as shipping address during generation of IRN.
+-
+During generation of IRN for export, the shipping address of the port can be updated here for generating the e-Way Bill.
+- If the dispatching address and/or shipping address have not been passed during generation of IRN, then the respective addresses can be passed here.
+- If e-commerce wants to Get the RCM Invoice details, in the headers the supplier GSTIN value should be the Recipient GSTIN.

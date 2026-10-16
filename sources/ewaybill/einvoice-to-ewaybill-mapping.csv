@@ -1,0 +1,52 @@
+Ewaybill Attribute,IRN Attribute,Description,Remarks
+supplyType,NA,Supply Type,supplyType of e-waybill generated for IRN is always 'O' - Outward
+subSupplyType,NA,Sub Supply Type,"subSupplyType = '3'(Export) when TranDtls.SupTyp is EXPWOP/EXPWP, subSupplyType = '1'(Supply) otherwise"
+subSupplyDesc,NA,,Not Applicable
+transactionType,NA,Transaction type,"transaction type = 1(Regular), if Dispatch-from and Ship-to details are not provided, transaction type = 2(Ship to), if only Ship-to details are provided, transaction type = 3(Dispatch from), if only Dispatch-from details are provided , transaction type = 4(Combination), if both Dispatch-from and Ship-to details are provided"
+docType,DocDtls.Typ,Document Type,Applicable only for INV(Invoice) in e Invoice
+docNo,DocDtls.No,Document Number,
+docDate,DocDtls.Dt,Document Date,
+fromGstin,SellerDtls.Gstin,From GSTIN (Supplier or Consignor ),
+fromTrdName,SellerDtls.TrdNm,From Trade Name (Consignor Trade name),
+fromAddr1,SellerDtls.Addr1 or DispDtls.Addr1,"From Address Line 1,","If Dispatch details are not available, Seller details will be assigned"
+fromAddr2,SellerDtls.Addr2 or DispDtls.Addr2,From Address Line 2,"If Dispatch details are not available, Seller details will be assigned"
+fromPlace,SellerDtls.Loc or DispDtls.Loc,From Place,"If Dispatch details are not available, Seller details will be assigned"
+fromPincode,SellerDtls.Pin or DispDtls.Pin,From Pincode,"If Dispatch details are not available, Seller details will be assigned"
+fromStateCode,SellerDtls.Stcd,From State Code,
+actFromStateCode,DispDtls.Stcd,Actual From State Code,"Dispatch from state code, if dispatch details are not available, then seller state code will be assigned"
+toGstin,BuyerDtls.Gstin,To GSTIN (Consignee or Recipient),
+toTrdName,BuyerDtls.TrdNm,To Trade Name (Consignee Trade name or Recipient Trade name),
+toAddr1,BuyerDtls.Addr1 or ShipDtls.Addr1,To Address Line 1,"If Ship details are not available, Buyer details will be assigned"
+toAddr2,BuyerDtls.Addr2 or ShipDtls.Addr2,To Address Line 2,"If Ship details are not available, Buyer details will be assigned"
+toPlace,BuyerDtls.Loc or ShipDtls.Loc,To Place,"If Ship details are not available, Buyer details will be assigned"
+toPincode,BuyerDtls.Pin or ShipDtls.Pin,To Pincode,"If Ship details are not available, Buyer details will be assigned"
+toStateCode,BuyerDtls.Stcd,To State Code,
+actToStateCode,ShipDtls.Stcd,Actual To State Code,"Ship to state code, if ship details are not available, then buyer state code will be assigned"
+First 250 items from Invoice will be mapped in e-Way Bill
+productName,NA,,"Since it is an optional field, no value will be stored in product name"
+productDesc,Item.PrdDesc,Product / Item description,First 100 characters of Item.PrdDesc will be stored in e-WayBill
+hsnCode,Item.HsnCd,HSN Code,
+quantity,Item.Qty,Quantity,Assigned to E Way Bill if within the allowed range as per E Way Bill
+qtyUnit,Item.Unit,Unit,
+taxableAmount,Item.AssAmt,Taxable Amount,
+sgstRate,Item.GstRt/2,SGST Rate of Tax,sgstRate = (Item.GstRt/2)
+cgstRate,Item.GstRt/2,CGST Rate of Tax,cgstRate = (Item.GstRt/2)
+igstRate,Item.GstRt,IGST Rate of Tax,igstRate = Item.GstRt
+cessRate,Item.CesRt,Cess Rate of Tax,
+cessNonadvol,0,,
+totalValue,ValDtls.AssVal,Sum of Taxable value,
+cgstValue,ValDtls.CgstVal,CGST value,
+sgstValue,ValDtls.SgstVal,SGST value,
+igstValue,ValDtls.IgstVal,IGST value,
+cessValue,ValDtls.CesVal,Cess Value,cessValue of E Way Bill is assigned with the sum of cess and cessNonAdvol at item level
+cessNonAdvolValue,0,,
+otherValue,ValDtls.OthChrg + ValDtls.StCesVal - ValDtls.Dsicount+ ValDtls.RndOffAmt,"Other charges, if any (At item level as well as Invoice level)",ValDtls.StCesVal includes StateCesAmt and StateCesNonAdvlAmt at item level
+totInvValue,ValDtls.TotInvVal,Total Invoice Value,
+transMode,EwbDtls.TransMode,Mode of transport,"(Road-1, Rail-2, Air-3, Ship-4)"
+transDistance,EwbDtls.Distance,Distance,
+transporterName,EwbDtls.TransName,Name of the transporter,
+transporterId,EwbDtls.TransId,15 Digit Transporter GSTIN/TRANSID,
+transDocNo,EwbDtls.TransDocNo,Transport Document Number,
+transDocDate,EwbDtls.TransDocDt,Transport Document Date,
+vehicleNo,EwbDtls.VehNo,Vehicle Number,
+vehicleType,EwbDtls.VehType,Vehicle Type,

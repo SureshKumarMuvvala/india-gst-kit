@@ -1,0 +1,51 @@
+Parameter Name,Type,Description,Values,Sample Data,Allowed character
+supplyType,Text(1),Supply whether it is outward/inward.,Refer Code List,O,
+subSupplyType,Text(2),Sub types of Supply,Refer Code List,2,
+subSypplyDesc,Text(20),Sub Supply Description if selected “Others” in subSupplyType,,,
+docType,Text(3),Document Type,Refer Code List,CHL,
+docNo,Text(16),Document No,,12,"Alphanum, -, /"
+docDate,Text,Document Date,dd/mm/yyyy format,12/09/2017,
+fromGstin,Text(15),GSTIN of the Consignor,,29ABCDE8755F1Z2,Alphanum
+fromTrdName,Text(100),LegalName of consignor,,ABHYUDHYA CO OP BANK,Alphanumeric
+fromAddr1,Text(120),Address of consignor - Line 1,,Shambhai Fortune,Alphanumeric
+fromAddr2,Text(120),Address of consignor - Line 2,,Behind KSRTC Bus Stop,Alphanumeric
+fromPlace,Text(50),Place of consignor,,Bengaluru,Alphabetic
+fromPincode,Number(6),Pincode of consignor,,576101,Number
+fromStateCode,Number(2),State of consignor,Refer Code List,29,
+actFromStateCode,Number(2),State of Supply,Refer Code List,4,
+toGstin,Text(15),GSTIN of consignee,,29ABCDE8755F1Z2,Alphanumeric
+toTrdname,Text(100),Legalname of consignee,,INDER CHHAJER,Alphanumeric
+toAddr1,Text(120),Address of consignee - Line 1,,PRIYADARSHANI LAYOUT,Alphanumeric
+toAddr2,Text(120),Address of consignee- Line 2,,MUDALAYAPALYA,Alphanumeric
+toPlace,Text(50),Place of consignee,,Bengaluru,Alphabetic
+toPincode,Number(6),Pincode of the consignee,,560072,Number
+toStateCode,Number(2),State of Supply,Refer Code List,4,
+actToStateCode,Number(2),State of Supply,Refer Code List,4,
+transactionType,Number(1),Type of transaction,1 or 2 or 3 or 4,1,Number
+otherValue,"Decimal(18,2)",Other Charges if any,,2000,
+totalValue,"Decimal(18,2)",Sum of Taxable value,,2000,
+totInvValue,"Decimal(18,2)",Total Invoice Value,,,
+cgstValue,"Decimal(18,2)",CGST Amount,,0,
+sgstValue,"Decimal(18,2)",SGST Amount,,0,
+igstValue,"Decimal(18,2)",IGST Amount,,240,
+cessValue,"Decimal(18,2)",CESS Amount,,20,
+cessNonAdvolValue,"Decimal(18,2)",CESS Non Advol Amount,,20,
+transMode,Number(1),Mode of transportation,Refer Code List,1,
+VehicleType,Char(1),Type of Vehcile,R or O,R,
+transDistance,Number(5),Distance of transportation,,10,Max Value = 4000
+transporterId,Text(15),Transporter Id,,29ABCDE8755F1Z2,
+transporterName,Text(100),Transporter Name,,TAPURI,
+transDocNo,Text(15),Transporter Doc No,,11,
+transDocDate,Text,Transporter Doc Date,dd/mm/yyyy format,13/09/2017,
+vehicleNo,Text(15),Vehicle No.,Pl refer Code List,KA12BL4567,Vehicle No. to begin with state code as given in the Code list
+productName,Text(100),Name of the Product,,Steel,
+productDesc,Text(100),Description of the Product,,5mm Rod,
+hsnCode,Number(8),HSN Code of the Product,,10101,
+quantity,"Decimal(8,2)",Quantity of Product in Numbers,,QTS,
+qtyUnit,Text(3),"Unit of the Product, like Liter,Kg etc",Refer Code List,200,
+taxableAmount,"Decimal(18,2)",Taxable Amount,,100000,
+cgstRate,"Decimal(6,3)",CGST Rate,,9,
+sgstRate,"Decimal(6,3)",SGST Rate,,9,
+igstRate,"Decimal(6,3)",IGST Rate,,18,
+cessRate,"Decimal(6,3)",CESS Rate,,0,
+cessNonadvol,"Decimal(6,3)",Cess Non-Advolerum,,0,
