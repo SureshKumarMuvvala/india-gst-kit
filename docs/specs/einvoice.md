@@ -22,6 +22,7 @@ The schema types amounts, quantities, rates and PIN codes as JSON **numbers**. P
 - `IrnDecimal` = string `/^-?\d+(\.\d+)?$/` (no exponent, no leading `+`). `IrnInt` = string `/^\d+$/`.
 - `serializeIrnRequest(req): string` writes those strings as **raw JSON number literals**, never through `Number`, in the schema's key order, as compact JSON. Values such as the ValDtls maximum `99999999999999.99` need 16 significant digits, more than a double can hold.
 - `parseIrnRequestJson(text)` uses `JSON.parse` with the reviver `context.source` (Node ≥ 22; verified on 22.22) to turn every number into its source text, then runs `IrnRequestSchema.safeParse`. A JSON string where the schema expects a number is a type error, and so is the reverse.
+- Note (decision 2026-10-16, `docs/specs/recon.md` D-P1): the lossless-JSON helper (`src/lossless.ts`: `JsonNumber`, `parseJsonLossless`, `convertNumbers`, `parseLenient`, plus the parts of `zod-walk.ts` they need) moves to `@india-gst-kit/model`. `einvoice` will import it from there, with no change in behaviour. The move is done in the recon build PR, with a changeset.
 - `toIrnRequest` emits money with exactly 2 dp (`"747.50"`), rates and quantities as in the model, and `Pin` as 6 digits.
 
 ## 3. Mapping `GstDocument` → IRN request (`toIrnRequest`)
