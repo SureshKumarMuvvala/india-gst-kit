@@ -12,6 +12,14 @@ export function isGstinStructurallyValid(gstin: string): boolean {
   return PATTERN.test(gstin) && isGstinStateCode(gstin.slice(0, 2));
 }
 
+/**
+ * Shape of a temporary ID seen on a real document: 2-digit state + 10 digits + "TMP". Not a GSTIN;
+ * accepting such IDs as recipients is deferred (spec §12). Shape only, nothing official is known.
+ */
+export function isTemporaryId(value: string): boolean {
+  return /^[0-9]{12}TMP$/.test(value);
+}
+
 /** mod-36 check character for the first 14 characters. Throws unless given 14 chars of [0-9A-Z]. */
 export function gstinCheckDigit(first14: string): string {
   if (!/^[0-9A-Z]{14}$/.test(first14)) {

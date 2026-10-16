@@ -1,8 +1,10 @@
 import { GSTINS } from "@india-gst-kit/fixtures";
 import { describe, expect, it } from "vitest";
+import { GstinSchema } from "../src/primitives.js";
 import {
   gstinCheckDigit,
   isGstinStructurallyValid,
+  isTemporaryId,
   isValidGstin,
   parseGstin,
 } from "../src/index.js";
@@ -88,5 +90,26 @@ describe("parseGstin", () => {
   it("returns undefined for structurally invalid input", () => {
     expect(parseGstin("nope")).toBeUndefined();
     expect(parseGstin("28AAAAA0000A1ZY")).toBeUndefined();
+  });
+});
+
+describe("temporary IDs (state + 10 digits + TMP, seen on a real document)", () => {
+  it("isTemporaryId recognises the shape only", () => {
+    expect(isTemporaryId("291234567890TMP")).toBe(true);
+    expect(isTemporaryId("291234567890TMQ")).toBe(false);
+    expect(isTemporaryId("29ABCDEFGHIJTMP")).toBe(false);
+    expect(isTemporaryId("29123456789TMP")).toBe(false);
+  });
+  it("is never a valid GSTIN", () => {
+    expect(isValidGstin("291234567890TMP")).toBe(false);
+  });
+  it("GstinSchema gives its own message, not the check-digit one", () => {
+    const r = GstinSchema.safeParse("291234567890TMP");
+    expect(r.success).toBe(false);
+    expect(r.error?.issues[0]?.message).toBe("looks like a temporary ID, not a GSTIN");
+  });
+  it("other bad GSTINs keep the generic message", () => {
+    const r = GstinSchema.safeParse("37BZNPM9430M1KL");
+    expect(r.error?.issues[0]?.message).toMatch(/^Invalid GSTIN/);
   });
 });

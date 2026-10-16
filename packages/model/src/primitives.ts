@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isValidGstin } from "./gstin.js";
+import { isTemporaryId, isValidGstin } from "./gstin.js";
 import { isPlaceOfSupplyCode, isStateCode } from "./states.js";
 import { isUqcCode } from "./uqc.js";
 
@@ -46,9 +46,16 @@ export const PlaceOfSupplySchema = StateCodeSchema.refine(
   isPlaceOfSupplyCode,
   "State code 25 is withdrawn as a place of supply",
 );
-export const GstinSchema = z
-  .string()
-  .refine(isValidGstin, "Invalid GSTIN (pattern, state code or check digit)");
+export const GstinSchema = z.string().check((ctx) => {
+  if (isValidGstin(ctx.value)) return;
+  ctx.issues.push({
+    code: "custom",
+    input: ctx.value,
+    message: isTemporaryId(ctx.value)
+      ? "looks like a temporary ID, not a GSTIN"
+      : "Invalid GSTIN (pattern, state code or check digit)",
+  });
+});
 export const HsnSacSchema = z
   .string()
   .regex(/^(?!0+$)(\d{4}|\d{6}|\d{8})$/, "HSN/SAC must be 4, 6 or 8 digits");

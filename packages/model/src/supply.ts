@@ -13,9 +13,14 @@ export function decideTaxSplit(
 // Status: UNVERIFIED — needs CA
 // Andaman and Nicobar Islands (35), Lakshadweep (31), Dadra and Nagar Haveli (26), Daman and Diu (25),
 // Chandigarh (04), other territory (97). Later amendments (Ladakh, the 2020 Dadra/Daman merger) were
-// not retrieved, so Ladakh (38) is NOT listed here.
+// searched for on gstcouncil.gov.in on 2026-10-16 and not found (sources/acts/README.md), so Ladakh
+// (38) is answered "unknown" rather than guessed.
 const UTGST_CODES: ReadonlySet<string> = new Set(["35", "31", "26", "25", "04", "97"]);
 
-export function usesUtgst(stateCode: StateCode): boolean {
+const UTGST_UNKNOWN_CODES: ReadonlySet<string> = new Set(["38"]);
+
+/** `"unknown"` where the governing amendment is not in `sources/acts/` (Ladakh, 38). */
+export function usesUtgst(stateCode: StateCode): boolean | "unknown" {
+  if (UTGST_UNKNOWN_CODES.has(stateCode)) return "unknown";
   return UTGST_CODES.has(stateCode);
 }
