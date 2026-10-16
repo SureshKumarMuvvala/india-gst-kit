@@ -14,10 +14,13 @@ describe("decideTaxSplit", () => {
     "SEZ_WITHOUT_PAYMENT",
     "EXPORT_WITH_PAYMENT",
     "EXPORT_WITHOUT_PAYMENT",
-    "DEEMED_EXPORT",
-  ])("same state + %s → INTER", (c) => {
+  ])("same state + %s → INTER (SEZ and exports are always inter-state)", (c) => {
     expect(decideTaxSplit("29", "29", c)).toBe("INTER");
     expect(decideTaxSplit("29", "27", c)).toBe("INTER");
+  });
+  it("DEEMED_EXPORT follows the states like DOMESTIC (not listed as always inter-state)", () => {
+    expect(decideTaxSplit("29", "29", "DEEMED_EXPORT")).toBe("INTRA");
+    expect(decideTaxSplit("29", "27", "DEEMED_EXPORT")).toBe("INTER");
   });
 });
 

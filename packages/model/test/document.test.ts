@@ -145,6 +145,18 @@ describe("invalid documents — each asserts the issue path", () => {
     d.supplyCategory = "SEZ_WITH_PAYMENT";
     expectIssueAt(d, "lines.0.cgst"); // CGST not allowed on SEZ supply
   });
+  it("same-state DEEMED_EXPORT is intra-state (CGST/SGST valid, IGST rejected)", () => {
+    const d = doc("intraInvoice");
+    d.supplyCategory = "DEEMED_EXPORT";
+    expectValid(d);
+    const inter = doc("interInvoice");
+    inter.supplyCategory = "DEEMED_EXPORT";
+    expectValid(inter);
+    const wrong = doc("interInvoice");
+    wrong.supplyCategory = "DEEMED_EXPORT";
+    wrong.placeOfSupply = "29";
+    expectIssueAt(wrong, "lines.0.igst");
+  });
   it("totals off by 0.01 (each field)", () => {
     for (const f of [
       "taxableValue",

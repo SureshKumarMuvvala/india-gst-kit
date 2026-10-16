@@ -1,11 +1,16 @@
 import type { StateCode, SupplyCategory, TaxSplit } from "./primitives.js";
 
+// Source: e-invoice validations — "In case of Exports and SEZ, the supply is always Interstate"
+// (sources/einvoice/generate-irn-validations.txt). Deemed exports are not listed, so they follow the states.
+// Retrieved: 2026-10-16
+// Status: UNVERIFIED — needs CA
 export function decideTaxSplit(
   supplierState: StateCode,
   placeOfSupply: StateCode,
   category: SupplyCategory = "DOMESTIC",
 ): TaxSplit {
-  return supplierState === placeOfSupply && category === "DOMESTIC" ? "INTRA" : "INTER";
+  const alwaysInter = category !== "DOMESTIC" && category !== "DEEMED_EXPORT";
+  return supplierState === placeOfSupply && !alwaysInter ? "INTRA" : "INTER";
 }
 
 // Source: UTGST Act 2017 s.2(8) and CGST Act s.2(114), as enacted — sources/acts/ (GST Council site)

@@ -194,16 +194,11 @@ describe("toIrnRequest — mapping", () => {
       const req = mapDoc(variant("interInvoice", { supplyCategory: "DEEMED_EXPORT" }));
       expect(req.TranDtls.SupTyp).toBe("DEXP");
     });
-    it("deemed export within one state: the model's IGST conflicts with decision D-Q3 → V11", () => {
-      // The model treats every non-DOMESTIC category as inter-state (IGST); source C and D-Q3 decide by state.
-      const doc = variant("interInvoice", {
-        supplyCategory: "DEEMED_EXPORT",
-        recipient: parties.recipientKa,
-        placeOfSupply: "29",
-      });
-      const r = toIrnRequest(doc);
-      expect(r.ok).toBe(false);
-      if (!r.ok) expect(hits(r.issues, "V11").length).toBeGreaterThan(0);
+    it("deemed export within one state is intra-state (CGST/SGST), as the model and D-Q3 agree", () => {
+      const req = mapDoc(variant("intraInvoice", { supplyCategory: "DEEMED_EXPORT" }));
+      expect(req.TranDtls.SupTyp).toBe("DEXP");
+      expect(req.ItemList[0]?.CgstAmt).toBe("90.00");
+      expect(req.ItemList[0]?.IgstAmt).toBe("0.00");
     });
   });
 
