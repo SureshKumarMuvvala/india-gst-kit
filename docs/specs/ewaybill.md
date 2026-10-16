@@ -1,6 +1,6 @@
 # Spec — `@india-gst-kit/ewaybill` (v0.1)
 
-Status: **draft 2026-10-16, for review**. The open questions in §14 need answers before the build. Every legal or official fact here is **UNVERIFIED — needs CA** until a chartered accountant signs it off in `docs/legal-facts.md`.
+Status: **approved 2026-10-16**; the questions in §14 were decided by the owner (§15). **Build order:** the ewaybill build starts only after the recon build PR is merged, because both change `@india-gst-kit/model` (§15 D-Q1). Every legal or official fact here is **UNVERIFIED — needs CA** until a chartered accountant signs it off in `docs/legal-facts.md`.
 
 Sources (captured 2026-10-16; see `sources/README.md`, section "E-way bill sources"):
 - **H**: EWB API v1.03 "Generate E-way Bill". Files `sources/ewaybill/generate-ewaybill-*`.
@@ -29,7 +29,7 @@ Where a source contradicts this spec, **the source wins**; the conflict is repor
   - Computing the validity period (`validUpto`); the rule is not in `sources/`.
   - Error-code descriptions (`api-error-codes-list.html`, not captured).
   - Everything that needs the portal's databases (§9).
-- ESM only, named exports, Zod 4 (peer `^4.0.0`), `decimal.js`, and `@india-gst-kit/model` as a dependency (`workspace:^`). The `@india-gst-kit/einvoice` dependency is open question Q1. Types are `z.infer`. Objects use `z.strictObject`.
+- ESM only, named exports, Zod 4 (peer `^4.0.0`), `decimal.js`, and `@india-gst-kit/model` as a dependency (`workspace:^`). `parseJsonLossless` and `PIN_RANGES` come from `@india-gst-kit/model` (D-Q1). `@india-gst-kit/einvoice` (`workspace:^`) is a dependency **only** for the `EwbDtls` schema/type. Types are `z.infer`. Objects use `z.strictObject`.
 
 ## 2. Numbers and JSON
 The same approach as `docs/specs/einvoice.md` §2. In memory, numbers are **strings**; in JSON text they are written as raw number literals and read back losslessly.
@@ -69,7 +69,7 @@ EwbTransportSchema = z.strictObject({
 });
 ```
 - Only the input's **shape** is checked here. The transport rules (§8.1) run on the mapped payload, so payloads built elsewhere get the same checks.
-- `shipTo` has no name or GSTIN: `shipToGSTIN`/`shipToTrdName` and `ExpShipDtls.Gstin`/`TrdNm` are commented out in H and I, and the "mandatory Ship-To GSTIN" change was put on hold on 30/07/2026 (L). See Q7.
+- `shipTo` has no name or GSTIN: `shipToGSTIN`/`shipToTrdName` and `ExpShipDtls.Gstin`/`TrdNm` are commented out in H and I, and the "mandatory Ship-To GSTIN" change was put on hold on 30/07/2026 (L). Not in v0.1 (D-Q7).
 - **Mode codes:** `ROAD → "1"`, `RAIL → "2"`, `AIR → "3"`, `SHIP → "4"`. K1's mode `5` "inTransit" is in no schema enum and is not supported.
 - **Vehicle types:** `REGULAR → "R"`, `ODC → "O"`.
 
@@ -102,9 +102,9 @@ Whether a supplier is enabled for e-invoicing is portal data and cannot be deriv
 | `ewbRoute` is `IRN` | `USE_IRN_ROUTE` | H validations |
 | no `fromPincode`: neither `dispatchFrom` nor `supplier.address.pincode` has one | `MISSING_PIN` | H `required` |
 | no `toPincode`: neither `shipTo` nor `recipient.address.pincode` has one | `MISSING_PIN` | H `required`; I/C "Pincode of Recipient GSTIN is mandatory if Ship-To details are not entered" |
-| `EXPORT_*` without `shipTo` | `EXPORT_NEEDS_PORT_SHIP_TO` | I/C: for exports "the address of port should have been passed as shipping address" (decision D-Q3) |
-| the tax split implied by the EWB state codes (V-G9) differs from `decideTaxSplit(supplier.stateCode, placeOfSupply, supplyCategory)`. Zero-tax documents are compared too, because the rates still follow the split | `STATE_SPLIT_MISMATCH` | H vs model §5 (open question Q4) |
-| a line's HSN has a leading zero | `HSN_LEADING_ZERO` | H `hsnCode` is a JSON number (open question Q2) |
+| `EXPORT_*` without `shipTo` | `EXPORT_NEEDS_PORT_SHIP_TO` | I/C: for exports "the address of port should have been passed as shipping address" (decision D-M3) |
+| the tax split implied by the EWB state codes (V-G9) differs from `decideTaxSplit(supplier.stateCode, placeOfSupply, supplyCategory)`. Zero-tax documents are compared too, because the rates still follow the split | `STATE_SPLIT_MISMATCH` | H vs model §5 (D-Q4; needs CA) |
+| a line's HSN has a leading zero | `HSN_LEADING_ZERO` | H `hsnCode` is a JSON number (D-Q2) |
 
 **Field mapping.** Party fields follow J, where J defines the same field for the IRN route.
 | EWB field | From | Notes |
@@ -129,7 +129,7 @@ Whether a supplier is enabled for e-invoicing is portal data and cannot be deriv
 | `totalValue` | `totals.taxableValue` | |
 | `cgstValue/sgstValue/igstValue` | `totals.cgst/sgst/igst` | `sgstValue` carries SGST **or UTGST**, as in the model |
 | `cessValue` | `totals.cess` | J: "sum of cess and cessNonAdvol at item level" (the model's `cess` already includes non-advol) |
-| `cessNonAdvolValue` | `"0.00"` | J maps `0` (decision D-Q2) |
+| `cessNonAdvolValue` | `"0.00"` | J maps `0` (decision D-M2) |
 | `otherValue` | `totals.otherCharges + totals.roundOff` (signed, 2 dp) | J: `OthChrg + StCesVal − Discount + RndOffAmt`; the model has no state cess and no invoice-level discount |
 | `totInvValue` | `totals.grandTotal` | |
 | `transMode` | from `transport.mode`; omitted if absent | §3 |
@@ -138,13 +138,13 @@ Whether a supplier is enabled for e-invoicing is portal data and cannot be deriv
 | `transDocNo/transDocDate` | `transport.transportDocNo` / `transportDocDate` → `DD/MM/YYYY`; omitted if absent | |
 | `vehicleNo/vehicleType` | from `transport`; omitted if absent | |
 | `itemList[i].productName` | omitted | J: "no value will be stored in product name" |
-| `productDesc` | `description` | H max 100; never truncated (Q3) |
-| `hsnCode` | `hsnSac` as a JSON number | Q2 |
+| `productDesc` | `description` | H max 100; never truncated (D-Q3) |
+| `hsnCode` | `hsnSac` as a JSON number | D-Q2 |
 | `quantity/qtyUnit` | `quantity` / `unit`; both omitted for a line without quantity | |
 | `taxableAmount` | `taxableValue` | |
-| `cgstRate/sgstRate/igstRate` | INTRA: `gstRate/2`, `gstRate/2`, `0`. INTER: `0`, `0`, `gstRate`. `BILL_OF_SUPPLY`: all `0` | J. The split comes from V-G9; D-Q1 covers bills of supply |
+| `cgstRate/sgstRate/igstRate` | INTRA: `gstRate/2`, `gstRate/2`, `0`. INTER: `0`, `0`, `gstRate`. `BILL_OF_SUPPLY`: all `0` | J. The split comes from V-G9; D-M1 covers bills of supply |
 | `cessRate` | `cessRate ?? "0"` | |
-| `cessNonadvol` | `"0"` | it is a **rate** (K4 lists it in Rs., Decimal(6,3)), and the model only has an amount. J maps `0` (D-Q2) |
+| `cessNonadvol` | `"0"` | it is a **rate** (K4 lists it in Rs., Decimal(6,3)), and the model only has an amount. J maps `0` (D-M2) |
 
 - **All lines are mapped**, including service lines, because H only forbids an all-service list.
 - The output never contains `dispatchFromGSTIN`, `dispatchFromTradeName`, `shipToGSTIN` or `shipToTrdName` (§3).
@@ -158,7 +158,7 @@ Whether a supplier is enabled for e-invoicing is portal data and cannot be deriv
   - `ExpShipDtls = { Addr1, Addr2, Loc, Pin, Stcd }` from `shipTo`.
   - `Stcd` is emitted 2-digit, as in einvoice (D5 there).
   - Neither the IRN nor the document is needed beyond that. Export port and dispatch addresses may be supplied here when the IRN lacked them (I validations).
-- `toIrnEwbDtls(movement)` returns `{ TransId, TransName, TransMode, Distance, TransDocNo, TransDocDt, VehNo, VehType }`. The type is `IrnRequest["EwbDtls"]` from `@india-gst-kit/einvoice`, if Q1 allows the dependency. Dispatch and ship-to belong in the IRN's own `DispDtls`/`ShipDtls`, which `einvoice` does not yet map (its §11). The caller attaches the block, and `validateIrnRequest` runs on the result.
+- `toIrnEwbDtls(movement)` returns `{ TransId, TransName, TransMode, Distance, TransDocNo, TransDocDt, VehNo, VehType }`. The type is `IrnRequest["EwbDtls"]` from `@india-gst-kit/einvoice` (the only use of that dependency, D-Q1). Dispatch and ship-to belong in the IRN's own `DispDtls`/`ShipDtls`, which `einvoice` does not yet map (its §11). The caller attaches the block, and `validateIrnRequest` runs on the result.
 
 ## 7. Schemas (`src/schema.ts`)
 `EwbRequestSchema` (H) and `EwbByIrnRequestSchema` (I) are Zod transcriptions of **every** constraint in the source files: lengths, patterns, enums, min/max and required fields, using the string number types from §2. Unknown keys are rejected.
@@ -167,7 +167,7 @@ Whether a supplier is enabled for e-invoicing is portal data and cannot be deriv
 - **H, GSTIN patterns.** H's patterns are unanchored and use `[0-9|A-Z]` (a literal `|` in the class). They are read as `^[0-9]{2}[0-9A-Z]{13}$`, which is stricter. `fromGstin`/`toGstin` additionally accept exactly `"URP"`, overriding `minLength 15` (§13 D2).
 - **H, `docDate`.** The unanchored date pattern is anchored. Its year part `20[1-2][0-9]` stays (§13 D3).
 - **H, `itemList`.** `items: [ {…} ]` (array form) is read as "every item".
-- **H, empty strings.** Optional string fields equal to `""` are treated as **absent** when validating (decision D-Q4): `transporterName`, `transporterId`, `transDocNo`, `transDocDate`, `vehicleNo`, `vehicleType` and `subSupplyDesc`. H's own sample sends `""`, and I/C say such fields "should be null or attributes should not have been passed". The mapper never emits `""`.
+- **H, empty strings.** Optional string fields equal to `""` are treated as **absent** when validating (decision D-M4): `transporterName`, `transporterId`, `transDocNo`, `transDocDate`, `vehicleNo`, `vehicleType` and `subSupplyDesc`. H's own sample sends `""`, and I/C say such fields "should be null or attributes should not have been passed". The mapper never emits `""`.
 - **I, top level.** I lists its properties at the top level, without `type`/`properties`, and puts `$schema` and `required` beside them. They are read as an object schema whose properties are all keys except `$schema` and `required`.
 - **I, character classes.** `[A-Z|a-z|0-9]` and `[O|R]` are read without `|`; for `VehType` the enum applies.
 
@@ -217,10 +217,10 @@ Each rule names the route variants where the sources differ.
 | V-G9 | Tax split: INTRA iff `fromStateCode = toStateCode`. INTRA ⇒ `igstValue = 0` and every `igstRate = 0`. INTER ⇒ CGST/SGST values and rates are 0 | H ("In case of one of the party is SEZ unit, then IGST" is covered by 99) |
 | V-G10 | `totalValue + cgstValue + sgstValue + igstValue + cessValue + cessNonAdvolValue + otherValue ≤ totInvValue + 2.00`. Skipped if `rspHsnRelaxation` (Notification 20/2025; its HSN list is not in `sources/`) | H, L (23/01/2026) |
 | V-G11 | 1 ≤ items ≤ 250. `hsnCode` is an integer of at most 8 digits. At least one HSN does not start with `99` | H |
-| V-G12 | `qtyUnit` ∈ K1 units (identical to the model's `UQC_CODES`). `quantity` beyond Decimal(8,2) (more than 2 dp or ≥ 10⁶) is a **warning** (Q5) | H, K1 |
+| V-G12 | `qtyUnit` ∈ K1 units (identical to the model's `UQC_CODES`). `quantity` beyond Decimal(8,2) (more than 2 dp or ≥ 10⁶) is a **warning** (D-Q5) | H, K1 |
 | V-G13 | Money fields ≤ 2 dp; rates ≤ 3 dp (`multipleOf`) | H schema |
 | V-G14 | "GSTR1 fields" present: the seven value fields; per item `cgstRate`, `sgstRate`, `igstRate`, `cessRate`, `cessNonadvol`, `taxableAmount` | H |
-| V-G15 | The address character sets from H's data structure. Addresses may contain only letters, digits, spaces and `# - /`; places only letters and spaces. **Warning** (Q6) | H data structure |
+| V-G15 | The address character sets from H's data structure. Addresses may contain only letters, digits, spaces and `# - /`; places only letters and spaces. **Warning** (D-Q6) | H data structure |
 | V-G16 | `transactionType ∈ 1..4` | H, K1 |
 | V-G17 | `supplierEInvoiceEnabled = true`, `docType = INV`, `docDate ≥ 01/10/2020`, and either `toGstin ≠ URP` with `subSupplyType = 1`, or `subSupplyType = 3` ⇒ error `USE_IRN_ROUTE`. If the option is `undefined`, a warning | H |
 
@@ -296,7 +296,7 @@ No function throws on bad data. They throw only on programmer errors.
 **mapping (by IRN / EwbDtls)**
 - Fields are mapped and omitted correctly; `Distance` is a number; `Stcd` is 2-digit.
 - `DispDtls` gets the name; `ExpShipDtls` has no `Gstin`.
-- `toIrnEwbDtls` output passes `validateIrnRequest` when attached to a mapped einvoice fixture (if Q1 allows the dependency).
+- `toIrnEwbDtls` output passes `validateIrnRequest` when attached to a mapped einvoice fixture.
 
 **serialise/parse**
 - `transDistance` is written as a JSON string and `Distance` as a number.
@@ -328,7 +328,7 @@ No function throws on bad data. They throw only on programmer errors.
   - V-G7 fails (`toStateCode 27` with a `29` GSTIN);
   - V-G10 passes (57100.23 ≤ 68360.00);
   - `vehicleNo "PVC1234"` matches a V-T6 shape;
-  - the `""` fields count as absent (D-Q4).
+  - the `""` fields count as absent (D-M4).
 - I sample: `Irn ""` fails V-B1 / the schema, and `TransId "12XXXXXX"` fails length 15 and V-T9. No other errors are expected; confirm this at build time.
 - Response samples: H's decrypted sample parses, with `ewayBillNo "123456789012"` and a warning on `validUpto "12.00:00 PM"`. I's sample parses with `EwbNo "111008683051"`.
 
@@ -339,7 +339,7 @@ No function throws on bad data. They throw only on programmer errors.
 - Synthetic data only, using only the GSTINs in `packages/fixtures/src/gstins.ts`. Transporter IDs in fixtures are synthetic GSTINs from that file.
 
 ## 13. Deviations and source contradictions (follow the sources, report)
-- **D1. The Ship-mode rules differ in H, I and C** (sources finding E2). Each route's validator applies its own source's rule (V-T4). Q8 asks whether to unify them.
+- **D1. The Ship-mode rules differ in H, I and C** (sources finding E2). Each route's validator applies its own source's rule (V-T4). They stay per route (D-Q8).
 - **D2. URP vs the GSTIN schema.** H's schema says `fromGstin`/`toGstin` are exactly 15 characters with a GSTIN pattern, but its validations say to pass `URP`. Following the schema would make every B2C e-way bill impossible, so `URP` is accepted. Only the exact string `URP` is accepted.
 - **D3. The `docDate` year pattern** `20[1-2][0-9]` rejects 2030 and later, as in einvoice D2. Kept.
 - **D4. Distance types and range.**
@@ -352,35 +352,54 @@ No function throws on bad data. They throw only on programmer errors.
   - A document whose recipient or dispatch state is 25 cannot be mapped to the Generate route: K2 lacks 25 (V-G7).
 - **D8. K4's tax-rate list is undated**, includes IGST 0.5 % (withdrawn per source C) and is not enforced (CLAUDE.md: no rate list without notifications and a CA). The portal will still reject rates outside its list; that is reported as "not checkable offline".
 - **D9. `toPincode`** has no min/max in H's schema, unlike `fromPincode`. The data structure says Number(6), so V-G8 requires 6 digits for both.
-- **D10. `quantity`** is Decimal(8,2) in H's data structure, while the schema has no limit and the model allows 3 dp. This is a warning only (Q5).
+- **D10. `quantity`** is Decimal(8,2) in H's data structure, while the schema has no limit and the model allows 3 dp. This is a warning only (D-Q5).
 - **D11. The official samples are inconsistent** (sources finding E5). The tests assert their exact failures rather than treating them as valid.
 
-## 14. Open questions (owner/CA decision needed before the build)
+## 14. Questions (decided by the owner on 2026-10-16; outcomes in §15)
 - **Q1. Dependency on `einvoice`.** The lossless JSON reader (`einvoice/src/lossless.ts`) and the PIN ranges (`pin-ranges.ts`) are needed here too, as is the `IrnRequest["EwbDtls"]` type. Options:
   - (a) `ewaybill` depends on `@india-gst-kit/einvoice`, which adds named exports `parseJsonLossless` and `PIN_RANGES`;
   - (b) move both into `@india-gst-kit/model`;
   - (c) duplicate them.
 
-  *Proposed: (a).*
-- **Q2. HSN with a leading zero** (chapters 01–09; e.g. `0101`). H types `hsnCode` as a JSON number, so the leading zero cannot be sent. Does the portal read `101` as `0101`? *Proposed: mapping error `HSN_LEADING_ZERO` until confirmed* (no silent change). The IRN routes are unaffected, because `HsnCd` is a string there.
-- **Q3. `productDesc` > 100 characters** (the model allows 300). J says the portal itself keeps "first 100 characters" on the IRN route. *Proposed: a validation error on the Generate route, never truncated (as einvoice D4).* The alternative is to truncate with a warning.
-- **Q4. `toStateCode`: recipient state or place of supply?** H's data structure describes `toStateCode` as "State of Supply", and J maps it from `BuyerDtls.Stcd`. H's tax-split rule compares `fromStateCode` with `toStateCode`, but the model splits on `placeOfSupply`. *Proposed: emit `recipient.stateCode` (J), and refuse to map (`STATE_SPLIT_MISMATCH`) when the two splits disagree.* Needs CA.
-- **Q5. Quantity precision:** should > 2 dp be an error, given Decimal(8,2)? *Proposed: a warning.*
-- **Q6. Address character sets** (V-G15): "Valid Special Chars #,-,/". Is a comma or full stop rejected by the portal? *Proposed: a warning.*
-- **Q7. Ship-to GSTIN.** It is on hold (L, 30/07/2026). When it is re-enabled, `shipTo` gains `gstin`/`tradeName`, and the withdrawn L rule (22/05/2026) that bill-to/ship-to needs "3 different parties" may return. *Proposed: not in v0.1.*
-- **Q8. Ship mode.** Keep per-route rules (D1), or apply one stricter combined rule? *Proposed: per route.*
-- **Q9. Zero-rated exports and SEZ supplies without payment.** Per J, `igstRate = gstRate` while `igstValue = 0`. Is that what the portal expects on the Generate route, or should the rate be 0? *Proposed: follow J* (decision D-Q1). Bills of supply send rate 0.
-- **Q10. Supplier is an SEZ unit** (outward). H defines 99 only for an SEZ **recipient** (outward) or an SEZ **supplier** on inward. *Proposed: `fromStateCode` = actual state.* Needs CA.
+  → **(b)**, D-Q1.
+- **Q2. HSN with a leading zero** (chapters 01–09; e.g. `0101`). H types `hsnCode` as a JSON number, so the leading zero cannot be sent. Does the portal read `101` as `0101`? → D-Q2. The IRN routes are unaffected, because `HsnCd` is a string there.
+- **Q3. `productDesc` > 100 characters** (the model allows 300). J says the portal itself keeps "first 100 characters" on the IRN route. → D-Q3.
+- **Q4. `toStateCode`: recipient state or place of supply?** H's data structure describes `toStateCode` as "State of Supply", and J maps it from `BuyerDtls.Stcd`. H's tax-split rule compares `fromStateCode` with `toStateCode`, but the model splits on `placeOfSupply`. → D-Q4.
+- **Q5. Quantity precision:** should > 2 dp be an error, given Decimal(8,2)? → D-Q5.
+- **Q6. Address character sets** (V-G15): "Valid Special Chars #,-,/". Is a comma or full stop rejected by the portal? → D-Q6.
+- **Q7. Ship-to GSTIN.** It is on hold (L, 30/07/2026). When it is re-enabled, `shipTo` gains `gstin`/`tradeName`, and the withdrawn L rule (22/05/2026) that bill-to/ship-to needs "3 different parties" may return. → D-Q7.
+- **Q8. Ship mode.** Keep per-route rules (D1), or apply one stricter combined rule? → D-Q8.
+- **Q9. Zero-rated exports and SEZ supplies without payment.** Per J, `igstRate = gstRate` while `igstValue = 0`. Is that what the portal expects on the Generate route, or should the rate be 0? → D-Q9.
+- **Q10. Supplier is an SEZ unit** (outward). H defines 99 only for an SEZ **recipient** (outward) or an SEZ **supplier** on inward. → D-Q10.
 
-## 15. Decisions (draft; each UNVERIFIED — needs CA)
-- **D-Q1** Rates: INTRA `gstRate/2` each; INTER `igstRate = gstRate`, including zero-rated supplies with zero values (J). Bill of supply: all rates 0.
-- **D-Q2** Cess: `cessValue = totals.cess`, `cessNonAdvolValue = 0`, item `cessNonadvol = 0` (J). The model has no per-unit non-advol rate.
-- **D-Q3** Exports need `shipTo` = the port address in India, for both the Generate and IRN routes (I/C validations; H "actual distance being travelled in the country").
-- **D-Q4** `""` in optional H string fields is treated as absent when validating; the mapper never emits `""`.
+## 15. Decisions (all UNVERIFIED; **Needs CA** where marked)
+
+### Owner decisions on §14 (2026-10-16)
+- **D-Q1** Option (b): `parseJsonLossless` and `PIN_RANGES` belong in `@india-gst-kit/model`.
+  - The recon build, running now, moves the lossless helper into `model`. The ewaybill build reuses it from there.
+  - The ewaybill build itself moves `PIN_RANGES` (from `einvoice/src/pin-ranges.ts`, with its `Source` header) into `model`, re-points `einvoice` to it, and adds a **model changeset**.
+  - `ewaybill` depends on `@india-gst-kit/einvoice` **only** for the `EwbDtls` schema/type (§6).
+  - **Build order:** the ewaybill build starts only after the recon build PR is merged, because both change `@india-gst-kit/model`.
+- **D-Q2** HSN with a leading zero: mapping error `HSN_LEADING_ZERO` until the portal's behaviour is confirmed. The code is never changed silently.
+- **D-Q3** `productDesc` > 100 characters: validation error on the Generate route. Never truncated.
+- **D-Q4** `toStateCode` = `recipient.stateCode` (J). The mapper refuses to map (`STATE_SPLIT_MISMATCH`) when the EWB split and the model's split disagree. **Needs CA.**
+- **D-Q5** Quantity with more than 2 dp (or ≥ 10⁶): warning (V-G12).
+- **D-Q6** Address or place characters outside the stated set: warning (V-G15).
+- **D-Q7** Ship-to GSTIN/trade name: not in v0.1.
+- **D-Q8** Ship-mode rules stay per route (V-T4, D1).
+- **D-Q9** Zero-rated exports and SEZ supplies without payment follow J: `igstRate = gstRate` with `igstValue = 0` (D-M1). **Needs CA.**
+- **D-Q10** Outward supply by an SEZ unit: `fromStateCode` = the supplier's actual state. **Needs CA.**
+- **E6** (sources finding): `29ABCDE8755F1Z2` is a page placeholder, not an official test GSTIN. Recording it as a finding, not a stop, was correct.
+
+### Mapping decisions
+- **D-M1** Rates: INTRA `gstRate/2` each; INTER `igstRate = gstRate`, including zero-rated supplies with zero values (J). Bill of supply: all rates 0.
+- **D-M2** Cess: `cessValue = totals.cess`, `cessNonAdvolValue = 0`, item `cessNonadvol = 0` (J). The model has no per-unit non-advol rate.
+- **D-M3** Exports need `shipTo` = the port address in India, for both the Generate and IRN routes (I/C validations; H "actual distance being travelled in the country").
+- **D-M4** `""` in optional H string fields is treated as absent when validating; the mapper never emits `""`.
 
 ## 16. Deferred
 - Inward EWBs; delivery challans, bills of entry and "others"; sub-types other than 1 and 3.
-- Ship-to/dispatch-from GSTINs (Q7).
+- Ship-to/dispatch-from GSTINs (D-Q7).
 - Part-B update, cancel, reject, extend, consolidated and multi-vehicle EWBs.
 - Validity calculation; error-code descriptions.
 - The RSP HSN list (Notification 20/2025-CT, **file to attach**: the notification PDF from cbic-gst.gov.in).
@@ -392,6 +411,7 @@ No function throws on bad data. They throw only on programmer errors.
 As in CLAUDE.md. Specific to this package:
 - `EWB_STATE_CODES`, the K3 mapping and the K1 code lists are legal lists the package **enforces**. Each lives in its own file with a `Source`/`Retrieved`/`Status` header and a `docs/legal-facts.md` row. If a source file is missing at build time, stop.
 - If H and I/C disagree in a way §13 does not cover, apply the stricter rule and report it.
+- Do not start the build before the recon build PR is merged (D-Q1): both change `@india-gst-kit/model`.
 - Never use `29ABCDE8755F1Z2`, or the GSTINs hidden in the HTML comments, as valid data.
 
 ## 18. `docs/legal-facts.md` rows to add (at build time)
@@ -407,4 +427,5 @@ Each row: source URL (H, I, J, K1–K4, L), retrieved 2026-10-16, status UNVERIF
 - The vehicle-number shapes (K1, as interpreted in §8.4).
 - The transport-mode rules, including the three Ship variants.
 - The IRN → EWB field mapping (J, `map.ts`).
-- The decisions D-Q1 to D-Q4, one row each, marked "Design decision".
+- The decisions D-M1 to D-M4 and D-Q2 to D-Q10, one row each, marked "Design decision" (D-Q4, D-Q9 and D-Q10 additionally "needs CA").
+- `PIN_RANGES` moves to `packages/model/src/` (D-Q1): update the file path of its existing row.
