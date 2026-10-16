@@ -1,6 +1,6 @@
 # Official sources
 
-Everything under `sources/` was captured on **2026-10-16** from the official sites below, through a browser in India (the cloud build environment cannot reach these sites). Each file was checked against the live page by SHA-256 at capture time.
+Everything under `sources/` was captured on **2026-10-16** from the official sites below, through a browser in India (the cloud build environment cannot reach these sites). Each e-invoice file was checked against the live page by SHA-256 at capture time; the GSTR-2B files (`recon/`) were downloaded by hand and are recorded with the hash of the file as uploaded.
 
 Status of every fact taken from these files: **UNVERIFIED — needs CA**, until signed off in `docs/legal-facts.md`.
 
@@ -16,6 +16,15 @@ Status of every fact taken from these files: **UNVERIFIED — needs CA**, until 
 | `einvoice/generate-irn-json-schema.json` | https://einv-apisandbox.nic.in/version1.03/generate-irn.html#JSONSchema | Source **C**. Whitespace re-indented; content identical (compact-JSON sha256 `92e10dda…c298d` equals the page). Schema quirks such as keys with trailing spaces (`"AddlDocDtls "`) and `"type": " number"` are the publisher's and are kept as published. | equal |
 | `einvoice/generate-irn-validations.txt` | same page, section "Validations" | Source **C**. Whitespace-normalised text (sha256 `a21aeab3…5b9e1` equals the page) | equal |
 | `einvoice/sample-signed-einvoice.json` | https://einvoice1.gst.gov.in/Documents/SampleJson.json | Official sample IRN response (signed invoice + signed QR JWTs); for the `einvoice` package. Re-indented; compact-JSON sha256 `27d5bbe0…59066` equals the page | equal |
+
+### GSTR-2B (Track C, `recon`)
+
+Captured by hand from https://developer.gst.gov.in/apiportal/taxpayer/returns on 2026-10-16. Full provenance, the v4.4 → v4.5 change summary and the schema quirks are in `recon/README.md`.
+
+| File | Official page | Notes | SHA-256 |
+|---|---|---|---|
+| `recon/gstr2b-get-all-details-v4.5-response-schema.json` | https://developer.gst.gov.in/apiportal/taxpayer/returns (GSTR-2B Get All Details, response) | Source **H**, authoritative. v4.5, **Draft**, published 20-07-2026 | `3351e86b…02e95` (file as uploaded; not checked against the live page) |
+| `recon/gstr2b-get-all-details-v4.4-response-schema.json` | same page | v4.4, **Draft**, published 25-02-2026; kept for the change summary only | `80ef571d…2b000` (same) |
 
 Not captured: the Port Code table (1,062 rows) on the master-codes page — only needed for export details, which are deferred.
 
