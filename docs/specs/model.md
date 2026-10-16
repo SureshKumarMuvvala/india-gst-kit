@@ -158,6 +158,7 @@ export function parseGstin(gstin: string):
   { stateCode: StateCode; panOrId: string; entityCode: string; checkDigit: string } | undefined;
 ```
 - Structure: source C publishes only the loose pattern `^[0-9]{2}[0-9A-Z]{13}$` (supplier/e-commerce); buyer/ship-to also allow `URP` (unregistered person, exports) — a recipient-level concept handled by `registrationType`, not a GSTIN. No PAN-structured, TDS or TCS pattern is published, so none is enforced; TDS/TCS/non-resident-shaped GSTINs pass if they match the loose pattern and check digit. The first two digits must be a state code from §6.1 other than 96/99.
+- Temporary IDs: a value shaped 2-digit state + 10 digits + `TMP` (observed on a real document) fails with its own message "looks like a temporary ID, not a GSTIN" (`isTemporaryId`), not a check-digit error. It is still rejected.
 - Check digit: no official algorithm document exists (source D not found); the publicly documented **mod-36** algorithm (charset `0-9A-Z`, alternating weights 1/2 across the first 14 chars, sum of quotient+remainder of each product by 36, check = (36 − sum mod 36) mod 36), marked UNVERIFIED. No official sample GSTINs exist (source E); the portal's illustrative samples (`37BZNPM9430M1KL`, `03BZNPM9430M1KL`) fail mod-36 and are **not** used as valid. Tests use synthetic GSTINs with computed check digits. `scripts/verify-gstin.mjs` lets the owner check real GSTINs privately from a gitignored local file.
 
 ### 6.5 Supply decision and UTGST (`supply.ts`)
@@ -166,9 +167,9 @@ export function decideTaxSplit(
   supplierState: StateCode, placeOfSupply: StateCode,
   category?: SupplyCategory, // default "DOMESTIC"
 ): TaxSplit;                 // INTRA iff same state AND DOMESTIC
-export function usesUtgst(stateCode: StateCode): boolean; // UTGST Act s.2(8) territories, UNVERIFIED
+export function usesUtgst(stateCode: StateCode): boolean | "unknown"; // UTGST Act s.2(8) territories, UNVERIFIED
 ```
-`usesUtgst` is true for the territories in UTGST Act 2017 s.2(8) / CGST Act s.2(114) as enacted (`sources/acts/`): Andaman and Nicobar (35), Lakshadweep (31), Dadra and Nagar Haveli (26), Daman and Diu (25), Chandigarh (04), other territory (97). Later amendments (e.g. Ladakh, the 2020 Dadra/Daman merger) were not retrieved; Ladakh (38) therefore returns false — logged for CA. The `sgst` field holds SGST or UTGST; `usesUtgst(placeOfSupply)` tells consumers which label applies. The model stores one field so arithmetic and validation are identical for both.
+`usesUtgst` is true for the territories in UTGST Act 2017 s.2(8) / CGST Act s.2(114) as enacted (`sources/acts/`): Andaman and Nicobar (35), Lakshadweep (31), Dadra and Nagar Haveli (26), Daman and Diu (25), Chandigarh (04), other territory (97). Later amendments (e.g. Ladakh, the 2020 Dadra/Daman merger) were not retrieved; the Council site's search and Act pages (2026-10-16) offer no such amendment, so Ladakh (38) returns `"unknown"` rather than a guess — logged for CA. The `sgst` field holds SGST or UTGST; `usesUtgst(placeOfSupply)` tells consumers which label applies. The model stores one field so arithmetic and validation are identical for both.
 
 ### 6.6 Money (`money.ts`)
 ```ts
@@ -217,7 +218,7 @@ Facts tracked: state codes; UQC codes; GST rates offered and legacy with effecti
 **uqc** — no duplicates; `isUqcCode` true/false.
 **rates** — `GstRate` accepts `0`, `5`, `2.5`, `0.25`, `999.999`; rejects `-1`, `1000`, `5.0000`, `05`, `abc`.
 **gstin** — synthetic GSTINs with computed check digits are valid; each wrong check digit invalid; wrong length, lowercase, unknown state prefix, `96`/`99` prefix rejected; the portal's two illustrative sample GSTINs are invalid; `parseGstin` extracts state and PAN/ID.
-**supply** — same state DOMESTIC → INTRA; different → INTER; same state + SEZ/EXPORT/DEEMED_EXPORT → INTER; `usesUtgst` true for 04, 25, 26, 31, 35, 97; false for states, Delhi, Puducherry, J&K, Ladakh (see §6.5).
+**supply** — same state DOMESTIC → INTRA; different → INTER; same state + SEZ/EXPORT/DEEMED_EXPORT → INTER; `usesUtgst` true for 04, 25, 26, 31, 35, 97; false for states, Delhi, Puducherry, J&K; `"unknown"` for Ladakh 38 (see §6.5).
 **money / computeLineTax** — half-up at `.005` boundaries (`0.005 → 0.01`, `0.0049 → 0.00`); exact sums over many lines; **odd-paisa cases under both conventions**, e.g. taxable `100.10` @ 5 % (`5.005` → T = `5.01`): remainder-to-sgst → cgst `2.51` (`round2(2.505)`), sgst `2.50`; equal-halves → `2.50` / `2.50` (`100.10 × 2.5 % = 2.5025`, sum `5.00`); INTER → igst `5.01`. Both INTRA results pass validation.
 **line schema** — taxable = gross − discount; discount > gross rejected; goods line without qty rejected; service line with non-99 SAC rejected; unit without qty rejected; cess arithmetic; INTRA line passes under each convention; `|cgst − sgst| = 0.02` rejected; cgst + sgst off by 0.02 rejected.
 **document schema** — valid: intra tax invoice, inter tax invoice, B2C unregistered, bill of supply, credit note, debit note, composition bill of supply, composition credit note, UT place of supply, document with a zero-rate line. Invalid (each asserts the issue `path`): note without originalDocument; invoice with originalDocument; original date after note date; IGST on intra; CGST on inter; totals off by 0.01; roundOff ≥ 1; supplier without GSTIN; GSTIN/state mismatch; composition supplier issuing TAX_INVOICE; composition supplier charging tax on a credit note; same GSTIN both sides; non-contiguous lineNo; empty lines; export-without-payment with non-zero tax.
@@ -232,4 +233,4 @@ Facts tracked: state codes; UQC codes; GST rates offered and legacy with effecti
 - `pnpm check` can't be made green without weakening strictness or lint rules → stop and report.
 
 ## 12. Deferred (TODO after v0.1)
-`UIN_HOLDER` registration type; export details (port, shipping bill, currency); other document kinds; invoice-level discount — needs CA; `GST_RATES_OFFERED` / `GST_RATES_LEGACY` / `rateInForceOn` and any rate-list validation — needs rate notifications + CA; e-invoice/GSTR-1 mappings (other packages).
+`UIN_HOLDER` registration type; export details (port, shipping bill, currency); other document kinds; invoice-level discount — needs CA; `GST_RATES_OFFERED` / `GST_RATES_LEGACY` / `rateInForceOn` and any rate-list validation — needs rate notifications + CA; accepting temporary IDs (`…TMP`) as recipients; e-invoice/GSTR-1 mappings (other packages).

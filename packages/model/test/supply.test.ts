@@ -25,11 +25,14 @@ describe("usesUtgst (UTGST Act 2017 s.2(8) as enacted â€” UNVERIFIED, see spec Â
   it("true for A&N, Lakshadweep, D&NH, D&D, Chandigarh, other territory", () => {
     for (const c of ["35", "31", "26", "25", "04", "97"] as const) expect(usesUtgst(c)).toBe(true);
   });
-  it("false for states, Delhi, Puducherry, J&K and Ladakh (amendments not retrieved)", () => {
-    const utgst = new Set(["35", "31", "26", "25", "04", "97"]);
+  it("false for states, Delhi, Puducherry and J&K", () => {
+    const notFalse = new Set(["35", "31", "26", "25", "04", "97", "38"]);
     for (const s of STATE_CODES) {
-      if (!utgst.has(s.code)) expect(usesUtgst(s.code)).toBe(false);
+      if (!notFalse.has(s.code)) expect(usesUtgst(s.code)).toBe(false);
     }
-    for (const c of ["07", "34", "01", "38"] as const) expect(usesUtgst(c)).toBe(false);
+    for (const c of ["07", "34", "01"] as const) expect(usesUtgst(c)).toBe(false);
+  });
+  it('"unknown" for Ladakh (38): the amending law was not retrieved, so never silently wrong', () => {
+    expect(usesUtgst("38")).toBe("unknown");
   });
 });

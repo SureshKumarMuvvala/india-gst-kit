@@ -12,4 +12,6 @@ Definition (UTGST Act s.2(8); CGST Act s.2(114)): Andaman and Nicobar Islands; L
 
 Limitation: these are the Acts as enacted plus the 2018 amendment. Later changes (Ladakh as a separate UT, the 2020 merger of Dadra and Nagar Haveli with Daman and Diu) were **not** retrieved.
 
+Ladakh search (2026-10-16): the GST Council pages https://gstcouncil.gov.in/utgst and https://gstcouncil.gov.in/central-gst list only the 2017 Acts, the 2018/2023 CGST amendments, the J&K extension Act and the UTGST 2018 amendment; the site search for "ladakh" returns only notifications and Council-meeting papers. No amendment covering Ladakh was found, so `usesUtgst("38")` returns `"unknown"`. To resolve: attach the Gazette text that amends UTGST s.2(8) / CGST s.2(114) for Ladakh.
+
 Not fetched: rate notifications (source F). `taxinformation.cbic.gov.in` fails TLS verification from the build environment; `cbic-gst.gov.in` does not host rates. Deferred (spec §12).
