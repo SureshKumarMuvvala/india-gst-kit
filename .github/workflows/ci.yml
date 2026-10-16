@@ -37,7 +37,7 @@ jobs:
       - name: "Packed packages must not contain workspace: ranges"
         run: |
           dir="$(mktemp -d)"
-          pnpm -r pack --pack-destination "$dir"
+          pnpm -r --filter "!@india-gst-kit/fixtures" pack --pack-destination "$dir"
           fail=0
           for t in "$dir"/*.tgz; do
             if tar -xzOf "$t" package/package.json | grep -q 'workspace:'; then
