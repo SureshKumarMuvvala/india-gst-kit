@@ -22,3 +22,4 @@ export * from "./schema/party.js";
 export * from "./schema/line.js";
 export * from "./schema/document.js";
 export * from "./lossless.js";
+export { PIN_RANGES } from "./pin-ranges.js";
