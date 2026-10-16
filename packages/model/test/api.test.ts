@@ -16,6 +16,7 @@ describe("api surface", () => {
       "isGstinStructurallyValid",
       "gstinCheckDigit",
       "isValidGstin",
+      "isTemporaryId",
       "parseGstin",
       "decideTaxSplit",
       "usesUtgst",

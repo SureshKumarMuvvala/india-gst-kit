@@ -9,7 +9,13 @@ export {
   stateName,
 } from "./states.js";
 export { UQC_CODES, isUqcCode } from "./uqc.js";
-export { gstinCheckDigit, isGstinStructurallyValid, isValidGstin, parseGstin } from "./gstin.js";
+export {
+  gstinCheckDigit,
+  isGstinStructurallyValid,
+  isTemporaryId,
+  isValidGstin,
+  parseGstin,
+} from "./gstin.js";
 export { decideTaxSplit, usesUtgst } from "./supply.js";
 export { computeLineTax, money, sumMoney } from "./money.js";
 export * from "./schema/party.js";

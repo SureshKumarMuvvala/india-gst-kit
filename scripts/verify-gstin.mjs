@@ -5,7 +5,7 @@
 //   node scripts/verify-gstin.mjs [file]        # default: scripts/local/gstins.txt (gitignored)
 //
 // The file holds one GSTIN per line; blank lines and `#` comments are ignored. Nothing is printed
-// except PASS/FAIL per line, and nothing is written anywhere. Never commit real GSTINs.
+// except PASS/FAIL per line (GSTIN masked), and nothing is written anywhere. Never commit real GSTINs.
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -14,13 +14,16 @@ if (!existsSync(fileURLToPath(modelEntry))) {
   console.error("Build the model first: pnpm --filter @india-gst-kit/model build");
   process.exit(2);
 }
-const { gstinCheckDigit, isGstinStructurallyValid, isValidGstin } = await import(modelEntry.href);
+const { isGstinStructurallyValid, isValidGstin } = await import(modelEntry.href);
 
 const file = process.argv[2] ?? fileURLToPath(new URL("./local/gstins.txt", import.meta.url));
 if (!existsSync(file)) {
   console.error(`No input file: ${file}\nCreate it (it is gitignored) with one GSTIN per line.`);
   process.exit(2);
 }
+
+// Output never shows a full GSTIN: first 4 + last 3 characters, e.g. 36LG…1ZM.
+const mask = (g) => (g.length > 7 ? `${g.slice(0, 4)}…${g.slice(-3)}` : "…");
 
 let failed = 0;
 let total = 0;
@@ -29,18 +32,16 @@ for (const raw of readFileSync(file, "utf8").split(/\r?\n/)) {
   if (gstin === "" || gstin.startsWith("#")) continue;
   total += 1;
   if (isValidGstin(gstin)) {
-    console.log(`PASS  ${gstin}`);
+    console.log(`PASS  ${mask(gstin)}`);
     continue;
   }
   failed += 1;
   if (!isGstinStructurallyValid(gstin)) {
     console.log(
-      `FAIL  ${gstin}  (structure: need 15 chars [0-9A-Z], a valid state code, not 96/99)`,
+      `FAIL  ${mask(gstin)}  (structure: need 15 chars [0-9A-Z], a valid state code, not 96/99)`,
     );
   } else {
-    console.log(
-      `FAIL  ${gstin}  (check digit: expected ${gstinCheckDigit(gstin.slice(0, 14))}, got ${gstin.charAt(14)})`,
-    );
+    console.log(`FAIL  ${mask(gstin)}  (check digit mismatch)`);
   }
 }
 console.log(
