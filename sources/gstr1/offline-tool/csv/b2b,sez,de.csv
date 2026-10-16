@@ -1,0 +1,16 @@
+GSTIN/UIN of Recipient,Receiver Name,Invoice Number,Invoice date,Invoice Value,Place Of Supply,Reverse Charge,Applicable % of Tax Rate,Invoice Type,E-Commerce GSTIN,Rate,Taxable Value,Cess Amount
+[REDACTED-GSTIN],xyz,1000,14-Jul-17,50000,37-Andhra Pradesh,N,65,Intra-State supplies attracting IGST,,12,45000,756
+[REDACTED-GSTIN],xyz,A1001,14-Jul-17,43000,12-Arunachal Pradesh,N,,Deemed Exp,,5,40000,
+[REDACTED-GSTIN],xyz,1000A,14-Jul-17,42000,36-Telangana,N,,Deemed Exp,,12,40000,
+[REDACTED-GSTIN],xyz,A/1001,14-Jul-17,55000,05-Uttarakhand,Y,,Regular B2B,,28,50000,6700
+[REDACTED-GSTIN],xyz,A/1002,14-Jul-17,40330,05-Uttarakhand,Y,,Regular B2B,,0.25,40000,
+[REDACTED-GSTIN],xyz,A/1003,14-Jul-17,50000,37-Andhra Pradesh,N,,Regular B2B,,12,10000,
+[REDACTED-GSTIN],xyz,A/1003,14-Jul-17,60000,37-Andhra Pradesh,N,,Regular B2B,,5,35000,
+[REDACTED-GSTIN],xyz,1/1005,14-Jul-17,44000,37-Andhra Pradesh,N,65,Regular B2B,[REDACTED-GSTIN],12,40000,500
+[REDACTED-GSTIN],xyz,A-10010,14-Jul-17,26000,37-Andhra Pradesh,N,,Intra-State supplies attracting IGST,,18,25000,
+[REDACTED-GSTIN],xyz,1-10010,15-Jul-17,48000,36-Telangana,N,,SEZ supplies without payment,,0,40000,
+[REDACTED-GSTIN],xyz,A-KNP/1000/06-17,15-Jul-17,45000,37-Andhra Pradesh,N,,Intra-State supplies attracting IGST,,3,40000,
+[REDACTED-GSTIN],xyz,06-17/LKO/1052,15-Jul-17,43000,37-Andhra Pradesh,N,,Regular B2B,[REDACTED-GSTIN],12,40000,
+[REDACTED-GSTIN],xyz,06-17/LKO/1053,15-Jul-17,43000,37-Andhra Pradesh,N,65,Intra-State supplies attracting IGST,[REDACTED-GSTIN],28,40000,5000
+[REDACTED-GSTIN],xyz,A1001,14-Jul-17,43000,12-Arunachal Pradesh,N,,Deemed Exp,,12,40000,
+[REDACTED-GSTIN],abc,A2001,3-Mar-20,43000,25-Daman & Diu,N,,Regular B2B,,6,40000,

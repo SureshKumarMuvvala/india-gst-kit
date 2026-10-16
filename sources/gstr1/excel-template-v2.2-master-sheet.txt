@@ -1,0 +1,54 @@
+Source: GSTR1_Excel_Workbook_Template_V2.2.xlsx, worksheet "master" (drop-down lists), inside
+        https://tutorial.gst.gov.in/offlineutilities/returns/gst_offline_tool.zip
+Retrieved: 2026-10-16
+xlsx SHA-256: 425084547928a31eab53123b9247bad9ded1ee421fbc9202d009260e5d9b18e5
+Status: UNVERIFIED — needs CA
+Full sheet, verbatim cell text. Each line = "<Excel row> <non-empty cells joined by ' | '>" — columns shift left
+where a column has ended, so read with the header row (row 1). UQC list = 45 codes, identical to sources/einvoice/master-codes/uqc.csv.
+---
+1 UQC | Export Type | Reverse Charge/Provisional Assessment | Note Type | Type | Tax Rate | POS | Invoice Type | Nature  of Document | UR Type | Supply Type  | Month | Financial Year | Differential Percentage | POS96 | Nature of Supply
+2 BAG-BAGS | WOPAY | N | C | OE | 0 | 01-Jammu & Kashmir | Regular B2B | Invoices for outward supply | B2CL | Inter State | JANUARY | 2017-18 | 01-Jammu & Kashmir | Liable to collect tax u/s 52(TCS)
+3 BAL-BALE | WPAY | Y | D | E | 0.1 | 02-Himachal Pradesh | SEZ supplies with payment | Invoices for inward supply from unregistered person | EXPWP | Intra State | FEBRUARY | 2018-19 | 65.00 | 02-Himachal Pradesh | Liable to pay tax u/s 9(5)
+4 BDL-BUNDLES | 0.25 | 03-Punjab | SEZ supplies without payment | Revised Invoice | EXPWOP | MARCH | 2019-20 | 03-Punjab
+5 BKL-BUCKLES | 1 | 04-Chandigarh | Deemed Exp | Debit Note | APRIL | 2020-21 | 04-Chandigarh
+6 BOU-BILLION OF UNITS | 1.5 | 05-Uttarakhand | Intra-State supplies attracting IGST | Credit Note | MAY | 2021-22 | 05-Uttarakhand
+7 BOX-BOX | 3 | 06-Haryana | Regular | Receipt Voucher | JUNE | 2022-23 | 06-Haryana
+8 BTL-BOTTLES | 5 | 07-Delhi | Deemed Exp | Payment Voucher | JULY | 2023-24 | 07-Delhi
+9 BUN-BUNCHES | 6 | 08-Rajasthan | SEZ supplies with payment | Refund Voucher | AUGUST | 2024-25 | 08-Rajasthan
+10 CAN-CANS | 7.5 | 09-Uttar Pradesh | SEZ supplies without payment | Delivery Challan for job work | SEPTEMBER | 2025-26 | 09-Uttar Pradesh
+11 CBM-CUBIC METERS | 12 | 10-Bihar | Delivery Challan for supply on approval | OCTOBER | 10-Bihar
+12 CCM-CUBIC CENTIMETERS | 18 | 11-Sikkim | Delivery Challan in case of liquid gas | NOVEMBER | 11-Sikkim
+13 CMS-CENTIMETERS | 28 | 12-Arunachal Pradesh | Delivery Challan in case other than by way of supply (excluding at S no. 9 to 11) | DECEMBER | 12-Arunachal Pradesh
+14 CTN-CARTONS | 40 | 13-Nagaland | 13-Nagaland
+15 DOZ-DOZENS | 14-Manipur | 14-Manipur
+16 DRM-DRUMS | 15-Mizoram | 15-Mizoram
+17 GGK-GREAT GROSS | 16-Tripura | 16-Tripura
+18 GMS-GRAMMES | 17-Meghalaya | 17-Meghalaya
+19 GRS-GROSS | 18-Assam | 18-Assam
+20 GYD-GROSS YARDS | 19-West Bengal | 19-West Bengal
+21 KGS-KILOGRAMS | 20-Jharkhand | 20-Jharkhand
+22 KLR-KILOLITRE | 21-Odisha | 21-Odisha
+23 KME-KILOMETRE | 22-Chhattisgarh | 22-Chhattisgarh
+24 LTR-LITRES | 23-Madhya Pradesh | 23-Madhya Pradesh
+25 MLT-MILILITRE | 24-Gujarat | 24-Gujarat
+26 MTR-METERS | 25-Daman & Diu | 25-Daman & Diu
+27 MTS-METRIC TON | 26-Dadra & Nagar Haveli & Daman & Diu | 26-Dadra & Nagar Haveli & Daman & Diu 
+28 NOS-NUMBERS | 27-Maharashtra | 27-Maharashtra
+29 PAC-PACKS | 29-Karnataka | 29-Karnataka
+30 PCS-PIECES | 30-Goa | 30-Goa
+31 PRS-PAIRS | 31-Lakshdweep | 31-Lakshdweep
+32 QTL-QUINTAL | 32-Kerala | 32-Kerala
+33 ROL-ROLLS | 33-Tamil Nadu | 33-Tamil Nadu
+34 SET-SETS | 34-Puducherry | 34-Puducherry
+35 SQF-SQUARE FEET | 35-Andaman & Nicobar Islands | 35-Andaman & Nicobar Islands
+36 SQM-SQUARE METERS | 36-Telangana | 36-Telangana
+37 SQY-SQUARE YARDS | 37-Andhra Pradesh | 37-Andhra Pradesh
+38 TBS-TABLETS | 38-Ladakh | 38-Ladakh
+39 TGM-TEN GROSS | 97-Other Territory | 96-Foreign Country
+40 THD-THOUSANDS | 97-Other Territory
+41 TON-TONNES
+42 TUB-TUBES
+43 UGS-US GALLONS
+44 UNT-UNITS
+45 YDS-YARDS
+46 OTH-OTHERS

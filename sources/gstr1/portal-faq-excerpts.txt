@@ -1,0 +1,52 @@
+Source: GST Portal - Known Issues & Suggested Solutions (Return Issue No. 11, page 27 of 73)
+        https://tutorial.gst.gov.in/offlineutilities/gsterrorandresolution/gstissuesandsuggestedsolutions.pdf
+Retrieved: 2026-10-16
+PDF SHA-256: ded23f944f793f1929a23e96d5e5f47d8bb20534e3c88bbe9869a94d3a21b1bc
+Status: UNVERIFIED — needs CA
+Excerpt (pdftotext -layout), verbatim:
+---
+Return Issue No.11
+Category: Return
+Sub-Category / Form: GSTR 1
+Issue/Error Message:
+2.1.11. File could not be uploaded
+When this issue/error comes: While filing offline
+Suggested solution:
+Download the latest version of Offline tool to generate the JSON file' or 'JSON
+Structure Validation'. Please follow the steps given below to understand the
+issue with the JSON if you are getting the error 'File could not be uploaded! -
+1. Go to https://developer.gst.gov.in/apiportal/taxpayer/returns
+2. Click on View API List.
+3. click on `GSTR1 - Save GSTR1 data' and then version-v1.1 (On third page).
+4. Click on Request Payload and then click on Download Schema.
+5. Go to https://www.jsonschemavalidator.net/
+6. Copy the schema and paste in Select schema: on
+https://www.jsonschemavalidator.net/ (first tab)
+7. copy the JSON which is throwing error and paste in Input JSON: (second tab)
+and Click on the format tab. The errors in the JSON will appear.
+8. Correct the mentioned errors in the offline tool and generate the JSON again.
+(For example- In the generated JSON if in HSN section uqc i.e unit of
+measurement is missing which is required property. Kindly fill the required
+property and then try to upload the corrected json).
+
+
+===
+Source: "FAQs and User Manual  Returns Offline Tool.pdf", inside gst_offline_tool.zip (see sources/gstr1/README.md)
+PDF SHA-256: 81a819f9a1399e5057fbe14da2a1b17265c081a4516397de31ac132d3c1b972c
+Excerpt (FAQ 42-43), verbatim:
+---
+8. Generating JSON File by using Returns offline tool
+
+42. What will be file extension of generated file from Offline tool for FORM GSTR-1/ IFF?
+
+A JSON file with file extension .JSON gets generated from the Offline tool. Once the JSON file
+is generated from Offline Tool, by default the JSON file will be named in the below format:
+retruns_ReturnPeriod_Returns_GSTIN of Supplier_offline.json
+Note: Maximum size of the JSON file must not exceed 5 MB. Right click on the file and click on
+Properties to see the size of the JSON file.
+
+43. What will happen if the file size of generated JSON is more than 5 MB?
+
+GST Portal doesn't allow the JSON file to be uploaded with file size more than 5 MB. If the
+JSON file is more than 5 MB, then:
+

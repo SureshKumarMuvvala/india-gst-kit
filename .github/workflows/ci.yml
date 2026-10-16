@@ -34,3 +34,15 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
       - run: pnpm build
+      - name: "Packed packages must not contain workspace: ranges"
+        run: |
+          dir="$(mktemp -d)"
+          pnpm -r --filter "!@india-gst-kit/fixtures" pack --pack-destination "$dir"
+          fail=0
+          for t in "$dir"/*.tgz; do
+            if tar -xzOf "$t" package/package.json | grep -q 'workspace:'; then
+              echo "::error title=workspace: in packed package::$(basename "$t") still contains a workspace: range"
+              fail=1
+            fi
+          done
+          exit "$fail"
