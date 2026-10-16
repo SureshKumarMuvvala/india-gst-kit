@@ -21,3 +21,4 @@ export { computeLineTax, money, sumMoney } from "./money.js";
 export * from "./schema/party.js";
 export * from "./schema/line.js";
 export * from "./schema/document.js";
+export * from "./lossless.js";

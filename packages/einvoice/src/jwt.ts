@@ -7,10 +7,10 @@
 // `signatureVerified: false`.
 import { z } from "zod";
 import { toIrnIssues } from "./json.js";
-import { convertNumbers, parseJsonLossless, parseLenient, pathStartsWith } from "./lossless.js";
+import { markNumber, parseJsonLossless, parseLenient, pathStartsWith } from "@india-gst-kit/model";
+import { convertIrnNumbers } from "./numbers.js";
 import { IRN_INT_PATTERN, IrnRequestSchema, ItemSchema } from "./schema.js";
 import { hasErrors, issue, type IrnIssue } from "./types.js";
-import { markNumber } from "./zod-walk.js";
 
 export type DecodeResult<T> = {
   ok: boolean;
@@ -103,7 +103,7 @@ function validatePart<S extends z.ZodType>(
   issues: IrnIssue[],
 ): z.output<S> | undefined {
   const typeIssues: IrnIssue[] = [];
-  const converted = convertNumbers(part.lossless, schema, [], typeIssues, prefix, "J-TYPE");
+  const converted = convertIrnNumbers(part.lossless, schema, typeIssues, prefix, "J-TYPE");
   const r = parseLenient(schema, converted);
   issues.push(...typeIssues);
   for (const p of r.unknown) {

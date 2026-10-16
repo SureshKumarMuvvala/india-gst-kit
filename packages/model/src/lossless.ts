@@ -1,6 +1,36 @@
 import { z } from "zod";
-import { issue, type IrnIssue } from "./types.js";
-import { arrayElement, isNumberLeaf, objectShape } from "./zod-walk.js";
+
+// Number leaves are JSON numbers on the wire but strings in memory. They are tracked by identity so that
+// serialisers and the lossless parser can tell them apart from string leaves.
+const NUMBER_LEAVES = new WeakSet<object>();
+
+export function markNumber<T extends z.ZodType>(schema: T): T {
+  NUMBER_LEAVES.add(schema);
+  return schema;
+}
+
+/** Strips `.optional()` / `.nullable()` wrappers. */
+export function unwrapSchema(schema: z.ZodType): z.ZodType {
+  let cur = schema;
+  while (cur instanceof z.ZodOptional || cur instanceof z.ZodNullable) {
+    cur = cur.unwrap() as z.ZodType;
+  }
+  return cur;
+}
+
+export function isNumberLeaf(schema: z.ZodType): boolean {
+  return NUMBER_LEAVES.has(unwrapSchema(schema));
+}
+
+export function objectShape(schema: z.ZodType): Readonly<Record<string, z.ZodType>> | undefined {
+  const u = unwrapSchema(schema);
+  return u instanceof z.ZodObject ? u.shape : undefined;
+}
+
+export function arrayElement(schema: z.ZodType): z.ZodType | undefined {
+  const u = unwrapSchema(schema);
+  return u instanceof z.ZodArray ? (u.element as z.ZodType) : undefined;
+}
 
 /** A JSON number kept as its source text, so no digit is ever lost to a double. */
 export class JsonNumber {
@@ -9,6 +39,9 @@ export class JsonNumber {
 
 type Path = (string | number)[];
 export type ZodIssue = z.core.$ZodIssue;
+
+/** A number/string mismatch found by {@link convertNumbers}; callers wrap it in their own issue type. */
+export type LosslessTypeIssue = { path: Path; message: string };
 
 /** `JSON.parse` that turns every number into a {@link JsonNumber} (needs Node ≥ 22: reviver `context.source`). */
 export function parseJsonLossless(text: string): unknown {
@@ -27,40 +60,37 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
 
 /**
  * Replaces {@link JsonNumber}s by their source text where `schema` has a number leaf. A string where a
- * number belongs, or a number where a string belongs, is reported as WRONG_TYPE and replaced by `undefined`.
+ * number belongs, or a number where a string belongs, is pushed to `issues` and replaced by `undefined`.
  */
 export function convertNumbers(
   value: unknown,
   schema: z.ZodType | undefined,
   path: Path,
-  issues: IrnIssue[],
+  issues: LosslessTypeIssue[],
   prefix: Path = [],
-  rule = "S-TYPE",
 ): unknown {
   const here = [...prefix, ...path];
   if (value instanceof JsonNumber) {
     if (schema === undefined || isNumberLeaf(schema)) return value.source;
-    issues.push(issue(here, "WRONG_TYPE", rule, "expected a string, found a JSON number"));
+    issues.push({ path: here, message: "expected a string, found a JSON number" });
     return undefined;
   }
   if (typeof value === "string") {
     if (schema !== undefined && isNumberLeaf(schema)) {
-      issues.push(issue(here, "WRONG_TYPE", rule, "expected a JSON number, found a string"));
+      issues.push({ path: here, message: "expected a JSON number, found a string" });
       return undefined;
     }
     return value;
   }
   if (Array.isArray(value)) {
     const element = schema === undefined ? undefined : arrayElement(schema);
-    return value.map((v: unknown, i) =>
-      convertNumbers(v, element, [...path, i], issues, prefix, rule),
-    );
+    return value.map((v: unknown, i) => convertNumbers(v, element, [...path, i], issues, prefix));
   }
   if (isPlainObject(value)) {
     const shape = schema === undefined ? undefined : objectShape(schema);
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value)) {
-      out[k] = convertNumbers(v, shape?.[k], [...path, k], issues, prefix, rule);
+      out[k] = convertNumbers(v, shape?.[k], [...path, k], issues, prefix);
     }
     return out;
   }
