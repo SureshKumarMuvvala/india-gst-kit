@@ -87,6 +87,19 @@ importers:
         specifier: 4.5.4
         version: 4.5.4
 
+  packages/recon:
+    dependencies:
+      '@india-gst-kit/model':
+        specifier: workspace:^
+        version: link:../model
+      decimal.js:
+        specifier: ^10.6.0
+        version: 10.6.0
+    devDependencies:
+      zod:
+        specifier: 4.5.4
+        version: 4.5.4
+
 packages:
 
   '@cacheable/memory@2.2.0':
