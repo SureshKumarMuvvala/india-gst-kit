@@ -1,6 +1,6 @@
 # Spec — `@india-gst-kit/model` (v0.1)
 
-Status: approved 2026-10-16. Every legal/official fact referenced here is **UNVERIFIED — needs CA** until a chartered accountant signs it off in `docs/legal-facts.md`. Sources still to be obtained: see `docs/sources-needed.md`.
+Status: approved 2026-10-16. Every legal/official fact referenced here is **UNVERIFIED — needs CA** until a chartered accountant signs it off in `docs/legal-facts.md`. Sources: `sources/README.md` (e-invoice portal, captured 2026-10-16) and `sources/acts/README.md` (CGST/UTGST Acts). No official sample GSTINs or check-digit document exist publicly; fixtures use synthetic GSTINs.
 
 ## 1. Purpose and scope
 `@india-gst-kit/model` defines **one GST document** as Zod schemas plus pure helpers. It is the shared contract for every other package (`gstr1`, `einvoice`, `recon`, `ewaybill`, `gsp`).
@@ -24,13 +24,13 @@ Status: approved 2026-10-16. Every legal/official fact referenced here is **UNVE
 |---|---|---|---|
 | `Money` | string | `/^\d{1,15}\.\d{2}$/` — non-negative, exactly 2 dp | Never a JS number (float error); 2 dp = paise. Credit/debit-note amounts are positive; direction comes from `kind`. |
 | `SignedMoney` | string | `/^-?\d{1,15}\.\d{2}$/` | Only for `roundOff`. |
-| `Quantity` | string | `/^\d{1,15}(\.\d{1,3})?$/`, > 0 | Precision to be confirmed from source C. |
-| `UnitPrice` | string | `/^\d{1,15}(\.\d{1,3})?$/` | Precision to be confirmed from source C. |
-| `GstRate` | string | member of `GST_RATES_ALL` (§6.3) | Rates like `0.25`, `1.5` need exact decimal match. |
+| `Quantity` | string | `/^\d{1,10}(\.\d{1,3})?$/`, > 0 | Source C: `Qty` ≤ 9999999999.999. |
+| `UnitPrice` | string | `/^\d{1,12}(\.\d{1,3})?$/` | Source C: `UnitPrice` ≤ 999999999999.999. |
+| `GstRate` | string | `/^(0\|[1-9]\d{0,2})(\.\d{1,3})?$/` (0–999.999, ≤3 dp) | Source C: `GstRt` 0–999.999. The model holds no rate list and does not decide taxability. |
 | `IsoDate` | string | `/^\d{4}-\d{2}-\d{2}$/` **and** a real calendar date | No `Date` objects (timezone drift). |
-| `StateCode` | string | 2 digits, member of `STATE_CODES` | |
-| `Gstin` | string | 15 chars, uppercase, matches one of the official GSTIN patterns (source C) + valid check digit | See §6.4. |
-| `HsnSac` | string | 4, 6 or 8 digits | Length rules to confirm against source C. |
+| `StateCode` | string | 2 digits (zero-padded), member of `STATE_CODES` | The master publishes codes without a leading zero (`1`); the model normalises to 2 digits (`01`) to match GSTINs. |
+| `Gstin` | string | 15 chars, uppercase, `/^[0-9]{2}[0-9A-Z]{13}$/` (the only official pattern, source C) + first two digits a GSTIN-capable state code + valid check digit | See §6.4. |
+| `HsnSac` | string | 4, 6 or 8 digits, not all zeros | Source C `HsnCd` pattern. |
 | `UqcCode` | string | member of `UQC_CODES` | Official unit codes only. |
 
 ## 4. Enums
@@ -49,9 +49,9 @@ Status: approved 2026-10-16. Every legal/official fact referenced here is **UNVE
 | `line2` | string | opt | ≤100 | |
 | `city` | string | req | 1–50 | |
 | `pincode` | string | opt | `/^\d{6}$/` | Absent for overseas parties |
-| `stateCode` | StateCode | req | | |
+| `stateCode` | StateCode | req | `96` (Other Countries) for overseas parties | |
 | `country` | string | opt, default `"IN"` | ISO 3166-1 alpha-2 | Exports |
-Length limits are design defaults, to be revisited against source C.
+Length limits are design defaults (source C has its own limits; enforcing them belongs to the `einvoice` package).
 
 ### 5.2 `PartySchema` (supplier and recipient)
 | Field | Type | Req | Rule | Why |
@@ -93,21 +93,22 @@ Refinements: `gstin` absent ⇔ `registrationType ∈ {UNREGISTERED, OVERSEAS}`.
 | Field | Type | Rule |
 |---|---|---|
 | `taxableValue`, `cgst`, `sgst`, `igst`, `cess`, `lineDiscount` | Money | each = Σ of the line field |
-| `documentDiscount` | Money, opt, default `"0.00"` | invoice-level discount applied after tax (not part of the tax base) |
 | `otherCharges` | Money, default `"0.00"` | |
 | `roundOff` | SignedMoney, default `"0.00"` | \|roundOff\| < 1.00 |
-| `grandTotal` | Money | = Σ lineTotal + otherCharges − documentDiscount + roundOff; must be ≥ 0 |
+| `grandTotal` | Money | = Σ lineTotal + otherCharges + roundOff; must be ≥ 0 |
+
+Invoice-level discounts are not modelled: the caller must apportion them into each line's `discount` before building the document.
 
 ### 5.6 `GstDocumentSchema`
 | Field | Type | Req | Rule | Why |
 |---|---|---|---|---|
 | `schemaVersion` | literal `"1"` | req | | Forward-compatible evolution |
 | `kind` | DocumentKind | req | | |
-| `number` | string | req | 1–16 chars, `/^[A-Za-z0-9\/-]+$/`, not starting with `0`, `/` or `-` | GST serial-number rule — from source C, UNVERIFIED |
+| `number` | string | req | 1–16 chars, `/^[A-Za-z0-9\/-]+$/`, not starting with `0`, `/` or `-` | GST serial-number rule — source C `Doc.No` pattern `^[a-zA-Z1-9][a-zA-Z0-9/-]{0,15}$`; UNVERIFIED — needs CA |
 | `date` | IsoDate | req | | |
 | `supplier` | SupplierSchema | req | | |
 | `recipient` | PartySchema | req | | |
-| `placeOfSupply` | StateCode | req | | Decides CGST+SGST/UTGST vs IGST |
+| `placeOfSupply` | StateCode | req | not `25` (withdrawn as place of supply, source C validations) | Decides CGST+SGST/UTGST vs IGST |
 | `supplyCategory` | SupplyCategory | req, default `"DOMESTIC"` | | |
 | `reverseCharge` | boolean | req, default `false` | | |
 | `originalDocument` | OriginalDocRef | cond. | required iff `kind ∈ {CREDIT_NOTE, DEBIT_NOTE}`, forbidden otherwise; `originalDocument.date ≤ date` | |
@@ -128,11 +129,15 @@ Exports: all schemas, inferred types (`GstDocument`, `Line`, `Party`, …), and 
 ## 6. Helpers — signatures
 
 ### 6.1 States (`states.ts`, from source A)
+Codes are stored as 2-digit strings. The master has no `28`; `25` (Daman and Diu) is listed but withdrawn as place of supply; `96` and `99` are both "OTHER COUNTRIES" (POS for exports is `96`); `97` is "Other Territory". `stateCodeFromName("OTHER COUNTRIES")` returns `96`.
 ```ts
 export const STATE_CODES: readonly { code: StateCode; name: string }[];
 export function stateName(code: string): string | undefined;
 export function stateCodeFromName(name: string): StateCode | undefined; // case/whitespace-insensitive
 export function isStateCode(code: string): code is StateCode;
+export function normaliseStateCode(code: string): StateCode | undefined; // "1" → "01"; unknown → undefined
+export function isPlaceOfSupplyCode(code: string): boolean;              // false for withdrawn "25"
+export function isGstinStateCode(code: string): boolean;                  // false for 96 / 99 (outside India)
 ```
 
 ### 6.2 UQC (`uqc.ts`, from source B)
@@ -141,27 +146,19 @@ export const UQC_CODES: readonly { code: string; description: string }[];
 export function isUqcCode(code: string): boolean;
 ```
 
-### 6.3 Rates (`rates.ts`, from sources C/F)
-```ts
-export interface RateEntry { rate: string; effectiveFrom: IsoDate; effectiveTo?: IsoDate; source: string }
-export const GST_RATES_OFFERED: readonly RateEntry[]; // currently in force
-export const GST_RATES_LEGACY: readonly RateEntry[];  // abolished, valid on historical documents
-export const GST_RATES_ALL: readonly string[];        // union of rate strings; used by validation
-export function isGstRate(rate: string): boolean;
-export function rateInForceOn(rate: string, date: IsoDate): boolean; // informational; NOT enforced by the schema in v0.1
-```
-Validation accepts the union so historical documents parse. Each entry carries its effective dates and source. UNVERIFIED.
+### 6.3 Rates — deferred
+No rate list in v0.1 (see §12). `GstRate` is validated by format only. Informational fact for `docs/legal-facts.md`: the e-invoice validations state "Tax rate 0.5% is withdrawn" (date not stated).
 
 ### 6.4 GSTIN (`gstin.ts`)
 ```ts
-export function isGstinStructurallyValid(gstin: string): boolean; // matches any official pattern
+export function isGstinStructurallyValid(gstin: string): boolean; // official pattern + GSTIN-capable state code
 export function gstinCheckDigit(first14: string): string;         // computes 15th char
 export function isValidGstin(gstin: string): boolean;             // structure + check digit
 export function parseGstin(gstin: string):
   { stateCode: StateCode; panOrId: string; entityCode: string; checkDigit: string } | undefined;
 ```
-- Structure: the patterns in source C. The check **must not reject** the TDS, TCS, non-resident (and other special) GSTIN formats that source C lists — each format is tested.
-- Check digit: an official GSTN algorithm document (source D) if one exists; otherwise the publicly documented **mod-36** algorithm (charset `0-9A-Z`, alternating weights 1/2 across the first 14 chars, sum of quotient+remainder of each product by 36, check = (36 − sum mod 36) mod 36), marked UNVERIFIED. It is tested against every official sample GSTIN (source E). **Stop only if an official sample fails it.**
+- Structure: source C publishes only the loose pattern `^[0-9]{2}[0-9A-Z]{13}$` (supplier/e-commerce); buyer/ship-to also allow `URP` (unregistered person, exports) — a recipient-level concept handled by `registrationType`, not a GSTIN. No PAN-structured, TDS or TCS pattern is published, so none is enforced; TDS/TCS/non-resident-shaped GSTINs pass if they match the loose pattern and check digit. The first two digits must be a state code from §6.1 other than 96/99.
+- Check digit: no official algorithm document exists (source D not found); the publicly documented **mod-36** algorithm (charset `0-9A-Z`, alternating weights 1/2 across the first 14 chars, sum of quotient+remainder of each product by 36, check = (36 − sum mod 36) mod 36), marked UNVERIFIED. No official sample GSTINs exist (source E); the portal's illustrative samples (`37BZNPM9430M1KL`, `03BZNPM9430M1KL`) fail mod-36 and are **not** used as valid. Tests use synthetic GSTINs with computed check digits. `scripts/verify-gstin.mjs` lets the owner check real GSTINs privately from a gitignored local file.
 
 ### 6.5 Supply decision and UTGST (`supply.ts`)
 ```ts
@@ -169,9 +166,9 @@ export function decideTaxSplit(
   supplierState: StateCode, placeOfSupply: StateCode,
   category?: SupplyCategory, // default "DOMESTIC"
 ): TaxSplit;                 // INTRA iff same state AND DOMESTIC
-export function usesUtgst(stateCode: StateCode): boolean; // UT without legislature (source G), UNVERIFIED
+export function usesUtgst(stateCode: StateCode): boolean; // UTGST Act s.2(8) territories, UNVERIFIED
 ```
-The `sgst` field holds SGST or UTGST; `usesUtgst(placeOfSupply)` tells consumers which label applies. The model stores one field so arithmetic and validation are identical for both.
+`usesUtgst` is true for the territories in UTGST Act 2017 s.2(8) / CGST Act s.2(114) as enacted (`sources/acts/`): Andaman and Nicobar (35), Lakshadweep (31), Dadra and Nagar Haveli (26), Daman and Diu (25), Chandigarh (04), other territory (97). Later amendments (e.g. Ladakh, the 2020 Dadra/Daman merger) were not retrieved; Ladakh (38) therefore returns false — logged for CA. The `sgst` field holds SGST or UTGST; `usesUtgst(placeOfSupply)` tells consumers which label applies. The model stores one field so arithmetic and validation are identical for both.
 
 ### 6.6 Money (`money.ts`)
 ```ts
@@ -194,16 +191,15 @@ All helpers are pure; inputs normalised with `trim().toUpperCase()` where releva
 
 ## 8. Edge cases
 1. **Unregistered recipient (B2C):** no `gstin`, `registrationType = "UNREGISTERED"`, `placeOfSupply` still required (caller decides). Valid.
-2. **Export/SEZ placeholders:** any non-DOMESTIC `supplyCategory` forces INTER regardless of states. `*_WITHOUT_PAYMENT` (LUT/bond) ⇒ all tax amounts zero while `gstRate` is kept. Overseas recipient: `registrationType = "OVERSEAS"`, no GSTIN, `stateCode`/`placeOfSupply` = the "Other Country" code **only if** source A lists one. Port code, shipping bill, currency, export duty: **not modelled in v0.1** (TODO).
+2. **Export/SEZ placeholders:** any non-DOMESTIC `supplyCategory` forces INTER regardless of states. `*_WITHOUT_PAYMENT` (LUT/bond) ⇒ all tax amounts zero while `gstRate` is kept. Overseas recipient: `registrationType = "OVERSEAS"`, no GSTIN, `stateCode`/`placeOfSupply` = `96` (source A lists 96 and 99 as Other Countries; source C uses 96 for POS outside India). Port code, shipping bill, currency, export duty: **not modelled in v0.1** (TODO).
 3. **Rounding:** per line, half-up to 2 dp (decimal.js `ROUND_HALF_UP`); totals are sums of already-rounded line values (no re-rounding); whole-rupee rounding goes in `roundOff`, |roundOff| < 1. Design choice, logged UNVERIFIED.
 4. **Cess:** separate from GST; same for INTRA/INTER; `cess = round2(taxable × cessRate / 100) + cessNonAdvol`. No cess-rate list (varies by HSN) — arithmetic only.
 5. **Reverse charge:** flag only; tax amounts still present and validated.
-6. **Nil/exempt lines on a tax invoice:** `gstRate = "0"` allowed iff "0" is in the sourced rate list.
+6. **Nil/exempt lines on a tax invoice:** `gstRate = "0"` allowed.
 7. **Credit/debit notes:** positive amounts; `originalDocument` required; not cross-checked against the original (no data access).
 8. **Zero-value lines / 100 % discount:** allowed.
 9. **Dates:** `2028-02-29` valid, `2026-02-29` invalid.
 10. **Large values:** up to 15 integer digits; strings + decimal.js, no overflow.
-11. **Document discount:** reduces `grandTotal` only; does not change taxable value or tax.
 
 ## 9. Legal-facts process
 Each official list/rule lives in its own source file with a header comment:
@@ -219,21 +215,21 @@ Facts tracked: state codes; UQC codes; GST rates offered and legacy with effecti
 **primitives** — Money accepts `0.00`, `12.50`; rejects `12.5`, `12`, `-1.00`, `1e3`, JS numbers. IsoDate accepts `2028-02-29`; rejects `2026-02-29`, `2026-13-01`, `26-01-01`. Quantity precision bounds. HsnSac lengths.
 **states** — every code round-trips via name; unknown → `undefined`; name lookup case-insensitive; no duplicate codes/names; count matches source.
 **uqc** — no duplicates; `isUqcCode` true/false.
-**rates** — offered and legacy lists have no duplicates and canonical decimal strings; every entry has `effectiveFrom` and source; a legacy rate validates on a document; `rateInForceOn` true inside / false outside the window; unknown rate rejected.
-**gstin** — every official sample GSTIN (source E) valid under the mod-36 / official algorithm; each wrong check digit invalid; wrong length, lowercase, unknown state prefix rejected; TDS, TCS and non-resident format examples from source C pass the structural check; `parseGstin` extracts state and PAN/ID.
-**supply** — same state DOMESTIC → INTRA; different → INTER; same state + SEZ/EXPORT/DEEMED_EXPORT → INTER; `usesUtgst` true for each UT-without-legislature in source G, false for states and UTs with legislature.
+**rates** — `GstRate` accepts `0`, `5`, `2.5`, `0.25`, `999.999`; rejects `-1`, `1000`, `5.0000`, `05`, `abc`.
+**gstin** — synthetic GSTINs with computed check digits are valid; each wrong check digit invalid; wrong length, lowercase, unknown state prefix, `96`/`99` prefix rejected; the portal's two illustrative sample GSTINs are invalid; `parseGstin` extracts state and PAN/ID.
+**supply** — same state DOMESTIC → INTRA; different → INTER; same state + SEZ/EXPORT/DEEMED_EXPORT → INTER; `usesUtgst` true for 04, 25, 26, 31, 35, 97; false for states, Delhi, Puducherry, J&K, Ladakh (see §6.5).
 **money / computeLineTax** — half-up at `.005` boundaries (`0.005 → 0.01`, `0.0049 → 0.00`); exact sums over many lines; **odd-paisa cases under both conventions**, e.g. taxable `100.10` @ 5 % (`5.005` → T = `5.01`): remainder-to-sgst → cgst `2.51` (`round2(2.505)`), sgst `2.50`; equal-halves → `2.50` / `2.50` (`100.10 × 2.5 % = 2.5025`, sum `5.00`); INTER → igst `5.01`. Both INTRA results pass validation.
 **line schema** — taxable = gross − discount; discount > gross rejected; goods line without qty rejected; service line with non-99 SAC rejected; unit without qty rejected; cess arithmetic; INTRA line passes under each convention; `|cgst − sgst| = 0.02` rejected; cgst + sgst off by 0.02 rejected.
-**document schema** — valid: intra tax invoice, inter tax invoice, B2C unregistered, bill of supply, credit note, debit note, composition bill of supply, composition credit note, UT place of supply, document with documentDiscount, document with a legacy rate. Invalid (each asserts the issue `path`): note without originalDocument; invoice with originalDocument; original date after note date; IGST on intra; CGST on inter; totals off by 0.01; roundOff ≥ 1; documentDiscount not reflected in grandTotal; supplier without GSTIN; GSTIN/state mismatch; composition supplier issuing TAX_INVOICE; composition supplier charging tax on a credit note; same GSTIN both sides; non-contiguous lineNo; empty lines; export-without-payment with non-zero tax.
-**fixtures** — every document in `packages/fixtures` parses; fixtures contain only source-E sample GSTINs (a test scans for any other 15-char GSTIN-shaped string).
+**document schema** — valid: intra tax invoice, inter tax invoice, B2C unregistered, bill of supply, credit note, debit note, composition bill of supply, composition credit note, UT place of supply, document with a zero-rate line. Invalid (each asserts the issue `path`): note without originalDocument; invoice with originalDocument; original date after note date; IGST on intra; CGST on inter; totals off by 0.01; roundOff ≥ 1; supplier without GSTIN; GSTIN/state mismatch; composition supplier issuing TAX_INVOICE; composition supplier charging tax on a credit note; same GSTIN both sides; non-contiguous lineNo; empty lines; export-without-payment with non-zero tax.
+**fixtures** — every document in `packages/fixtures` parses; fixtures contain only the synthetic GSTINs registered in `packages/fixtures/src/gstins.ts` (a test scans for any other 15-char GSTIN-shaped string).
 **api surface** — no default exports (lint rule + test asserting `!("default" in module)`).
 
 ## 11. Stop conditions (halt and report instead of guessing)
-- An official source in `docs/sources-needed.md` is unavailable or ambiguous → stop and name the file to attach.
-- An official sample GSTIN fails the check-digit algorithm → stop.
+- A source needed for a **legal list the model enforces** is unavailable or ambiguous → stop and name the file to attach. (Rates and UTGST are not blockers; see §12.)
+- An *official* sample GSTIN fails the check-digit algorithm → stop. (None exist; the portal's illustrative samples are known to fail and are not authoritative — see §6.4.)
 - Source C contradicts this spec (precision, number format, GSTIN patterns) → follow the source, report under "Deviations from spec".
 - A requirement would need AGPL/GPL reference code or real company data → stop.
 - `pnpm check` can't be made green without weakening strictness or lint rules → stop and report.
 
 ## 12. Deferred (TODO after v0.1)
-`UIN_HOLDER` registration type; export details (port, shipping bill, currency); other document kinds; enforcing `rateInForceOn` by document date; e-invoice/GSTR-1 mappings (other packages).
+`UIN_HOLDER` registration type; export details (port, shipping bill, currency); other document kinds; invoice-level discount — needs CA; `GST_RATES_OFFERED` / `GST_RATES_LEGACY` / `rateInForceOn` and any rate-list validation — needs rate notifications + CA; e-invoice/GSTR-1 mappings (other packages).
