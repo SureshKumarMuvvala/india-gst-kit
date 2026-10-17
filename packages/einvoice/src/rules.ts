@@ -18,6 +18,7 @@
 // V3 and V27 are also enforced by the structural schema; the structural issue is reported under these ids.
 import {
   isGstinStructurallyValid,
+  isTemporaryId,
   isPlaceOfSupplyCode,
   isUqcCode,
   isValidGstin,
@@ -328,7 +329,9 @@ export function runRules(req: IrnRequest, options: ValidateOptions = {}): IrnIss
   ];
   for (const [path, g] of gstins) {
     if (g === undefined || g === "URP") continue;
-    if (!isGstinStructurallyValid(g))
+    if (isTemporaryId(g))
+      out.push(rule(path, "V5", "GSTIN looks like a temporary ID, not a GSTIN (model spec §6.4)"));
+    else if (!isGstinStructurallyValid(g))
       out.push(
         rule(
           path,

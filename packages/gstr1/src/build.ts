@@ -6,6 +6,7 @@
 // Status: UNVERIFIED — needs CA
 import {
   decideTaxSplit,
+  isTemporaryId,
   type DocumentKind,
   type Gstin,
   type GstDocument,
@@ -248,9 +249,13 @@ export function buildGstr1(input: Gstr1Input): Gstr1Result {
   }
   if (!isS5Gstin(gstin)) {
     issues.push(
-      issue("SUPPLIER_GSTIN_FORMAT", `filer GSTIN ${gstin} does not match the portal's pattern`, {
-        path: ["gstin"],
-      }),
+      issue(
+        "SUPPLIER_GSTIN_FORMAT",
+        isTemporaryId(gstin)
+          ? `filer GSTIN ${gstin} looks like a temporary ID, not a GSTIN (model spec §6.4)`
+          : `filer GSTIN ${gstin} does not match the portal's pattern`,
+        { path: ["gstin"] },
+      ),
     );
   }
 

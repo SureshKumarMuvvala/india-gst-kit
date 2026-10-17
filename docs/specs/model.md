@@ -194,14 +194,14 @@ No rate list in v0.1 (see §12). `GstRate` is validated by format only. Informat
 
 ### 6.4 GSTIN (`gstin.ts`)
 ```ts
-export function isGstinStructurallyValid(gstin: string): boolean; // official pattern + GSTIN-capable state code
+export function isGstinStructurallyValid(gstin: string): boolean; // official pattern + GSTIN-capable state code + not a temporary ID
 export function gstinCheckDigit(first14: string): string;         // computes 15th char
 export function isValidGstin(gstin: string): boolean;             // structure + check digit
 export function parseGstin(gstin: string):
   { stateCode: StateCode; panOrId: string; entityCode: string; checkDigit: string } | undefined;
 ```
 - Structure: source C publishes only the loose pattern `^[0-9]{2}[0-9A-Z]{13}$` (supplier/e-commerce); buyer/ship-to also allow `URP` (unregistered person, exports) — a recipient-level concept handled by `registrationType`, not a GSTIN. No PAN-structured, TDS or TCS pattern is published, so none is enforced; TDS/TCS/non-resident-shaped GSTINs pass if they match the loose pattern and check digit. The first two digits must be a state code from §6.1 other than 96/99.
-- Temporary IDs: a value shaped 2-digit state + 10 digits + `TMP` (observed on a real document) fails with its own message "looks like a temporary ID, not a GSTIN" (`isTemporaryId`), not a check-digit error. It is still rejected.
+- Temporary IDs: a value shaped 2-digit state + 10 digits + `TMP` (observed on a real document) fails with its own message "looks like a temporary ID, not a GSTIN" (`isTemporaryId`), not a check-digit error. It is still rejected, also when it happens to pass mod-36 (e.g. `330000000000TMP`): `isGstinStructurallyValid` and `isValidGstin` return false for it.
 - Check digit: no official algorithm document exists (source D not found); the publicly documented **mod-36** algorithm (charset `0-9A-Z`, alternating weights 1/2 across the first 14 chars, sum of quotient+remainder of each product by 36, check = (36 − sum mod 36) mod 36), marked UNVERIFIED. No official sample GSTINs exist (source E); the portal's illustrative samples (`37BZNPM9430M1KL`, `03BZNPM9430M1KL`) fail mod-36 and are **not** used as valid. Tests use synthetic GSTINs with computed check digits. `scripts/verify-gstin.mjs` lets the owner check real GSTINs privately from a gitignored local file.
 
 ### 6.5 Supply decision and UTGST (`supply.ts`)

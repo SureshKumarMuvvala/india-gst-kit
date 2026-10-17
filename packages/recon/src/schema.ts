@@ -6,7 +6,7 @@
 // into its source text. Their outputs are already normalised (money to 2 dp, dates to ISO, GSTINs to upper
 // case). Quirks of source H are listed in docs/specs/recon.md §3.3 and cited where they apply.
 import { z } from "zod";
-import { IsoDateSchema, markNumber } from "@india-gst-kit/model";
+import { IsoDateSchema, isTemporaryId, markNumber } from "@india-gst-kit/model";
 import { D } from "./decimal.js";
 
 // ---------- leaf definitions ----------
@@ -26,17 +26,28 @@ export function isOrdinaryGstinPattern(s: string): boolean {
   return GSTIN_PATTERN.test(s);
 }
 
-const GstinWire = z
-  .string()
-  .refine((s) => GSTIN_PATTERN.test(s), "not a GSTIN (source H `gstin` pattern, 15 characters)")
-  .transform(upper);
-const CtinWire = z
-  .string()
-  .refine(
-    (s) => GSTIN_PATTERN.test(s) || NR_PATTERN.test(s),
-    "not a supplier GSTIN (source H `ctin` patterns, 15 characters)",
-  )
-  .transform(upper);
+// A temporary ID (`…TMP`, model spec §6.4) gets its own message rather than the pattern one.
+const TEMPORARY_ID = "looks like a temporary ID, not a GSTIN (model spec §6.4)";
+const gstinLike = (valid: (s: string) => boolean, patternMessage: string) =>
+  z
+    .string()
+    .check((ctx) => {
+      if (valid(ctx.value)) return;
+      ctx.issues.push({
+        code: "custom",
+        input: ctx.value,
+        message: isTemporaryId(ctx.value.toUpperCase()) ? TEMPORARY_ID : patternMessage,
+      });
+    })
+    .transform(upper);
+const GstinWire = gstinLike(
+  (s) => GSTIN_PATTERN.test(s),
+  "not a GSTIN (source H `gstin` pattern, 15 characters)",
+);
+const CtinWire = gstinLike(
+  (s) => GSTIN_PATTERN.test(s) || NR_PATTERN.test(s),
+  "not a supplier GSTIN (source H `ctin` patterns, 15 characters)",
+);
 
 const MONEY_WIRE = /^-?\d{1,13}(\.\d{1,2})?$/;
 const pad2 = (s: string): string => {

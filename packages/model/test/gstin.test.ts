@@ -108,6 +108,25 @@ describe("temporary IDs (state + 10 digits + TMP, seen on a real document)", () 
     expect(r.success).toBe(false);
     expect(r.error?.issues[0]?.message).toBe("looks like a temporary ID, not a GSTIN");
   });
+  // These match the shape AND happen to pass mod-36 (found by search, not hand-made): they must still be
+  // rejected, with the temporary-ID message (spec §6.4).
+  const TMP_PASSING_MOD36 = [
+    "330000000000TMP",
+    "010000000013TMP",
+    "070000000299TMP",
+    "290000000079TMP",
+    "270000000199TMP",
+  ];
+  it.each(TMP_PASSING_MOD36)("%s passes mod-36 but is rejected as a GSTIN", (v) => {
+    expect(isTemporaryId(v)).toBe(true);
+    expect(gstinCheckDigit(v.slice(0, 14))).toBe(v.charAt(14)); // the check digit really matches
+    expect(isValidGstin(v)).toBe(false);
+    expect(isGstinStructurallyValid(v)).toBe(false);
+    expect(parseGstin(v)).toBeUndefined();
+    const r = GstinSchema.safeParse(v);
+    expect(r.success).toBe(false);
+    expect(r.error?.issues[0]?.message).toBe("looks like a temporary ID, not a GSTIN");
+  });
   it("other bad GSTINs keep the generic message", () => {
     const r = GstinSchema.safeParse("37BZNPM9430M1KL");
     expect(r.error?.issues[0]?.message).toMatch(/^Invalid GSTIN/);
