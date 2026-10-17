@@ -7,9 +7,12 @@ import type { StateCode } from "./primitives.js";
 const CHARSET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const PATTERN = /^[0-9]{2}[0-9A-Z]{13}$/;
 
-/** Official loose pattern plus a GSTIN-capable state code. Does not look at the check digit. */
+/**
+ * Official loose pattern plus a GSTIN-capable state code, and not a temporary ID (spec §6.4: some `…TMP` values
+ * happen to pass mod-36, e.g. `330000000000TMP`; they are still rejected). Does not look at the check digit.
+ */
 export function isGstinStructurallyValid(gstin: string): boolean {
-  return PATTERN.test(gstin) && isGstinStateCode(gstin.slice(0, 2));
+  return PATTERN.test(gstin) && isGstinStateCode(gstin.slice(0, 2)) && !isTemporaryId(gstin);
 }
 
 /**

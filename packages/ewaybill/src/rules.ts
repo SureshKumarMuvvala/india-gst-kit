@@ -19,6 +19,7 @@
 import {
   PIN_RANGES,
   isGstinStructurallyValid,
+  isTemporaryId,
   isUqcCode,
   isValidGstin,
   normaliseStateCode,
@@ -359,7 +360,9 @@ function partyRules(req: EwbRequest, o: GenerateOptions, out: EwbIssue[]): void 
   for (const key of ["fromGstin", "toGstin"] as const) {
     const g = req[key];
     if (g === "URP") continue;
-    if (!isGstinStructurallyValid(g))
+    if (isTemporaryId(g))
+      err([key], "V-G6", `${key} looks like a temporary ID, not a GSTIN (model spec §6.4)`);
+    else if (!isGstinStructurallyValid(g))
       err([key], "V-G6", `${key} is not a structurally valid GSTIN (pattern or state code)`);
     else if ((o.gstinCheckDigit ?? "enforce") === "enforce" && !isValidGstin(g)) {
       err([key], "V-G6", `${key} fails the GSTIN check digit`);
