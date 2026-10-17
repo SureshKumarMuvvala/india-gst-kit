@@ -1,6 +1,6 @@
 # Spec — `@india-gst-kit/ewaybill` (v0.1)
 
-Status: **approved 2026-10-16**; the questions in §14 were decided by the owner (§15). **Build order:** the ewaybill build starts only after the recon build PR is merged, because both change `@india-gst-kit/model` (§15 D-Q1). Every legal or official fact here is **UNVERIFIED — needs CA** until a chartered accountant signs it off in `docs/legal-facts.md`.
+Status: **approved 2026-10-16**; **Track E draft 2026-10-17** (ship-to / dispatch-from from the document, §3, §5, §6 — not yet approved); the questions in §14 were decided by the owner (§15). **Build order:** the ewaybill build starts only after the recon build PR is merged, because both change `@india-gst-kit/model` (§15 D-Q1). Every legal or official fact here is **UNVERIFIED — needs CA** until a chartered accountant signs it off in `docs/legal-facts.md`.
 
 Sources (captured 2026-10-16; see `sources/README.md`, section "E-way bill sources"):
 - **H**: EWB API v1.03 "Generate E-way Bill". Files `sources/ewaybill/generate-ewaybill-*`.
@@ -50,12 +50,12 @@ The same approach as `docs/specs/einvoice.md` §2. In memory, numbers are **stri
 - Serialisation is compact JSON in the schema's key order.
 
 ## 3. Input: `EwbMovement` (`src/movement.ts`)
-The model has no transport, dispatch-from or ship-to data. They come in as a separate, strictly validated input:
+The model has no transport data; it comes in as a separate, strictly validated input. Dispatch-from and ship-to are **on the document** (model §5.7, Track E) for the Generate route. The movement keeps them only for EWB-by-IRN (D-S11):
 ```ts
 EwbMovementSchema = z.strictObject({
   transport: EwbTransportSchema,
-  dispatchFrom: z.strictObject({ name: z.string(), address: AddressSchema }).optional(), // model AddressSchema
-  shipTo: z.strictObject({ address: AddressSchema }).optional(),
+  dispatchFrom: DispatchFromSchema.optional(),                         // model; by-IRN only
+  shipTo: z.strictObject({ address: ShipAddressSchema }).optional(),    // model; by-IRN only (ExpShipDtls has no name/GSTIN)
 });
 EwbTransportSchema = z.strictObject({
   distanceKm: z.string().regex(/^(0|[1-9]\d{0,3})$/), // integer km, "0" = let the portal compute it
@@ -69,7 +69,10 @@ EwbTransportSchema = z.strictObject({
 });
 ```
 - Only the input's **shape** is checked here. The transport rules (§8.1) run on the mapped payload, so payloads built elsewhere get the same checks.
-- `shipTo` has no name or GSTIN: `shipToGSTIN`/`shipToTrdName` and `ExpShipDtls.Gstin`/`TrdNm` are commented out in H and I, and the "mandatory Ship-To GSTIN" change was put on hold on 30/07/2026 (L). Not in v0.1 (D-Q7).
+- **Why the movement still has them:** I validations lines 16–17: "During generation of IRN for export, the shipping address of the port can be updated here" and "If the dispatching address and/or shipping address have not been passed during generation of IRN, then the respective addresses can be passed here". `toEwbByIrnRequest` has only the IRN, not the document.
+- `toEwbRequest` reads `doc.dispatchFrom` / `doc.shipTo`. A movement that also carries `dispatchFrom` or `shipTo` is the mapping error `ADDRESS_IN_MOVEMENT` (§5): the mapper never picks one source silently.
+- The movement's `shipTo` has no name or GSTIN: I's `ExpShipDtls` has neither (its `Gstin`/`TrdNm` are commented out, finding E7). A model `ShipTo` (with `legalName`) is therefore not accepted there, so a name can never be dropped.
+- Ship-to GSTIN on the Generate route: still not in v0.1 (D-Q7, re-checked in Track E, model D-S12). `shipToGSTIN`/`shipToTrdName` are commented out in H, and the "mandatory Ship-To GSTIN" change was put on hold on 30/07/2026 (L). The GSTN advisory and FAQ that L links to are not in `sources/`.
 - **Mode codes:** `ROAD → "1"`, `RAIL → "2"`, `AIR → "3"`, `SHIP → "4"`. K1's mode `5` "inTransit" is in no schema enum and is not supported.
 - **Vehicle types:** `REGULAR → "R"`, `ODC → "O"`.
 
@@ -100,9 +103,10 @@ Whether a supplier is enabled for e-invoicing is portal data and cannot be deriv
 |---|---|---|
 | `ewbRoute` is `NONE` | `NOT_EWB_DOCUMENT` | §4 |
 | `ewbRoute` is `IRN` | `USE_IRN_ROUTE` | H validations |
-| no `fromPincode`: neither `dispatchFrom` nor `supplier.address.pincode` has one | `MISSING_PIN` | H `required` |
-| no `toPincode`: neither `shipTo` nor `recipient.address.pincode` has one | `MISSING_PIN` | H `required`; I/C "Pincode of Recipient GSTIN is mandatory if Ship-To details are not entered" |
-| `EXPORT_*` without `shipTo` | `EXPORT_NEEDS_PORT_SHIP_TO` | I/C: for exports "the address of port should have been passed as shipping address" (decision D-M3) |
+| `movement.dispatchFrom` or `movement.shipTo` present | `ADDRESS_IN_MOVEMENT` | D-S11: on this route they come from the document |
+| no `fromPincode`: no `doc.dispatchFrom` and no `supplier.address.pincode` (a `dispatchFrom` always has one, model §5.7) | `MISSING_PIN` | H `required` |
+| no `toPincode`: no `doc.shipTo` and no `recipient.address.pincode` | `MISSING_PIN` | H `required`; I line 9 / C line 100 "Pincode of Recipient GSTIN is mandatory if Ship-To details are not entered" |
+| `EXPORT_*` without `doc.shipTo` | `EXPORT_NEEDS_PORT_SHIP_TO` | I/C: for exports "the address of port should have been passed as shipping address" (decision D-M3) |
 | the tax split implied by the EWB state codes (V-G9) differs from `decideTaxSplit(supplier.stateCode, placeOfSupply, supplyCategory)`. Zero-tax documents are compared too, because the rates still follow the split | `STATE_SPLIT_MISMATCH` | H vs model §5 (D-Q4; needs CA) |
 | a line's HSN has a leading zero | `HSN_LEADING_ZERO` | H `hsnCode` is a JSON number (D-Q2) |
 
@@ -117,15 +121,15 @@ Whether a supplier is enabled for e-invoicing is portal data and cannot be deriv
 | `docDate` | `date` → `DD/MM/YYYY` | |
 | `fromGstin` | `supplier.gstin` | |
 | `fromTrdName` | `supplier.tradeName ?? supplier.legalName` | H names it "Trade Name" in the schema and "LegalName of consignor" in the data structure (§13 D5) |
-| `fromAddr1/fromAddr2/fromPlace/fromPincode` | `dispatchFrom.address` if given, else `supplier.address`: `line1/line2/city/pincode` | H "Bill From – Dispatch From"; J |
+| `fromAddr1/fromAddr2/fromPlace/fromPincode` | `doc.dispatchFrom.address` if given, else `supplier.address`: `line1/line2/city/pincode` | H validations line 50 ("Bill From – Dispatch From"); J lines 11–14 |
 | `fromStateCode` | `supplier.stateCode` as an integer (`"03"` → `3`) | |
-| `actFromStateCode` | `dispatchFrom.address.stateCode`, else `supplier.stateCode` | J |
+| `actFromStateCode` | `doc.dispatchFrom.address.stateCode`, else `supplier.stateCode` | J line 16; H line 50 |
 | `toGstin` | `recipient.gstin`, else `"URP"` | H "pass URP" |
 | `toTrdName` | `recipient.tradeName ?? recipient.legalName` | as `fromTrdName` |
-| `toAddr1/toAddr2/toPlace/toPincode` | `shipTo.address` if given, else `recipient.address` | H "Bill To – Ship To"; J |
+| `toAddr1/toAddr2/toPlace/toPincode` | `doc.shipTo.address` if given, else `recipient.address` | H validations line 49 ("Bill To – Ship To"); J lines 19–22 |
 | `toStateCode` | `99` for `SEZ_*` and `EXPORT_*`; otherwise `recipient.stateCode` | H: SEZ recipient ⇒ "Other Country"; 96 is stored as 99. Exports: J (`BuyerDtls.Stcd` = 96) |
-| `actToStateCode` | `shipTo.address.stateCode`, else `recipient.stateCode` | J |
-| `transactionType` | 1 = neither `dispatchFrom` nor `shipTo`; 2 = `shipTo` only; 3 = `dispatchFrom` only; 4 = both | J; K1 |
+| `actToStateCode` | `doc.shipTo.address.stateCode`, else `recipient.stateCode` | J line 24; H line 49 |
+| `transactionType` | from model `shipmentPattern(doc)`: `REGULAR` → 1, `BILL_TO_SHIP_TO` → 2, `BILL_FROM_DISPATCH_FROM` → 3, `COMBINATION` → 4 | J line 5; K1 `transaction-types.csv`; C lines 29–31 |
 | `totalValue` | `totals.taxableValue` | |
 | `cgstValue/sgstValue/igstValue` | `totals.cgst/sgst/igst` | `sgstValue` carries SGST **or UTGST**, as in the model |
 | `cessValue` | `totals.cess` | J: "sum of cess and cessNonAdvol at item level" (the model's `cess` already includes non-advol) |
@@ -147,18 +151,21 @@ Whether a supplier is enabled for e-invoicing is portal data and cannot be deriv
 | `cessNonadvol` | `"0"` | it is a **rate** (K4 lists it in Rs., Decimal(6,3)), and the model only has an amount. J maps `0` (D-M2) |
 
 - **All lines are mapped**, including service lines, because H only forbids an all-service list.
-- The output never contains `dispatchFromGSTIN`, `dispatchFromTradeName`, `shipToGSTIN` or `shipToTrdName` (§3).
+- The output never contains `dispatchFromGSTIN`, `dispatchFromTradeName`, `shipToGSTIN` or `shipToTrdName` (§3). `toGstin`, `toTrdName` and `toStateCode` stay the **bill-to** party's; `fromGstin`, `fromTrdName` and `fromStateCode` the bill-from party's (H lines 49–50).
+- `doc.shipTo.gstin` present ⇒ warning `SHIP_TO_GSTIN_NOT_SENT` (D-S12): the value has no field on this route. `shipTo.legalName`/`tradeName` and `dispatchFrom.legalName` also have no field here (H sends only the bill parties' names); this is by H's design, so no warning.
+- `fromStateCode`/`toStateCode`, and therefore V-G9 and `STATE_SPLIT_MISMATCH`, never use the ship/dispatch states: the split stays the supplier's state vs the bill-to state, consistent with the model's supplier state vs place of supply (model D-S5).
 
 ## 6. EWB by IRN and `EwbDtls`
 - `toEwbByIrnRequest(irn: string, movement): MapResult<EwbByIrnRequest>`:
   - `Irn` = `irn`.
   - `Distance` = `distanceKm` (JSON number).
   - `TransMode`, `TransId`, `TransName`, `TransDocNo`, `TransDocDt` (DD/MM/YYYY), `VehNo`, `VehType` from `transport`; each omitted if absent.
-  - `DispDtls = { Nm: name, Addr1, Addr2, Loc, Pin, Stcd }` from `dispatchFrom`.
-  - `ExpShipDtls = { Addr1, Addr2, Loc, Pin, Stcd }` from `shipTo`.
+  - `DispDtls = { Nm: legalName, Addr1, Addr2, Loc, Pin, Stcd }` from `movement.dispatchFrom` (I: `Nm` 3–100, `Addr1` 1–100, `Addr2`/`Loc` 3–100, `Pin` 100000–999999, `Stcd` 1–2; required `Nm, Addr1, Loc, Pin, Stcd`).
+  - `ExpShipDtls = { Addr1, Addr2, Loc, Pin, Stcd }` from `movement.shipTo` (I: `Addr1` **3**–100, `Addr2`/`Loc` 3–100; required `Addr1, Loc, Pin, Stcd`; §13 D12).
+  - Both are only for addresses that were not sent with the IRN, or the export port (I lines 16–17).
   - `Stcd` is emitted 2-digit, as in einvoice (D5 there).
   - Neither the IRN nor the document is needed beyond that. Export port and dispatch addresses may be supplied here when the IRN lacked them (I validations).
-- `toIrnEwbDtls(movement)` returns `{ TransId, TransName, TransMode, Distance, TransDocNo, TransDocDt, VehNo, VehType }`. The type is `IrnRequest["EwbDtls"]` from `@india-gst-kit/einvoice` (the only use of that dependency, D-Q1). Dispatch and ship-to belong in the IRN's own `DispDtls`/`ShipDtls`, which `einvoice` does not yet map (its §11). The caller attaches the block, and `validateIrnRequest` runs on the result.
+- `toIrnEwbDtls(movement)` returns `{ TransId, TransName, TransMode, Distance, TransDocNo, TransDocDt, VehNo, VehType }`. The type is `IrnRequest["EwbDtls"]` from `@india-gst-kit/einvoice` (the only use of that dependency, D-Q1). Dispatch and ship-to belong in the IRN's own `DispDtls`/`ShipDtls`, which `einvoice` maps from the document (einvoice §3.1, Track E). The caller attaches the block, and `validateIrnRequest` runs on the result (including its V29/V30 warnings).
 
 ## 7. Schemas (`src/schema.ts`)
 `EwbRequestSchema` (H) and `EwbByIrnRequestSchema` (I) are Zod transcriptions of **every** constraint in the source files: lengths, patterns, enums, min/max and required fields, using the string number types from §2. Unknown keys are rejected.
@@ -280,7 +287,20 @@ No function throws on bad data. They throw only on programmer errors.
 - B2C: `toGstin "URP"`. A recipient without a PIN and no `shipTo` → `MISSING_PIN`.
 - SEZ with and without payment: `toStateCode 99`, `actToStateCode` = actual state, IGST.
 - Export: `subSupplyType "3"`, `toStateCode 99`, the port address as `to*`; no `shipTo` → `EXPORT_NEEDS_PORT_SHIP_TO`.
-- `shipTo` only → type 2; `dispatchFrom` only → 3; both → 4, with addresses taken from them and names and GSTINs from the bill parties.
+- **Track E (document ship-to / dispatch-from):**
+  - Regular → `transactionType 1`, `to*`/`from*` addresses from the bill parties.
+  - `doc.shipTo` only → 2: `toAddr1/toAddr2/toPlace/toPincode/actToStateCode` from `shipTo.address`; `toGstin`, `toTrdName`, `toStateCode` from the recipient.
+  - `doc.dispatchFrom` only → 3: `fromAddr1/fromAddr2/fromPlace/fromPincode/actFromStateCode` from `dispatchFrom.address`; `fromGstin`, `fromTrdName`, `fromStateCode` from the supplier.
+  - Both → 4.
+  - `shipTo` in another state than the recipient (supplier 29, recipient 29, POS 29, `shipTo` in 33) → `toStateCode 29`, `actToStateCode 33`, CGST/SGST rates, no `STATE_SPLIT_MISMATCH`.
+  - `dispatchFrom` in 33 for a supplier in 29 → `fromStateCode 29`, `actFromStateCode 33`, split unchanged.
+  - SEZ recipient with `shipTo` in another state → `toStateCode 99`, `actToStateCode` = the ship-to state.
+  - B2C recipient without a PIN but with `shipTo` → maps (`toPincode` from `shipTo`); without either → `MISSING_PIN`.
+  - Export with `doc.shipTo` = port in 27 → `toStateCode 99`, `actToStateCode 27`, port address as `to*`; without → `EXPORT_NEEDS_PORT_SHIP_TO`.
+  - `shipTo` in state 25 → V-G7 error (K2 has no 25).
+  - `movement.shipTo` or `movement.dispatchFrom` passed to `toEwbRequest` → `ADDRESS_IN_MOVEMENT`.
+  - `doc.shipTo.gstin` present → warning `SHIP_TO_GSTIN_NOT_SENT`, `ok: true`, no `shipToGSTIN` in the output.
+  - `transactionType` equals the model's `shipmentPattern` mapping for every fixture.
 - Bill of supply → `BIL`, all rates 0.
 - Cess: `cessValue = totals.cess`, `cessNonAdvolValue "0.00"`, item `cessNonadvol "0"`.
 - `otherValue` = otherCharges + roundOff, including a negative result.
@@ -295,7 +315,9 @@ No function throws on bad data. They throw only on programmer errors.
 
 **mapping (by IRN / EwbDtls)**
 - Fields are mapped and omitted correctly; `Distance` is a number; `Stcd` is 2-digit.
-- `DispDtls` gets the name; `ExpShipDtls` has no `Gstin`.
+- `DispDtls` gets `movement.dispatchFrom.legalName` as `Nm`; `ExpShipDtls` has no `Gstin` or name.
+- `movement.shipTo` with a `legalName` or `gstin` is rejected by `EwbMovementSchema` (unknown key).
+- `ExpShipDtls.Addr1` of 2 characters → schema error (I min 3), while the same value is valid in the IRN's `ShipDtls` (C min 1) (D12).
 - `toIrnEwbDtls` output passes `validateIrnRequest` when attached to a mapped einvoice fixture.
 
 **serialise/parse**
@@ -354,6 +376,8 @@ No function throws on bad data. They throw only on programmer errors.
 - **D9. `toPincode`** has no min/max in H's schema, unlike `fromPincode`. The data structure says Number(6), so V-G8 requires 6 digits for both.
 - **D10. `quantity`** is Decimal(8,2) in H's data structure, while the schema has no limit and the model allows 3 dp. This is a warning only (D-Q5).
 - **D11. The official samples are inconsistent** (sources finding E5). The tests assert their exact failures rather than treating them as valid.
+- **D12. Ship-to address line 1:** `ExpShipDtls.Addr1` (I) has `minLength 3`; `ShipDtls.Addr1` (C) and `DispDtls.Addr1` (C and I) have `minLength 1`. Each route validates against its own schema; the model allows 1.
+- **D13. `toTrdName`:** H's schema describes it as "Consignee Trade name or Recipient Trade name", but H validations line 49 says `toTrdName` is passed "with 'Bill To' party" in a bill-to–ship-to transaction. The validation text is explicit, so the bill-to name is emitted (as before).
 
 ## 14. Questions (decided by the owner on 2026-10-16; outcomes in §15)
 - **Q1. Dependency on `einvoice`.** The lossless JSON reader (`einvoice/src/lossless.ts`) and the PIN ranges (`pin-ranges.ts`) are needed here too, as is the `IrnRequest["EwbDtls"]` type. Options:
@@ -385,7 +409,7 @@ No function throws on bad data. They throw only on programmer errors.
 - **D-Q4** `toStateCode` = `recipient.stateCode` (J). The mapper refuses to map (`STATE_SPLIT_MISMATCH`) when the EWB split and the model's split disagree. **Needs CA.**
 - **D-Q5** Quantity with more than 2 dp (or ≥ 10⁶): warning (V-G12).
 - **D-Q6** Address or place characters outside the stated set: warning (V-G15).
-- **D-Q7** Ship-to GSTIN/trade name: not in v0.1.
+- **D-Q7** Ship-to GSTIN/trade name: not in v0.1. **Re-checked in Track E (2026-10-17): still deferred** (model D-S12): H's visible schema has no `shipToGSTIN`/`shipToTrdName`, I's `ExpShipDtls` has no `Gstin`, J has no row for them, and L (30/07/2026) puts the mandatory Ship-To GSTIN on hold. On the IRN route the ship-to GSTIN travels in the IRN's `ShipDtls.Gstin` (C). The Generate mapper warns `SHIP_TO_GSTIN_NOT_SENT`.
 - **D-Q8** Ship-mode rules stay per route (V-T4, D1).
 - **D-Q9** Zero-rated exports and SEZ supplies without payment follow J: `igstRate = gstRate` with `igstValue = 0` (D-M1). **Needs CA.**
 - **D-Q10** Outward supply by an SEZ unit: `fromStateCode` = the supplier's actual state. **Needs CA.**
@@ -399,13 +423,12 @@ No function throws on bad data. They throw only on programmer errors.
 
 ## 16. Deferred
 - Inward EWBs; delivery challans, bills of entry and "others"; sub-types other than 1 and 3.
-- Ship-to/dispatch-from GSTINs (D-Q7).
+- Ship-to/dispatch-from GSTINs on the Generate and by-IRN routes (D-Q7; model D-S2, D-S12). **File to attach** when it is re-enabled: the GSTN advisory / FAQ "Ship-To field" linked from L, and the updated H schema.
 - Part-B update, cancel, reject, extend, consolidated and multi-vehicle EWBs.
 - Validity calculation; error-code descriptions.
 - The RSP HSN list (Notification 20/2025-CT, **file to attach**: the notification PDF from cbic-gst.gov.in).
 - The vehicle-registration state prefix list (**file to attach**: an official list of RTO state codes, if one exists).
 - The portal tax-rate list (needs rate notifications and a CA).
-- `DispDtls`/`ShipDtls` mapping in `einvoice`.
 
 ## 17. Stop conditions
 As in CLAUDE.md. Specific to this package:
@@ -429,3 +452,4 @@ Each row: source URL (H, I, J, K1–K4, L), retrieved 2026-10-16, status UNVERIF
 - The IRN → EWB field mapping (J, `map.ts`).
 - The decisions D-M1 to D-M4 and D-Q2 to D-Q10, one row each, marked "Design decision" (D-Q4, D-Q9 and D-Q10 additionally "needs CA").
 - `PIN_RANGES` moves to `packages/model/src/` (D-Q1): update the file path of its existing row.
+- Track E: `transactionType` from the document's ship-to / dispatch-from (J line 5, K1, H lines 49–50, C lines 29–31); decisions D-S11 and D-S12 (model spec §13.3), "Design decision".
