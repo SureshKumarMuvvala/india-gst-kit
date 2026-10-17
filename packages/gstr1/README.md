@@ -3,7 +3,12 @@
 Builds a GSTR-1 return from [`@india-gst-kit/model`](../model) `GstDocument`s for one monthly return period and renders it two ways. Spec: [`docs/specs/gstr1.md`](../../docs/specs/gstr1.md). Every legal/official fact is **UNVERIFIED — needs CA** until signed off in [`docs/legal-facts.md`](../../docs/legal-facts.md).
 
 ```ts
-import { buildGstr1, toApiSavePayload, toOfflineUploadJson, serializeGstr1 } from "@india-gst-kit/gstr1";
+import {
+  buildGstr1,
+  toApiSavePayload,
+  toOfflineUploadJson,
+  serializeGstr1,
+} from "@india-gst-kit/gstr1";
 
 const built = buildGstr1({ gstin, period: "102026", documents }); // classify + aggregate, once
 if (built.ok) {
