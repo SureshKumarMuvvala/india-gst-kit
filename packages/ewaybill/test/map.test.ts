@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ShipToSchema, parseGstDocument } from "@india-gst-kit/model";
 import { serializeEwbRequest, toEwbRequest, type EwbIssue } from "../src/index.js";
 import {
   GSTINS,
@@ -15,17 +16,16 @@ import {
   type FixtureName,
 } from "./helpers.js";
 
+// Track E: ship-to / dispatch-from are on the document (model §5.7), no longer in the movement.
 const shipTo = {
+  legalName: "Beta Test Buyers Delivery Site",
   address: { line1: "10 Delivery Lane", city: "Mysuru", pincode: "570002", stateCode: "29" },
 };
 const dispatchFrom = {
-  name: "Alpha Test Warehouse",
+  legalName: "Alpha Test Warehouse",
   address: { line1: "9 Depot Road", city: "Hosur", pincode: "560002", stateCode: "29" },
 };
-const withMovement = (extra: Record<string, unknown>, patch: Record<string, unknown> = {}) => ({
-  ...movement(patch),
-  ...extra,
-});
+const parseShip = (v: unknown) => ShipToSchema.parse(v);
 const codes = (issues: readonly EwbIssue[]) => issues.map((i) => i.code);
 
 describe("toEwbRequest: intra-state B2B", () => {
@@ -177,7 +177,7 @@ describe("toEwbRequest: parties and movement", () => {
       code: "MISSING_PIN",
       path: ["recipient", "address", "pincode"],
     });
-    const good = toEwbRequest(doc, withMovement({ shipTo }));
+    const good = toEwbRequest({ ...doc, shipTo: parseShip(shipTo) }, movement());
     expect(good.ok).toBe(true);
     if (good.ok) {
       expect(good.value).toMatchObject({
@@ -199,16 +199,17 @@ describe("toEwbRequest: parties and movement", () => {
       code: "MISSING_PIN",
       path: ["supplier", "address", "pincode"],
     });
-    const dispatchNoPin = withMovement({
-      dispatchFrom: {
-        name: "X Depot",
-        address: { line1: "9 Depot Road", city: "Hosur", stateCode: "29" },
-      },
-    });
-    expect(toEwbRequest(parsed("intraInvoice"), dispatchNoPin).issues[0]).toMatchObject({
-      code: "MISSING_PIN",
-      path: ["movement", "dispatchFrom", "address", "pincode"],
-    });
+    // Track E: a dispatch-from address always has a PIN (model ShipAddressSchema), so a missing one is
+    // rejected when the document is parsed, before mapping.
+    expect(
+      parseGstDocument({
+        ...fixtures.intraInvoice,
+        dispatchFrom: {
+          legalName: "X Depot",
+          address: { line1: "9 Depot Road", city: "Hosur", stateCode: "29" },
+        },
+      }).success,
+    ).toBe(false);
   });
   it("SEZ with and without payment: toStateCode 99, actToStateCode the actual state, IGST rates", () => {
     const without = mapped("sezWithoutPayment");
@@ -231,8 +232,7 @@ describe("toEwbRequest: parties and movement", () => {
   });
   it("export: subSupplyType 3, toStateCode 99, the port address as to*", () => {
     const r = mapDoc(
-      parsed("exportWithoutPayment"),
-      withMovement({ shipTo: { address: portAddress } }),
+      variant("exportWithoutPayment", { shipTo: { legalName: "Port", address: portAddress } }),
     );
     expect(r).toMatchObject({
       subSupplyType: "3",
@@ -252,22 +252,22 @@ describe("toEwbRequest: parties and movement", () => {
     expect(codes(res.issues)).toEqual(["EXPORT_NEEDS_PORT_SHIP_TO"]);
   });
   it("shipTo only → type 2; dispatchFrom only → 3; both → 4, with addresses from them", () => {
-    expect(mapped("intraInvoice", withMovement({ shipTo })).transactionType).toBe("2");
-    const ship = mapped("intraInvoice", withMovement({ shipTo }));
+    expect(mapDoc(variant("intraInvoice", { shipTo })).transactionType).toBe("2");
+    const ship = mapDoc(variant("intraInvoice", { shipTo }));
     expect(ship).toMatchObject({
       toAddr1: "10 Delivery Lane",
       toPincode: "570002",
       toGstin: GSTINS.recipientKa,
     });
     expect(ship.fromAddr1).toBe("1 Test Street");
-    const disp = mapped("intraInvoice", withMovement({ dispatchFrom }));
+    const disp = mapDoc(variant("intraInvoice", { dispatchFrom }));
     expect(disp.transactionType).toBe("3");
     expect(disp).toMatchObject({
       fromAddr1: "9 Depot Road",
       fromPlace: "Hosur",
       fromPincode: "560002",
     });
-    const both = mapped("intraInvoice", withMovement({ dispatchFrom, shipTo }));
+    const both = mapDoc(variant("intraInvoice", { dispatchFrom, shipTo }));
     expect(both).toMatchObject({
       transactionType: "4",
       fromAddr1: "9 Depot Road",
@@ -278,13 +278,13 @@ describe("toEwbRequest: parties and movement", () => {
     });
   });
   it("actToStateCode / actFromStateCode follow shipTo / dispatchFrom", () => {
-    const r = mapped(
-      "interInvoice",
-      withMovement({
+    const r = mapDoc(
+      variant("interInvoice", {
         shipTo: {
+          legalName: "Chennai Site",
           address: { line1: "12 Port Road", city: "Chennai", pincode: "600001", stateCode: "33" },
         },
-        dispatchFrom: { name: "Depot", address: { ...dispatchFrom.address, stateCode: "29" } },
+        dispatchFrom: { legalName: "Depot", address: { ...dispatchFrom.address, stateCode: "29" } },
       }),
     );
     expect(r).toMatchObject({ toStateCode: "27", actToStateCode: "33", fromStateCode: "29" });
@@ -476,9 +476,9 @@ describe("toEwbRequest: lines", () => {
 describe("toEwbRequest: output hygiene", () => {
   it("never emits empty strings, shipToGSTIN, dispatchFromGSTIN or their trade names", () => {
     const text = serializeEwbRequest(
-      mapped(
-        "intraInvoice",
-        withMovement({ dispatchFrom, shipTo }, { transporterName: undefined }),
+      mapDoc(
+        variant("intraInvoice", { dispatchFrom, shipTo: { ...shipTo, gstin: GSTINS.shipToTn } }),
+        movement({ transporterName: undefined }),
       ),
     );
     expect(text).not.toMatch(/:""/);
@@ -514,13 +514,13 @@ describe("toEwbRequest: output hygiene", () => {
       "reverseChargeInvoice",
     ];
     for (const name of names) {
-      const mv =
+      const doc =
         name === "exportWithoutPayment"
-          ? withMovement({ shipTo: { address: portAddress } })
+          ? variant(name, { shipTo: { legalName: "Port", address: portAddress } })
           : needsShipTo.has(name)
-            ? withMovement({ shipTo })
-            : movement();
-      const res = toEwbRequest(parsed(name), mv);
+            ? variant(name, { shipTo })
+            : parsed(name);
+      const res = toEwbRequest(doc, movement());
       expect(res.ok, `${name}: ${JSON.stringify(res.issues)}`).toBe(true);
     }
     // The other fixtures are not e-way bill documents, or carry a leading-zero HSN.

@@ -9,8 +9,9 @@ import {
 import { GSTINS, movement, parsed, portAddress } from "./helpers.js";
 
 const IRN = "a".repeat(64);
+// Track E: the movement's dispatchFrom is the model's DispatchFromSchema (legalName, spec §3).
 const dispatchFrom = {
-  name: "Alpha Test Warehouse",
+  legalName: "Alpha Test Warehouse",
   address: {
     line1: "9 Depot Road",
     line2: "Industrial Area",
@@ -94,13 +95,16 @@ describe("toEwbByIrnRequest", () => {
     });
     expect(r.ok && r.value.ExpShipDtls?.Stcd).toBe("04");
   });
-  it("a ship-to without a PIN fails validation (V-B3)", () => {
+  it("a ship-to without a PIN is rejected (the movement's shipTo uses the model ShipAddressSchema)", () => {
     const r = toEwbByIrnRequest(IRN, {
       ...movement(),
       shipTo: { address: { line1: "4 Sector Road", city: "Chandigarh", stateCode: "04" } },
     });
     expect(r.ok).toBe(false);
-    expect(r.issues.find((i) => i.rule === "V-B3")?.path).toEqual(["ExpShipDtls", "Pin"]);
+    expect(r.issues[0]).toMatchObject({
+      code: "BAD_MOVEMENT",
+      path: ["movement", "shipTo", "address", "pincode"],
+    });
   });
   it("an IRN that is not 64 lowercase hex maps with a warning; a short one fails", () => {
     const upper = toEwbByIrnRequest("A".repeat(64), movement());

@@ -16,6 +16,8 @@ export const EwbIssueSchema = z.strictObject({
     "STATE_SPLIT_MISMATCH",
     "HSN_LEADING_ZERO",
     "EINVOICE_STATUS_UNKNOWN",
+    "ADDRESS_IN_MOVEMENT",
+    "SHIP_TO_GSTIN_NOT_SENT",
   ]),
   /** Stable id: `S-…` schema, `V-T…` transport, `V-G…` Generate, `V-B…` by-IRN, `M-…` mapping, `R-…` route, `P-…` responses. */
   rule: z.string(),
