@@ -384,9 +384,81 @@ const CASES: Case[] = [
     fail: [[["ValDtls", "TotInvVal"], "9999.00"]],
     path: ["ValDtls", "TotInvVal"],
   },
+  // Track E (spec §5.2, §9): ship-to / dispatch-from.
+  {
+    rule: "V12",
+    title: "ShipDtls PIN prefix outside the state's range (warning)",
+    from: "billToShipTo",
+    fail: [[["ShipDtls", "Pin"], "560001"]],
+    path: ["ShipDtls", "Pin"],
+    severity: "warning",
+  },
+  {
+    rule: "V12",
+    title: "DispDtls PIN prefix outside the state's range (warning)",
+    from: "billFromDispatchFrom",
+    fail: [[["DispDtls", "Pin"], "560001"]],
+    path: ["DispDtls", "Pin"],
+    severity: "warning",
+  },
+  {
+    rule: "V5",
+    title: "ShipDtls GSTIN check digit",
+    from: "billToShipTo",
+    fail: [[["ShipDtls", "Gstin"], `${GSTINS.shipToTn.slice(0, 14)}A`]],
+    path: ["ShipDtls", "Gstin"],
+    pass: [[["ShipDtls", "Gstin"], "URP"]],
+  },
+  {
+    rule: "V29",
+    title: "EwbDtls without ShipDtls needs the buyer PIN (warning)",
+    from: "intraInvoice",
+    fail: [
+      [["EwbDtls"], { Distance: "100" }],
+      [["BuyerDtls", "Pin"], undefined],
+    ],
+    path: ["BuyerDtls", "Pin"],
+    pass: [[["EwbDtls"], { Distance: "100" }]],
+    severity: "warning",
+  },
+  {
+    rule: "V30",
+    title: "export EwbDtls without a port ShipDtls (warning)",
+    from: "exportWithoutPayment",
+    fail: [[["EwbDtls"], { Distance: "100" }]],
+    path: ["ShipDtls"],
+    pass: [
+      [["EwbDtls"], { Distance: "100" }],
+      [
+        ["ShipDtls"],
+        { LglNm: "Port Terminal", Addr1: "Gate 3", Loc: "Mumbai", Pin: "400001", Stcd: "27" },
+      ],
+    ],
+    severity: "warning",
+  },
+  {
+    rule: "V30",
+    title: "export EwbDtls with ShipDtls outside India (warning)",
+    from: "exportPortShipTo",
+    fail: [
+      [["EwbDtls"], { Distance: "100" }],
+      [["ShipDtls", "Stcd"], "96"],
+    ],
+    path: ["ShipDtls", "Stcd"],
+    pass: [[["EwbDtls"], { Distance: "100" }]],
+    severity: "warning",
+  },
 ];
 
 describe("validateIrnRequest — rules", () => {
+  it("V29 / V30: no warning without EwbDtls; V29 none when ShipDtls is present", () => {
+    const noPin = edit(mapped("billToShipTo"), [[["BuyerDtls", "Pin"], undefined]]);
+    expect(hits(validateIrnRequest(noPin).issues, "V29")).toEqual([]);
+    const withEwb = edit(noPin, [[["EwbDtls"], { Distance: "100" }]]);
+    expect(hits(validateIrnRequest(withEwb).issues, "V29")).toEqual([]);
+    expect(hits(validateIrnRequest(mapped("exportWithoutPayment")).issues, "V30")).toEqual([]);
+  });
+
   it("passes every mapped fixture with no issues at all", () => {
     for (const name of [
       "intraInvoice",

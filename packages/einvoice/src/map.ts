@@ -6,7 +6,8 @@
 // GstDocument (@india-gst-kit/model) → IRN request, docs/specs/einvoice.md §3. Covers:
 //   - SupTyp / Typ codes and the model → IRN mapping;
 //   - exclusions M1 bill of supply, M2 B2C, M3 SEZ-unit supplier, M5 composition supplier (see below);
-//   - M4 seller PIN required; M6 export to a GSTIN holder (decision D-Q2).
+//   - M4 seller PIN required; M6 export to a GSTIN holder (decision D-Q2);
+//   - dispatchFrom → DispDtls, shipTo → ShipDtls (Track E, spec §3.1; validations lines 29–31).
 import type { GstDocument } from "@india-gst-kit/model";
 import { D } from "./decimal.js";
 import { IRN_SCHEMA_VERSION } from "./rules.js";
@@ -113,6 +114,39 @@ function mapItem(line: GstDocument["lines"][number]): IrnItem {
   };
 }
 
+type ShipAddress = NonNullable<GstDocument["shipTo"]>["address"];
+
+/** The address part of DispDtls / ShipDtls. The model guarantees a PIN (model spec §5.7). */
+function shipAddress(a: ShipAddress) {
+  return {
+    Addr1: a.line1,
+    ...opt("Addr2", a.line2),
+    Loc: a.city,
+    Pin: a.pincode ?? "",
+    Stcd: a.stateCode,
+  };
+}
+
+/** Ship-to / dispatch-from blocks; never change BuyerDtls or Pos (model decision D-S5). */
+function shipBlocks(doc: GstDocument): Pick<IrnRequest, "DispDtls" | "ShipDtls"> {
+  const d = doc.dispatchFrom;
+  const t = doc.shipTo;
+  return {
+    ...(d === undefined ? {} : { DispDtls: { Nm: d.legalName, ...shipAddress(d.address) } }),
+    ...(t === undefined
+      ? {}
+      : {
+          // No GSTIN ⇒ Gstin omitted, never "URP" (model decision D-S4).
+          ShipDtls: {
+            ...opt("Gstin", t.gstin),
+            LglNm: t.legalName,
+            ...opt("TrdNm", t.tradeName),
+            ...shipAddress(t.address),
+          },
+        }),
+  };
+}
+
 function build(doc: GstDocument, version: string): IrnRequest {
   const exp = isExport(doc);
   const s = doc.supplier;
@@ -156,6 +190,7 @@ function build(doc: GstDocument, version: string): IrnRequest {
       ...opt("Pin", exp ? "999999" : r.address.pincode),
       Stcd: exp ? "96" : r.address.stateCode,
     },
+    ...shipBlocks(doc),
     ItemList: doc.lines.map(mapItem),
     ValDtls: {
       AssVal: doc.totals.taxableValue,
