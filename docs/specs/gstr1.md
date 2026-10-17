@@ -532,3 +532,21 @@ Output (b) deliberately keeps V1 and V4 as the tool writes them, and allows V2 (
 | Upload size 5 MB (tool splits at 4.7 MiB) | `serialize.ts` |
 
 Each row: source `sources/gstr1/…`, retrieved 2026-10-16, UNVERIFIED — needs CA.
+
+## 16. Track E (draft 2026-10-17): cleanup and ship-to / dispatch-from
+
+### 16.1 Lossless JSON from the model (cleanup)
+`src/numbers.ts` keeps a local copy of the lossless-JSON technique ("Kept here because `@india-gst-kit/model` does not export it yet"). The model now exports it (model spec §6.8), so the copy goes; this closes that spec deviation. Model spec §13.1 lists the check of the other packages: `einvoice` (`json.ts`, `jwt.ts`), `recon` (`parse.ts`) and `ewaybill` already import from the model; only `gstr1` duplicates it.
+- **Import from `@india-gst-kit/model`:** `markNumber`, `isNumberLeaf`, `unwrapSchema`, `objectShape`, `arrayElement`, `JsonNumber`, `parseJsonLossless`. Delete the local definitions, including the private `NUMBER_LEAVES` `WeakSet` and `isPlainObject` (or import an equivalent). `wire-schema.ts` must import `markNumber` from the model, so that there is one number-leaf registry (model §6.8).
+- **Kept locally:** the converter, renamed `convertGstr1Numbers`. gstr1's wire schemas have plain `z.number()` count fields (`num`, `totnum`, `cancel`, `net_issue`, `doc_num`) that must become doubles, and a string under a number leaf must surface as a Zod type error (`WrongType`). The model's `convertNumbers` does neither (it turns every number into text or a `LosslessTypeIssue`), so it is not reused (model D-S13). `parseWire` keeps its behaviour.
+- **Kept locally:** `writeJson` (insertion key order). Moving the writers into the model is deferred (model D-S14).
+- No API, output or behaviour change: changeset `@india-gst-kit/gstr1: patch`.
+
+Tests:
+- All existing gstr1 serialise/parse tests stay green **unchanged** (byte-exact round trips, `1e3`/`+1`/string-in-number rejections, `doc_num` integer vs string per output).
+- `isNumberLeaf` imported from `@india-gst-kit/model` returns `true` for a gstr1 money leaf (e.g. `ApiSavePayloadSchema` b2b item `txval`) — proves the shared registry.
+- A source scan asserts that no file under `packages/*/src` other than `packages/model/src/lossless.ts` calls `JSON.parse` with a reviver or declares `class JsonNumber`.
+
+### 16.2 Ship-to / dispatch-from
+GSTR-1 has no ship-to or dispatch-from field in S4/S5, and classification uses `placeOfSupply` and the recipient only. `doc.shipTo` / `doc.dispatchFrom` are ignored.
+- Test: a document with `shipTo` (in another state than the POS) and `dispatchFrom` produces exactly the same `Gstr1Return`, API payload and offline JSON as the same document without them.

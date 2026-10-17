@@ -1,6 +1,6 @@
 # Spec — `@india-gst-kit/einvoice` (v0.1)
 
-Status: approved 2026-10-16. Every legal/official fact referenced here is **UNVERIFIED — needs CA** until a chartered accountant signs it off in `docs/legal-facts.md`. Source **C** = `sources/einvoice/generate-irn-json-schema.json` (schema) and `sources/einvoice/generate-irn-validations.txt` (validations), captured 2026-10-16 from https://einv-apisandbox.nic.in/version1.03/generate-irn.html. Sample = `sources/einvoice/sample-signed-einvoice.json` (https://einvoice1.gst.gov.in/Documents/SampleJson.json). Where source C contradicts the model spec, **source C wins** (§10).
+Status: approved 2026-10-16; **Track E draft 2026-10-17** (`DispDtls`/`ShipDtls`, §3.1, V29–V30 — not yet approved). Every legal/official fact referenced here is **UNVERIFIED — needs CA** until a chartered accountant signs it off in `docs/legal-facts.md`. Source **C** = `sources/einvoice/generate-irn-json-schema.json` (schema) and `sources/einvoice/generate-irn-validations.txt` (validations), captured 2026-10-16 from https://einv-apisandbox.nic.in/version1.03/generate-irn.html. Sample = `sources/einvoice/sample-signed-einvoice.json` (https://einvoice1.gst.gov.in/Documents/SampleJson.json). Where source C contradicts the model spec, **source C wins** (§10).
 
 ## 1. Purpose and scope
 - **In scope:**
@@ -13,7 +13,7 @@ Status: approved 2026-10-16. Every legal/official fact referenced here is **UNVE
   - Computing the IRN hash (no algorithm in `sources/`).
   - Signature verification (TODO, §8.4).
   - E-way bill details (package `ewaybill`).
-  - Export details, dispatch/ship-to, payment, reference and additional-document blocks (the model has no data for them, §11).
+  - Export details, payment, reference and additional-document blocks (the model has no data for them, §11). Dispatch-from and ship-to **are** mapped (§3.1).
   - Checks that need the portal's databases (§5.5).
 - ESM only, named exports, Zod 4 (peer `^4.0.0`), `decimal.js`, and `@india-gst-kit/model` as a dependency (`workspace:^`). Types are `z.infer`. Objects use `z.strictObject`.
 
@@ -84,7 +84,40 @@ The schema types amounts, quantities, rates and PIN codes as JSON **numbers**. P
 | `ValDtls.TotInvVal` | `totals.grandTotal` | |
 | `RefDtls.InvRm` | `notes` | omitted if absent; never truncated (validation fails if longer than 100) |
 | `RefDtls.PrecDocDtls[0]` | `{ InvNo: originalDocument.number, InvDt: DD/MM/YYYY }` for CRN/DBN | |
-| `DispDtls, ShipDtls, PayDtls, ExpDtls, EwbDtls, AddlDocDtls, Irn` | omitted | `Irn` must not be sent (validations) |
+| `DispDtls` | from `dispatchFrom` (§3.1); omitted if absent | model §5.7 |
+| `ShipDtls` | from `shipTo` (§3.1); omitted if absent | model §5.7 |
+| `PayDtls, ExpDtls, EwbDtls, AddlDocDtls, Irn` | omitted | `Irn` must not be sent (validations) |
+
+`BuyerDtls` always describes the **bill-to** party and `BuyerDtls.Pos` is always `placeOfSupply`: a `shipTo` never changes them (model §5.7, D-S5). The tax split (V11) is unaffected.
+
+### 3.1 `DispDtls` / `ShipDtls` (Track E)
+Source C schema (`sources/einvoice/generate-irn-json-schema.json`); C validations lines 29–32. All text fields also carry the schema pattern `^([^\"])*$` (no `"`), plus the `\` exclusion of §5.1.
+
+**`DispDtls`** — emitted iff `dispatchFrom` is present. Required by the schema: `Nm, Addr1, Loc, Pin, Stcd`.
+| Field | Schema | From model |
+|---|---|---|
+| `Nm` | string 3–100, **required** | `dispatchFrom.legalName` |
+| `Addr1` | string 1–100, **required** | `dispatchFrom.address.line1` |
+| `Addr2` | string 3–100, optional | `dispatchFrom.address.line2`; omitted if absent |
+| `Loc` | string 3–100, **required** | `dispatchFrom.address.city` |
+| `Pin` | number 100000–999999, **required** | `dispatchFrom.address.pincode` (JSON number) |
+| `Stcd` | string 1–2, `^(?!0+$)([0-9]{1,2})$`, **required** | `dispatchFrom.address.stateCode`, 2-digit (D5) |
+
+**`ShipDtls`** — emitted iff `shipTo` is present. Required by the schema: `LglNm, Addr1, Loc, Pin, Stcd`.
+| Field | Schema | From model |
+|---|---|---|
+| `Gstin` | string 3–15, `^(([0-9]{2}[0-9A-Z]{13})\|URP)$`, optional | `shipTo.gstin`; **omitted** if absent, never `URP` (model D-S4) |
+| `LglNm` | string 3–100, **required** | `shipTo.legalName` |
+| `TrdNm` | string 3–100, optional | `shipTo.tradeName`; omitted if absent |
+| `Addr1` | string 1–100, **required** | `shipTo.address.line1` |
+| `Addr2` | string 3–100, optional | `shipTo.address.line2`; omitted if absent |
+| `Loc` | string 3–100, **required** | `shipTo.address.city` |
+| `Pin` | number 100000–999999, **required** | `shipTo.address.pincode` (JSON number) |
+| `Stcd` | string 1–2, `^(?!0+$)([0-9]{1,2})$`, **required** | `shipTo.address.stateCode`, 2-digit |
+
+- No new precondition: the model guarantees a PIN and an Indian state for both (model §5.7). The schema's other limits (names 3–100, `Loc`/`Addr2` ≥ 3, `Pin` ≥ 100000) are reported by validation; the mapper never truncates (D4).
+- Exports: `shipTo` is the port in India (C line 32); `BuyerDtls` stays `URP`/96/96/999999 (V8). `ShipDtls.Gstin` is normally absent.
+- `IrnRequestSchema` already transcribes both blocks (`DispDtlsSchema`, `ShipDtlsSchema`) and the conformance test covers them; V5 (`ShipDtls.Gstin`), V7 (`DispDtls.Stcd`, `ShipDtls.Stcd`) and V12 (`DispDtls.Pin`, `ShipDtls.Pin`) already apply to them.
 
 ## 4. `IrnRequestSchema` (structural, `src/schema.ts`)
 A Zod transcription of **every** constraint in the source schema: lengths, patterns, enums, min/max and required fields, using the string number types from §2.
@@ -137,7 +170,9 @@ type IrnIssue = {
 | V9 | `RegRev = Y` only with `SupTyp ∈ {B2B, SEZWP, SEZWOP}` |
 | V10 | `IgstOnIntra = Y` ⇒ seller `Stcd` = `Pos` and `RegRev = Y` |
 | V11 | Tax split. INTRA iff seller `Stcd = Pos` and `SupTyp ∈ {B2B, DEXP}` (decision D-Q3) and `IgstOnIntra ≠ Y`; otherwise INTER (exports and SEZ are always inter-state). INTER ⇒ `CgstAmt = SgstAmt = 0` on every item; INTRA ⇒ `IgstAmt = 0` |
-| V12 | PIN prefix: the first 3 digits fall in the state's range in `sources/einvoice/master-codes/state-pincode-ranges.csv`. **Warning only**: the portal first checks its full PIN master, which we do not have. `999999` is allowed for state 97 and for exports |
+| V12 | PIN prefix: the first 3 digits fall in the state's range in `sources/einvoice/master-codes/state-pincode-ranges.csv` (`PIN_RANGES`, model §6.7). **Warning only**: the portal first checks its full PIN master, which we do not have. `999999` is allowed for state 97 and for exports. Applies to `SellerDtls`, `BuyerDtls`, `DispDtls` and `ShipDtls` |
+| V29 | `EwbDtls` present and `ShipDtls` absent ⇒ `BuyerDtls.Pin` present. **Warning** (D-S15): C line 100 "Pincode of Recipient GSTIN is mandatory if Ship-To details are not entered" sits under "Validations on e-waybill", and line 106 says the IRN is still generated without the e-way bill |
+| V30 | `EwbDtls` present and `SupTyp ∈ {EXPWP, EXPWOP}` ⇒ `ShipDtls` present with `Stcd` not 96/99 (the port in India). **Warning** (D-S15): C lines 32 and 105. Whether the address really is a port cannot be checked offline |
 
 ### 5.3 Item rules
 | Id | Rule |
@@ -250,6 +285,22 @@ Parses `claims.data` (a JSON string) losslessly into `SignedInvoiceDataSchema`: 
 - With the default `earliestDocDate`, 31/03/2025 is rejected and 01/04/2025 accepted. **Overriding** `earliestDocDate: "2020-01-01"` accepts 05/08/2020, and `"2025-05-01"` rejects 30/04/2025.
 - Year 2030 is rejected (source pattern, D2).
 - V12 produces a warning only.
+- V12 on `DispDtls.Pin` / `ShipDtls.Pin` (path `["ShipDtls","Pin"]`), warning only.
+- V29: `EwbDtls` + no `ShipDtls` + no `BuyerDtls.Pin` → warning; with `ShipDtls` → none; without `EwbDtls` → none.
+- V30: export with `EwbDtls` and no `ShipDtls` → warning; with `ShipDtls.Stcd "96"` → warning; with a port ship-to in `27` → none; export without `EwbDtls` → none.
+- V5 on `ShipDtls.Gstin`: wrong check digit → error at `["ShipDtls","Gstin"]`; `"URP"` accepted (payloads built elsewhere).
+
+**mapping — ship-to / dispatch-from (Track E)**
+- Bill-to–ship-to: `ShipDtls` = `{ Gstin, LglNm, TrdNm, Addr1, Addr2, Loc, Pin, Stcd }` from `shipTo`, in schema key order; `DispDtls` absent.
+- `shipTo` without `gstin` / `tradeName` / `line2` → `Gstin` / `TrdNm` / `Addr2` omitted (never `URP`, never `""`).
+- Bill-from–dispatch-from: `DispDtls = { Nm, Addr1, Addr2, Loc, Pin, Stcd }` from `dispatchFrom`; `ShipDtls` absent. Combination: both.
+- Regular document: neither block.
+- Serialised `Pin` is a JSON number; `Stcd` is a 2-digit string (`"03"`).
+- `BuyerDtls` and `Pos` are unchanged by `shipTo`: supplier 29, POS 29, `shipTo` in 33 → `Pos "29"`, CGST/SGST, V11 passes.
+- Export with a port `shipTo` in 27: `ShipDtls.Stcd "27"`, no `Gstin`; buyer `URP`/96/96/999999; V30 passes once `EwbDtls` is attached.
+- Credit note with `shipTo` → `ShipDtls` emitted.
+- Length limits reported, not truncated: `shipTo.legalName` of 101 characters → error at `["ShipDtls","LglNm"]`; `city` of 2 characters → `["ShipDtls","Loc"]`; `dispatchFrom.legalName` of 2 characters → `["DispDtls","Nm"]`; PIN `099999` → `["DispDtls","Pin"]`.
+- The new ship-to / dispatch-from fixtures map with `ok: true`.
 
 **tolerance**
 - The three source examples, exactly.
@@ -290,10 +341,13 @@ Parses `claims.data` (a JSON string) losslessly into `SignedInvoiceDataSchema`: 
 - D5. The schema's `Stcd`/`Pos` accept both `"3"` and `"03"`. We emit `"03"`, as the sample does.
 - D6. The validations text forbids `"` and `\`, while the schema forbids only `"`. Both are enforced.
 - D7. The model's exact arithmetic is stricter than the portal's ±1 rupee, so every mapped document passes V20–V28. The tolerance matters for payloads built elsewhere.
+- D9. `ShipDtls.Gstin` allows `URP` (pattern) and is optional. We never emit `URP` (model D-S4).
+- D10. `BuyerDtls.Pin` is optional in the schema, but C line 100 makes it mandatory for an e-way bill when there is no ship-to. This was not in the approved spec; it is V29 (warning, D-S15).
+- D11. `ShipDtls.Loc` allows 100 characters (seller `Loc` 50), while the model keeps `city` ≤ 50 because H's `toPlace`/`fromPlace` allow only 50 (model §5.7).
 - D8. The mod-36 check digit has no official document (model §6.4). The owner checked it privately (`scripts/verify-gstin.mjs`) against **4 real GSTINs: 4/4 passed**. `gstinCheckDigit: "enforce"` therefore stays the default. The algorithm remains UNVERIFIED until a CA signs it off.
 
 ## 11. Deferred
-IGST on intra-state supply; e-commerce operator (`EcmGstin`); dispatch/ship-to; export details (`ExpDtls`, port/currency/country masters); e-way bill block (package `ewaybill`); payment/reference/contract/additional-document blocks; state cess; invoice-level discount (model §12, needs CA); line-level other charges; signature verification (§8.4); IRN hash computation; `UIN_HOLDER`.
+IGST on intra-state supply; e-commerce operator (`EcmGstin`); dispatch-from GSTIN (no field in C; model D-S2); `ShipDtls.Gstin` vs `Stcd` check (model D-S9); export details (`ExpDtls`, port/currency/country masters); e-way bill block (package `ewaybill`); payment/reference/contract/additional-document blocks; state cess; invoice-level discount (model §12, needs CA); line-level other charges; signature verification (§8.4); IRN hash computation; `UIN_HOLDER`.
 
 ## 12. Decisions (approved 2026-10-16; each UNVERIFIED — needs CA)
 - **D-Q1** Service line without a quantity: the schema requires `UnitPrice`. We emit `UnitPrice = TotAmt` and omit `Qty`/`Unit`.
@@ -322,3 +376,6 @@ Each row: Source C URL, retrieved 2026-10-16, status UNVERIFIED — needs CA. Fi
 - PIN first-3-digit ranges (`sources/einvoice/master-codes/state-pincode-ranges.csv`, V12, warning).
 - Decisions D-Q1, D-Q2, D-Q3, D-Q4 and D-Q5 (§12), one row each, marked "Design decision".
 - Check-digit enforcement default, with the owner's private 4/4 result (D8).
+- Track E: `dispatchFrom` → `DispDtls`, `shipTo` → `ShipDtls` mapping, with "Shipping party ⇒ Bill To–Ship To / Dispatching party ⇒ Bill From–Dispatch From / both ⇒ Combination" (C lines 29–31) (`map.ts`).
+- V29 buyer PIN without ship-to for an e-way bill (C line 100) and V30 export port as ship-to (C lines 32, 105) (`rules.ts`).
+- Decisions D-S4 and D-S15 (model spec §13.3), "Design decision".
