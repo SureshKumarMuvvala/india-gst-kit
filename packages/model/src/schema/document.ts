@@ -12,6 +12,7 @@ import {
 import { decideTaxSplit } from "../supply.js";
 import { LineSchema, lineTaxIssues, type TaxMode } from "./line.js";
 import { PartySchema, SupplierSchema } from "./party.js";
+import { DispatchFromSchema, ShipToSchema } from "./ship.js";
 
 export const OriginalDocRefSchema = z.strictObject({
   number: DocumentNumberSchema,
@@ -55,6 +56,9 @@ export const GstDocumentSchema = z
     lines: z.array(LineSchema).min(1),
     totals: TotalsSchema,
     notes: z.string().max(500).optional(),
+    // Track E (spec §5.7): never change placeOfSupply or the tax split (refinement 7).
+    shipTo: ShipToSchema.optional(),
+    dispatchFrom: DispatchFromSchema.optional(),
   })
   .superRefine((d, ctx) => {
     const add = (path: (string | number)[], message: string) => {

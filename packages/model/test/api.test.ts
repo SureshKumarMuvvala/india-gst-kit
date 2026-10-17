@@ -29,6 +29,25 @@ describe("api surface", () => {
       expect(api).toHaveProperty(name);
     }
   });
+  it("exports the Track E ship-to / dispatch-from and PIN helpers, and the lossless-JSON helpers", () => {
+    for (const name of [
+      "ShipToSchema",
+      "DispatchFromSchema",
+      "ShipAddressSchema",
+      "ShipmentPatternSchema",
+      "shipmentPattern",
+      "pinStateCheck",
+      "documentPinWarnings",
+      "PinWarningSchema",
+      "PIN_RANGES",
+      "parseJsonLossless",
+      "markNumber",
+      "isNumberLeaf",
+      "JsonNumber",
+    ] as const) {
+      expect(api).toHaveProperty(name);
+    }
+  });
   it("no longer exports rate lists or a documentDiscount (deferred, spec §12)", () => {
     for (const name of [
       "GST_RATES_OFFERED",
