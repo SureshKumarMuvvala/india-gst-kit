@@ -442,6 +442,63 @@ const exportWithoutPayment = {
   }),
 };
 
+// Track E: ship-to / dispatch-from. Place of supply stays an explicit input; the tax split is
+// supplier state vs place of supply whatever the ship/dispatch states are (model spec §5.7).
+const shipToTn = {
+  legalName: "Theta Test Consignee Private Limited",
+  tradeName: "Theta Consignee",
+  gstin: GSTINS.shipToTn,
+  address: {
+    line1: "9 Warehouse Road",
+    line2: "Unit 4",
+    city: "Chennai",
+    pincode: "600001",
+    stateCode: "33",
+  },
+};
+const shipToSite = {
+  legalName: "Beta Test Buyers Project Site",
+  address: { line1: "10 Site Road", city: "Hubballi", pincode: "580020", stateCode: "29" },
+};
+const dispatchDepot = {
+  legalName: "Alpha Test Traders Depot",
+  address: { line1: "11 Depot Lane", city: "Hosur", pincode: "635109", stateCode: "33" },
+};
+const mumbaiPort = {
+  legalName: "Mumbai Port Export Terminal",
+  address: { line1: "Gate 3 Port Road", city: "Mumbai", pincode: "400001", stateCode: "27" },
+};
+
+const billToShipTo = {
+  ...intraInvoice,
+  number: "INV/2026-27/0008",
+  lines: [goodsLine],
+  totals: totals({
+    taxableValue: "1000.00",
+    cgst: "90.00",
+    sgst: "90.00",
+    igst: "0.00",
+    grandTotal: "1180.00",
+  }),
+  shipTo: shipToTn,
+};
+const billToShipToUnregistered = {
+  ...billToShipTo,
+  number: "INV/2026-27/0009",
+  shipTo: shipToSite,
+};
+const billFromDispatchFrom = {
+  ...interInvoice,
+  number: "INV/2026-27/0010",
+  dispatchFrom: dispatchDepot,
+};
+const shipDispatchCombination = {
+  ...billToShipTo,
+  number: "INV/2026-27/0011",
+  dispatchFrom: dispatchDepot,
+};
+const exportPortShipTo = { ...exportWithoutPayment, number: "EXP/0002", shipTo: mumbaiPort };
+
 const reverseChargeInvoice = { ...intraInvoice, number: "INV/2026-27/0007", reverseCharge: true };
 
 export const fixtures = {
@@ -460,6 +517,11 @@ export const fixtures = {
   sezWithoutPayment,
   exportWithoutPayment,
   reverseChargeInvoice,
+  billToShipTo,
+  billToShipToUnregistered,
+  billFromDispatchFrom,
+  shipDispatchCombination,
+  exportPortShipTo,
 } as const satisfies Record<string, unknown>;
 
 export type FixtureName = keyof typeof fixtures;

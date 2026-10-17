@@ -66,6 +66,8 @@ export const RULE_IDS = [
   "V26",
   "V27",
   "V28",
+  "V29",
+  "V30",
 ] as const;
 
 export interface ValidateOptions {
@@ -442,6 +444,46 @@ export function runRules(req: IrnRequest, options: ValidateOptions = {}): IrnIss
           "warning",
         ),
       );
+    }
+  }
+
+  // V29 — "Pincode of Recipient GSTIN is mandatory if Ship-To details are not entered" (validations
+  // line 100, under "Validations on e-waybill"). Warning: the IRN is still generated (line 106; D-S15).
+  if (req.EwbDtls !== undefined && req.ShipDtls === undefined && req.BuyerDtls.Pin === undefined) {
+    out.push(
+      rule(
+        ["BuyerDtls", "Pin"],
+        "V29",
+        "An e-way bill without ship-to details needs the recipient PIN code",
+        "warning",
+      ),
+    );
+  }
+
+  // V30 — exports: the ship-to must be the place/port in India (validations lines 32 and 105). Warning
+  // (D-S15); whether the address is really a port cannot be checked offline.
+  if (req.EwbDtls !== undefined && isExport) {
+    if (req.ShipDtls === undefined) {
+      out.push(
+        rule(
+          ["ShipDtls"],
+          "V30",
+          "An export e-way bill needs the port in India as the ship-to address",
+          "warning",
+        ),
+      );
+    } else {
+      const st = ns(req.ShipDtls.Stcd);
+      if (st === "96" || st === "99") {
+        out.push(
+          rule(
+            ["ShipDtls", "Stcd"],
+            "V30",
+            "The ship-to of an export e-way bill must be the port in India (not state 96/99)",
+            "warning",
+          ),
+        );
+      }
     }
   }
 

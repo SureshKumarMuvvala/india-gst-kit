@@ -360,6 +360,12 @@ describe("toIrnRequest — mapping", () => {
     "sezWithoutPayment",
     "exportWithoutPayment",
     "reverseChargeInvoice",
+    // Track E fixtures (spec §9: "The new ship-to / dispatch-from fixtures map with ok: true").
+    "billToShipTo",
+    "billToShipToUnregistered",
+    "billFromDispatchFrom",
+    "shipDispatchCombination",
+    "exportPortShipTo",
   ];
   const UNMAPPABLE: FixtureName[] = [
     "b2cInvoice",

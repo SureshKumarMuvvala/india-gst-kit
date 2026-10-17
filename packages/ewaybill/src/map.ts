@@ -8,7 +8,7 @@
 // GstDocument (@india-gst-kit/model) + movement → Generate-EWB request, EWB-by-IRN request and the `EwbDtls`
 // block of an IRN request; docs/specs/ewaybill.md §5 and §6. Mapping decisions D-M1 (rates), D-M2 (cess),
 // D-M3 (exports need the port as ship-to), D-Q2 (leading-zero HSN), D-Q3 (never truncate), D-Q4 (state split).
-import { decideTaxSplit, type GstDocument } from "@india-gst-kit/model";
+import { decideTaxSplit, shipmentPattern, type GstDocument } from "@india-gst-kit/model";
 import { MODE_CODE, VEHICLE_TYPE_CODE } from "./codes.js";
 import { D } from "./decimal.js";
 import { toEwbIssues } from "./json.js";
@@ -60,45 +60,60 @@ function finish<T>(result: { ok: boolean; value?: T; issues: EwbIssue[] }): MapR
 }
 
 // ---- Generate ------------------------------------------------------------------------------------
+/** H "Bill To – Ship To" / "Bill From – Dispatch From" (validations lines 49–50); J lines 5, 11–24; K1. */
+const TRANSACTION_TYPE = {
+  REGULAR: "1",
+  BILL_TO_SHIP_TO: "2",
+  BILL_FROM_DISPATCH_FROM: "3",
+  COMBINATION: "4",
+} as const;
+
 function preconditions(doc: GstDocument, mv: EwbMovement, ewbSplit: "INTRA" | "INTER"): EwbIssue[] {
   const out: EwbIssue[] = [];
-  const fromAddress = mv.dispatchFrom?.address ?? doc.supplier.address;
-  if (fromAddress.pincode === undefined) {
+  // Decision D-S11: on this route the addresses come from the document; never pick one silently.
+  for (const key of ["dispatchFrom", "shipTo"] as const) {
+    if (mv[key] !== undefined) {
+      out.push(
+        issue(
+          ["movement", key],
+          "ADDRESS_IN_MOVEMENT",
+          "M-ADDRESS",
+          `${key} belongs on the document for the Generate route; the movement's ${key} is only for EWB by IRN`,
+        ),
+      );
+    }
+  }
+  if (out.length > 0) return out;
+  // A document dispatchFrom / shipTo always has a PIN (model ShipAddressSchema).
+  if (doc.dispatchFrom === undefined && doc.supplier.address.pincode === undefined) {
     out.push(
       issue(
-        mv.dispatchFrom === undefined
-          ? ["supplier", "address", "pincode"]
-          : ["movement", "dispatchFrom", "address", "pincode"],
+        ["supplier", "address", "pincode"],
         "MISSING_PIN",
         "M-PIN",
         "the dispatch-from PIN code is required (fromPincode)",
       ),
     );
   }
-  const exportWithoutPort = isExport(doc) && mv.shipTo === undefined;
+  const exportWithoutPort = isExport(doc) && doc.shipTo === undefined;
   if (exportWithoutPort) {
     out.push(
       issue(
-        ["movement", "shipTo"],
+        ["shipTo"],
         "EXPORT_NEEDS_PORT_SHIP_TO",
         "M-EXPORT-SHIPTO",
         "an export needs shipTo = the address of the port in India (decision D-M3)",
       ),
     );
-  } else {
-    const toAddress = mv.shipTo?.address ?? doc.recipient.address;
-    if (toAddress.pincode === undefined) {
-      out.push(
-        issue(
-          mv.shipTo === undefined
-            ? ["recipient", "address", "pincode"]
-            : ["movement", "shipTo", "address", "pincode"],
-          "MISSING_PIN",
-          "M-PIN",
-          "the ship-to PIN code is required (toPincode)",
-        ),
-      );
-    }
+  } else if (doc.shipTo === undefined && doc.recipient.address.pincode === undefined) {
+    out.push(
+      issue(
+        ["recipient", "address", "pincode"],
+        "MISSING_PIN",
+        "M-PIN",
+        "the ship-to PIN code is required (toPincode)",
+      ),
+    );
   }
   const modelSplit = decideTaxSplit(doc.supplier.stateCode, doc.placeOfSupply, doc.supplyCategory);
   if (modelSplit !== ewbSplit) {
@@ -155,16 +170,11 @@ function buildRequest(doc: GstDocument, mv: EwbMovement, split: "INTRA" | "INTER
   const s = doc.supplier;
   const r = doc.recipient;
   const t = mv.transport;
-  const from = mv.dispatchFrom?.address ?? s.address;
-  const to = mv.shipTo?.address ?? r.address;
-  const transactionType =
-    mv.dispatchFrom === undefined
-      ? mv.shipTo === undefined
-        ? "1"
-        : "2"
-      : mv.shipTo === undefined
-        ? "3"
-        : "4";
+  // Addresses, PINs and actual state codes from the ship/dispatch party; GSTINs, names and the bill-from /
+  // bill-to state codes stay the bill parties' (H validations lines 49–50).
+  const from = doc.dispatchFrom?.address ?? s.address;
+  const to = doc.shipTo?.address ?? r.address;
+  const transactionType = TRANSACTION_TYPE[shipmentPattern(doc)];
   return {
     supplyType: "O",
     subSupplyType: isExport(doc) ? "3" : "1",
@@ -239,13 +249,26 @@ export function toEwbRequest(
   const split = doc.supplier.stateCode === toState ? "INTRA" : "INTER";
   const pre = preconditions(doc, mv.value, split);
   if (pre.length > 0) return { ok: false, issues: pre };
-  return finish(
+  const result = finish(
     validateEwbRequest(buildRequest(doc, mv.value, split), {
       ...(options.supplierEInvoiceEnabled === undefined
         ? {}
         : { supplierEInvoiceEnabled: options.supplierEInvoiceEnabled }),
     }),
   );
+  // Decision D-S12 (D-Q7 still deferred): the ship-to GSTIN has no field on this route; say so.
+  if (result.ok && doc.shipTo?.gstin !== undefined) {
+    result.issues.push(
+      issue(
+        ["shipTo", "gstin"],
+        "SHIP_TO_GSTIN_NOT_SENT",
+        "M-SHIPTO-GSTIN",
+        "the ship-to GSTIN is not sent: the Generate E-way Bill schema has no ship-to GSTIN field (on hold since 30/07/2026)",
+        "warning",
+      ),
+    );
+  }
+  return result;
 }
 
 // ---- by IRN / EwbDtls ----------------------------------------------------------------------------
@@ -283,15 +306,15 @@ export function toEwbByIrnRequest(
     ...(shipTo === undefined ? {} : { ExpShipDtls: addr(shipTo.address) }),
     ...(dispatchFrom === undefined
       ? {}
-      : { DispDtls: { Nm: dispatchFrom.name, ...addr(dispatchFrom.address) } }),
+      : { DispDtls: { Nm: dispatchFrom.legalName, ...addr(dispatchFrom.address) } }),
   };
   return finish(validateEwbByIrnRequest(built));
 }
 
 /**
  * Builds the `EwbDtls` block of an IRN request (source C), so an e-way bill is generated together with the IRN.
- * Dispatch and ship-to belong in the IRN's own `DispDtls`/`ShipDtls`, which `einvoice` does not yet map; the caller
- * attaches the block and runs `validateIrnRequest` on the result.
+ * Dispatch and ship-to belong in the IRN's own `DispDtls`/`ShipDtls`, which `einvoice` maps from the document
+ * (Track E); the caller attaches the block and runs `validateIrnRequest` on the result (V29/V30 warnings).
  */
 export function toIrnEwbDtls(movement: EwbMovementInput): MapResult<EwbDtls> {
   const mv = parseMovement(movement);

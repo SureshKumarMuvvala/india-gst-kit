@@ -241,16 +241,14 @@ describe("V-G8 PIN codes", () => {
     );
   });
   it("no warning for a state without ranges (99)", () => {
+    // Track E: the export port ship-to is on the document (spec §3), not in the movement.
     const r = check(
-      mapped("exportWithoutPayment", {
+      mapped("exportPortShipTo", {
         transport: {
           distanceKm: "150",
           mode: "ROAD",
           vehicleNo: "KA01AB1234",
           vehicleType: "REGULAR",
-        },
-        shipTo: {
-          address: { line1: "Port Road", city: "Chennai", pincode: "600001", stateCode: "33" },
         },
       } as never),
     );

@@ -21,6 +21,8 @@ export const GSTINS = {
   spareAn: "35HHHHH7777H1Z8",
   /** Chandigarh (04) — spare, a second UTGST-territory GSTIN for intra-UT tests */
   spareCh: "04IIIII8888I1ZV",
+  /** Tamil Nadu (33) — third-party ship-to consignee (Track E) */
+  shipToTn: "33JJJJJ9999J1ZF",
 } as const;
 
 export const ALLOWED_FIXTURE_GSTINS: readonly string[] = Object.values(GSTINS);
