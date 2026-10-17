@@ -1,0 +1,156 @@
+=== #overview ===
+Overview
+
+This API is used for cancelling an e-Invoice within stipulated time by passing the IRN.
+
+The format and details of Cancellation of IRN API request is depicted in following table.
+
+URL	<URL>/api/Cancel
+
+Content-Type
+
+application/json
+
+Method
+
+POST
+
+=== #requestPayload ===
+Request Header
+Attributes	Description
+client_id
+
+client id to be provided by E-Invoice System
+
+client_secret
+
+client secret to be provided by E-Invoice System
+
+Gstin
+
+GSTIN of the authenticated user
+
+sup_gstin
+
+(Optional) Supplier GSTIN, only in case E Comm. operator is cancelling the IRN. For RCM invoices recipient GSTIN to be passed
+
+user_name
+
+User name of the authenticated user
+
+AuthToken
+
+Authentication token returned by the E-Invoice system
+
+Request Payload
+Attributes	Description
+Data	encoded string of encrypted Cancel e-invoice JSON using Sek.
+
+=== #responsePayload ===
+Response Payload
+Attributes	Description
+Status	Status of the Cancel  IRN request(values 1-Success and 0- Failure)
+Data	If Status is ‘1’
+InfoDtls	Any additional message to be conveyed would be passed.
+ErrorDetails	If Status is ‘0’
+
+If Status is "1"
+
+Data	Base 64 encoded string of decrypted invoice JSON using Sek.
+After decrypting Data the following attributes are obtained as below.
+Attributes	Description
+Irn	IRN that is cancelled
+CancelDate	Date of cancellation of the IRN
+
+If Status is "0"
+
+ErrorDetails	Base 64 encoded string.
+On decoding Error Detals the following attributes from JSON array are obtained as follows.
+ErrorCode	Unique error code
+ErrorMessage	Error Description
+
+=== #requestSampleJSON ===
+Sample JSON (Request)
+
+Cancel IRN Request
+
+ {
+"Data": "cwMtQmlx/upJuEqKfTMTQ6RH1s6SOQwm9SknTMBvHm9CFeJCCs4otZZbdf76sP/xpR4K3H5qvf1FmSrIFw1kmcPG1fSrE+AhZXjicr07dFsFmngugxwcTu 4BScdA75FgIolVbvDnDgvzJyg9mDWxMIM3Mkbtt7by5XC9CqVqqhnPSri9R5UE3PJgVKcMsM3aBewBdNGiQ/2Z9fITZwCp1l/z6h6pMDd93GT30I8nxMsn3"
+}
+
+JSON corresponds to the "Data" element of Cancel E-Invoice Request above
+
+ {
+"Irn":"a5c12dca80e743321740b001fd70953e8738d109865d28ba4013750f2046f229",
+"CnlRsn":"1 ",
+"CnlRem":"Wrong entry"
+}
+
+=== #responseSampleJSON ===
+Sample JSON (Response)
+ {
+"status":"1",
+"data":"<Encrypted response>",
+"ErrorDetails":null,
+"InfoDtls":"<alert message >"
+}
+
+JSON (corresponds to the data element of Cancelled e-Invoice Response(Success))
+
+ {   
+"Irn":"a5c12dca80e743321740b001fd70953e8738d109865d28ba4013750f2046f229",
+"CancelDate": "2019-12-05 14:26:00"
+}
+
+JSON(in case of error)
+
+ { 
+"status": "0",
+"Data": null,
+"ErrorDetails":"<Errors JSON >",
+"InfoDtls": "<alert message >"
+}
+
+=== #JSONSchema ===
+JSON Schema
+ {
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"type": "object",
+	"properties": {
+		"Irn": {
+			"type": "string",
+			"minLength": 64,
+			"maxLength": 64,
+			"description": "Invoice Reference Number"
+		},
+		"CnlRsn": {
+			"type": "string",
+			"minLength": 1,
+			"maxLength": 1,
+			"enum": ["1", "2", "3", "4"],
+			"description": "Cancel Reason 1- Duplicate, 2 - Data entry mistake, 3- Order Cancelled, 4 - Others"
+		},
+		"CnlRem": {
+			"type": "string",
+			"minLength": 0,
+			"maxLength": 100,
+			"description": "Cancel Remarks"
+		},
+		"required": [
+			"Irn",
+			"CnlRsn"
+		]
+	}
+}
+
+=== #validations ===
+Validations
+IRN can be cancelled within 24 hours of IRN generation.
+IRN cannot be cancelled, if the Valid/Active E-way Bill exists for the same.
+Cancellation can be done by active or suspended taxpayers.
+If e-commerce wants to Get the RCM Invoice details, in the headers the supplier GSTIN value should be the Recipient GSTIN.
+
+=== #faq ===
+Frequently Asked Questions
+
+Content will be updated shortly.

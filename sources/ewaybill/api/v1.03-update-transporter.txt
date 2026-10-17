@@ -1,0 +1,185 @@
+=== #overview ===
+Overview
+
+The format and details of Update Transporter API request is depicted in following table.
+
+URL
+
+<URL>/ewayapi/
+
+Content-Type
+
+application/json
+
+Method
+
+POST
+
+=== #requestPayload ===
+Request Payload
+
+Request Header
+
+Attributes	Description
+
+client-id
+
+clientid to be provided by E-WAY BILL SYSTEM
+
+client-secret
+
+Secret to be provided by E-WAY BILL SYSTEM
+
+Gstin
+
+GSTIN of Requester(Tax payer or Transporter)
+
+authtoken
+
+Authentication token returned by the E-way bill system
+
+Request Payload
+
+Attributes	Description
+Action	UPDATETRANSPORTER	UPDATETRANSPORTER
+
+Encrypt(Base64(Request JSON),sek)
+
+Update Transporter JSON string.
+
+=== #responsePayload ===
+Response Payload
+
+Attributes
+
+Description
+
+Value
+
+Status
+
+Status of request
+
+1 – Success ; 0 - Error
+
+Encrypt(Base64(Response JSON),sek)
+
+	Response of Update Transporter Json string.The response will have eway bill number for which Transporter detail updated and new transin if it is successfully updated Otherwise the response will have error codes.
+
+=== #requestSampleJSON ===
+Sample JSON (Request)
+
+Update Transporter Request
+
+ {
+"action":"UPDATETRANSPORTER",
+"data":"9WnDVxq+4udo/JaeSkxf0CeNJhKAjI/eZBSV4xty2WN091dpn4BMwiDOIglBx9SZyI2Ys,
+p3O8arcFb0N+D1/UQ=="
+}
+
+“data” JSON corresponds to the data element of Update Transporter Request above
+
+ {
+"ewbNo":"161000843009",
+"transporterId":"29AKLPM8755F1Z2"
+}
+
+=== #responseSampleJSON ===
+Sample JSON (Response)
+
+Update Transporter Response
+
+ {
+  "status":"1",
+  "data":"R5cbQqbYz47IbX4HBelv7lXKnCb5otdm9tjT9wQ4aN1z1vLIAb
+  0cTnFxQhz3X4CNFnQQNSbdDkCTaWmyfxJ65laR4BTvyTiDXH7TzavmZZLM3
+  pYaGN04O/7Pg7wHNfZNKm9Wq5wOoJoRn8Nt1b8mfg=="
+}
+
+“data” JSON (corresponds to the data element of Update Transporter Response(Success))
+
+ {
+  "ewayBillNo":"161000843009",
+  "transporterId":"29AKLPM8755F1Z2",
+  "transUpdateDate":"26/04/2018 04:32:27 PM"
+}
+
+JSON(in case of error)
+
+ {
+  "status":"0",
+  "error":{"errorCodes":240}
+}
+
+=== #JSONSchema ===
+JSON Schema
+
+ {
+ "$schema": "http://json-schema.org/draft-04/schema#",
+ "type": "object",
+ "properties": {
+ "ewbNo": {
+ "type": "number",
+ "description":"EwayBill Number"
+ }
+},
+
+ "transporterId": {
+  "type": "string",
+  "pattern": "[0-9]{2}[0-9|A-Z]{13}", "description": "15 Digit Transporter GSTIN/TRANSIN"
+ },
+
+ "required": [
+  "ewbNo",
+  "transporterId"
+ ]
+}
+
+=== #dataStructure ===
+Data Structure
+
+Parameter Name
+
+Type
+
+Description
+
+Values
+
+Sample Data
+
+Allowed Character
+
+ewbNo
+
+Number(12)
+
+E-way bill Generated
+
+ 
+
+131000026768
+
+Numbers
+
+transporterId
+
+Text(15)
+
+Transporter Id
+
+ 
+
+29BQSPA3829E1Z0
+
+=== #validations ===
+Validations
+The transporter can be updated for the e-way bill only by the current transporter. If transporter is not assigned, then the generator can update
+Transporter ID should be valid GSTIN or TRANSIN
+Transporter can be updated only if the e-way bill is active, that is, not cancelled
+Transporter can be updated only if the e-way bill is within validity period, that is, validity is not expired.
+
+=== #faq ===
+Frequently Asked Questions
+
+Content will be updated shortly.

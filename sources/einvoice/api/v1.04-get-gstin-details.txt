@@ -1,0 +1,136 @@
+=== #overview ===
+Overview
+
+This method provides the tax payer details for a given GSTIN number.
+
+The format and details of GetGSTIN API request is depicted in following table.
+
+URL
+
+<URL>/eivital/v1.04/Master/gstin/<GSTIN>
+
+Content-Type
+
+application/json
+
+Method
+
+GET
+
+URL Parameters
+
+GSTIN
+
+URL Parameter Description
+
+GSTIN – GSTIN number for which the details are required
+
+=== #requestPayload ===
+Request Payload
+
+Request Header
+
+Attributes	Description
+
+client_id
+
+client id to be provided by E-Invoice System
+
+client_secret
+
+client secret to be provided by E-Invoice System
+
+Gstin
+
+GSTIN of the authenticated user
+
+user_name
+
+User name of the authenticated user
+
+AuthToken
+
+Authorization Token
+
+=== #responsePayload ===
+Response Payload
+Attributes	Description
+Status	Status of the Get GSTIN Details API request(values 1-Success and 0- Failure)
+Data	If Status is 1
+ErrorDetails	If Status is ‘0’
+InfoDtls	Any additional message to be conveyed would be passed.
+
+If Status is "1"
+
+Data	Base 64 encoded string of decrypted invoice JSON using Sek.
+After decrypting Data the following attributes are obtained as below.
+Attributes	Description
+Gstin	GSTIN for which the details are provided
+TradeName	Trade Name of the GSTIN .
+LegalName	Legal Name of the GSTIN
+AddrBnm	Address
+AddrBno	Address
+AddrFlno	Floor number
+AddrSt	Street
+AddrLoc	Location
+StateCode	State Code
+AddrPncd	PIN code
+TxpType	Taxpayer Type
+BlkStatus	Block Status
+DtReg	Date of Registration
+DtDReg	Date of De-registration
+
+If Status is "0"
+
+ErrorDetails	Base 64 encoded string.
+On decoding ErrorDetals the following attributes from JSON array are obtained as follows.
+ErrorCode	Unique error code
+ErrorMessage	Error Description
+
+=== #SampleJSON ===
+Sample Json for GetGSTIN (GSTIN details)
+
+Get GSTIN Response
+
+ {
+"status":"1",
+"data":"C/qtMva8CzbQlJ4upD0/jgVYu45YIixiZ9c73+I/VCDH4xZvg+/qyLaBhIBJcnsxgcG2L4Xol/XNpb+2GM+hokAtIZaSVrvyWRhhdsnrxXRPg/rdEobcUtMpiU7ZLzkmT4P63RKG3FLTKYlO2S85Jk+D+t0ShtxS0ymJTtkvOSZPg/rdEobcUtMpiU7ZLzkmT4P63RKG3FLTKYlO2S85Jn8FWFBONpYsOBu7Y2IhwvuLkY0TMgqgEV0MVpxkOsVwJaef7+mYsRbddc6ZCNP8o9Wvo0zLakLiP10Z2qIakI72Ncm9BXjL1kM0xHJVYHP4srRII1LJNVrQ1NfnWkJffXq7EfUXueTauvC4kyWefPNwjjGr067OUk+5F0oRUhJmOls3NXjCUWXGVAE1CTZiUxhL9/3Wlaa0EIKoTLRDrhJww0Pu2nRXpbd+P/c2ExwNW8SZEVkHu485CVj55guwhg==",
+"ErrorDetails": null,
+"InfoDtls":"<alert message >"
+}
+
+"data" JSON (corresponds to the data element of GetGSTIN Response(Success))
+
+    {
+      "Gstin":"29XXXXXX",
+      "TradeName":"<redacted name>",
+      "LegalName":"<redacted name>",
+      "AddrBnm":"RAMANAGARA",
+      "AddrBno":"562160",
+      "AddrFlno":"1st floor",
+      "AddrSt":"6th main",
+      "AddrLoc":"CHANNAPATNA",
+      "StateCode":29,
+      "AddrPncd":562160,
+      "TxpType":"REG",
+      "Status":"ACT",
+      "BlkStatus":null,
+      "DtReg":"2021-05-03",
+      "DtDReg":2021-05-04"
+    }
+
+JSON(in case of error)
+
+ { 
+"status": "0",
+"Data": null,
+"ErrorDetails":"<Errors JSON >",
+"InfoDtls": "<alert message >"
+}
+
+=== #Faqs ===
+Faq's
+"Status" will have values as 'ACT' (Active) or 'CNL' (Cancelled) or 'INA' (Inactive) or 'PRO' (Provision). Considered active only if status='ACT'
+The "blkStatus" indicates the status of blocking of generation of E Way Bill and will have following values
+i) 'U' or '' for Unblocked
+ii) 'B' for blocked - E Way Bill generation is not allowed for tax payers who have not filed the returns for last two months
