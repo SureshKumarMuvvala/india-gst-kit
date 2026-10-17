@@ -1,0 +1,108 @@
+=== #overview ===
+Overview
+
+This method provides the e-Waybill Details for a given IRN.
+
+The format and details of Get e-Waybill Details by IRN API request is depicted in following table.
+
+URL
+
+<URL>/eiewb/v1.03/ewaybill/irn/<irn_no>
+
+Content-Type
+
+application/json
+
+Method
+
+GET
+
+URL Parameters
+
+IRN
+
+=== #requestPayload ===
+Request Payload
+
+Request Header
+
+Attributes	Description
+client_id
+
+client id to be provided by E-Invoice System
+
+client_secret
+
+client secret to be provided by E-Invoice System
+
+Gstin
+
+GSTIN of the authenticated user
+
+sup_gstin
+
+(Optional) Supplier GSTIN, only in case E Comm. operator is getting IRN details. For RCM invoices recipient GSTIN to be passed
+
+user_name
+
+User name of the authenticated user
+
+AuthToken
+
+Authentication token returned by the E-Invoice system
+
+=== #responsePayload ===
+Response Payload
+Attributes	Description
+Status	Status of the Get e-Waybill Details by IRN request(values 1-Success and 0- Failure)
+Data	If Status is ‘1’
+ErrorDetails	If Status is ‘0’
+InfoDtls	Any additional message to be conveyed would be passed.
+
+If Status is "1"
+
+Data	Base 64 encoded string of decrypted invoice JSON using Sek.
+After decrypting Data the following attributes are obtained as below.
+Attributes	Description
+EwbNo	E Way Bill No. , if E Way Bill is generated
+Status	‘ACT’ for Active and ‘CNL’ for Cancelled
+GenGstin	Generated Gstin number
+EwbDt	E Way Bill Date. , if E Way Bill is generated
+EwbValidTill	E Way Bill validity date, if Part B details are provided in the payload
+
+If Status is "0"
+
+ErrorDetails	Base 64 encoded string.
+On decoding ErrorDetals the following attributes from JSON array are obtained as follows.
+ErrorCode	Unique error code
+ErrorMessage	Error Description
+
+=== #SampleJSON ===
+Sample Response JSON (Success)
+  {
+    "Status":1,
+    "ErrorDetails":null,
+    "Data":"Cqb9aifC2SRjU3y5GtYPoORNGarPDub52n5DRdjf6bVUO2LrWclK3c2qPwaWjnuJqL9i6ON3NgwIIS4M5IiowNiT4R/WpJ5OWpTwwHJRIAhktPvMsUG4Xq2IDZl/H7D/H+rF1WWjIvXVQR9I4QKDoJKJSy79Sd2J7A0He7zoC3FREBiqEoKYCMMRacxG+kZ7",
+    "Alert":null
+   }
+
+JSON corresponds to the data element of Get e-Waybill Details by IRN Response(Success) above
+  {
+    "EwbNo":131008995134,
+    "Status":"ACT",
+    "GenGstin":"29xxxxxxxx",
+    "EwbDt":"2020-10-21 15:33:00",
+    "EwbValidTill":"2020-10-22 23:59:00"
+}
+
+=== #example5 ===
+{ 
+"status": "0",
+"Data": null,
+"ErrorDetails":"<Errors JSON >",
+"InfoDtls": "<alert message >"
+}
+
+=== #validations ===
+Validations
+If e-commerce wants to Get the RCM Invoice details, in the headers the supplier GSTIN value should be the Recipient GSTIN.

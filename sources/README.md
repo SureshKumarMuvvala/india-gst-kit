@@ -150,3 +150,46 @@ Full digests: `sources/ewaybill/SHA256SUMS` (check with `cd sources/ewaybill && 
   This matches L: the 22/05/2026 "mandatory Ship-To GSTIN" change was **put on hold on 30/07/2026**. The hidden blocks contain two GSTINs (`29AC…1ZJ`, `29AA…1ZV`) that **pass** mod-36 and may be real. They are not committed and are no evidence for the algorithm.
 - **E8. K4's rate list is undated.** It lists IGST 0.5 (CGST/SGST 0.25), although source C says "Tax rate 0.5% is withdrawn". Per CLAUDE.md no rate list is enforced (no rate notifications, no CA).
 - **E9. K1's vehicle-number formats are illustrative shapes** (`AB121234`, `TMXXXXXXXXXXXXX`, …). The list of valid first-two-letter state (RTO) prefixes it refers to is **not** published on these pages.
+
+# API documentation (`sources/einvoice/api/`, `sources/ewaybill/api/`, for `gsp`)
+
+Captured on **2026-10-18** through a browser in India from the public developer portals **https://einv-apisandbox.nic.in/** (e-invoice, NIC IRP) and **https://docs.ewaybillgst.gov.in/apidocs/** (e-way bill). No login or CAPTCHA was needed.
+
+**How the files were made.** Each page was fetched in the browser, `<script>`/`<style>` removed, and every top-level `div[id]` section (overview, request/response payload, samples, JSON schema, data structure, validations, FAQ) rendered and written as `=== #<id> ===` followed by the section's rendered text (`innerText`). HTML comments are not rendered, so commented-out content is not included. Normalisation: U+00A0 (no-break space) → space; trailing spaces before a newline removed; runs of 3+ newlines collapsed to 2. Each file's SHA-256 was computed in the browser and matched against the committed file. Changes after that check:
+
+- Sample values longer than 200 characters in `Data`/`data`/`SignedInvoice`/`SignedQRCode` were replaced, in the browser before hashing, with `<omitted: long sample value, see source page>`. One omitted signed e-invoice sample (`get-irn-by-doc-details`) decodes to a document naming what looks like a real company.
+- In `einvoice/api/v1.04-get-gstin-details.txt` and `v1.04-sync-gstin-details-from-cp.txt` the sample trade/legal name was replaced with `<redacted name>` after the check (pre-redaction SHA-256 `89f758dc…bac6315f` and `106a5a54…55138aa8`).
+- The sample GSTINs left in the e-way bill files (`29AKLPM8755F1Z2`, `29BQSPA3829E1Z0`) **fail** mod-36 and must never be used as valid (same as the e-invoice portal samples).
+
+File digests: `einvoice/api/SHA256SUMS`, `ewaybill/api/SHA256SUMS`. Raw page SHA-256 at capture (pages are static HTML, but may change):
+
+| File | Page | Raw page SHA-256 |
+|---|---|---|
+| `einvoice/api/v1.04-authentication.txt` | `version1.04/authentication.html` | `7190deeb9c9ae34727075b7d074ab94d207a59f321a4e9a2f5894fa23739624d` |
+| `einvoice/api/v1.04-get-gstin-details.txt` | `version1.04/get-gstin-details.html` | `535160acc0244bdfa997e422a8ec8719f07516cf09c2b99690a82fbc6b20a205` |
+| `einvoice/api/v1.04-sync-gstin-details-from-cp.txt` | `version1.04/Sync-GSTIN-Details-from-CP.html` | `0e836c97a664e10997d5882dc705249f47c7455f71af37ba2b75829c61e5c732` |
+| `einvoice/api/v1.03-cancel-irn.txt` | `version1.03/cancel-irn.html` | `cb7ddbf0d40d40a01d02f655cdd19cfaf28d5862dcc9f242b59c85ac8f103401` |
+| `einvoice/api/v1.03-get-einvoice-details.txt` | `version1.03/get-eInvoicedetails.html` | `1f84c22ec59546f2bf6d7cf953c79b986d1b9681780840921b1302611504f83e` |
+| `einvoice/api/v1.03-get-irn-by-doc-details.txt` | `version1.03/Get_IRNdetailsbyDocDetails.html` | `c3ea764f47fb5bbeeb61a9dfcac2f27d641fba67d75e1cc5726b1b27548cb516` |
+| `einvoice/api/v1.03-cancel-ewaybill-sandbox-only.txt` | `version1.03/cancel-eway-bill.html` | `f07e90d1e5d9ac02471460782473365c02bd78a9b4c28e4070f57ca6742fbbdf` |
+| `einvoice/api/v1.03-get-ewaybill-details-by-irn.txt` | `version1.03/get-ewaybill-details-by-irn.html` | `dbef6d51f7194f3cddcc5a5496d460e5bb353e6e6ffea2aaa8b147296f99703c` |
+| `ewaybill/api/v1.03-authentication.txt` | `version1.03/authenticationV1.03.html` | `d6069016a21682c5d64e9578bbade30248a5e183fb879272e265bf597c2f3573` |
+| `ewaybill/api/v1.03-vehicle-number-update.txt` | `version1.03/vehicle-number-update.html` | `5173d4156e011220914d239333c04e4624ced369f9f89e6c945cf0458d42428b` |
+| `ewaybill/api/v1.03-consolidated-ewaybill.txt` | `version1.03/consolidated-eway-bill.html` | `9fa9e7c6107a7e56a28baa79d14e4f0da2c11b11af919a052572912627edec3b` |
+| `ewaybill/api/v1.03-cancel-ewaybill.txt` | `version1.03/cancel-eway-bill.html` | `9ebb330aaf5fa3b0606f9dc9eace7154c9d37eedf62caf25a81676148f3356fa` |
+| `ewaybill/api/v1.03-extend-validity.txt` | `version1.03/extend-validity.html` | `33f310d28e8d4b3664866b8c7b104ab0ae3ae73fd6b6236b1c8b7129b4a7fc08` |
+| `ewaybill/api/v1.03-get-gstin-details.txt` | `version1.03/get-gstin-details.html` | `013898c4c2d0e3d9ab0c07710f67473f8f941267ae254e37d654948bccdd04db` |
+| `ewaybill/api/v1.03-update-transporter.txt` | `version1.03/update-transporter.html` | `df5004d04406043cbc003d45cec92f55ba1bc1fb4cdc904815048e365b3a8ad0` |
+| `ewaybill/api/v1.03-reject-ewaybill.txt` | `version1.03/reject-eway-bill.html` | `af402519c89437e8d7e439e944f4008682f26a159f7cbb239f99d73b34bdbbe1` |
+
+## Findings that affect the `gsp` spec
+
+- **G1. Who may call these APIs directly.** e-invoice: "tax payers with annual turnover of ₹100 crore and above in their previous financial year" (onboarding page), up to 4 whitelisted static IPs, a test summary report, and production credentials via the portal; others go through a GSP or an ERP. e-way bill: direct access needs "around 10 thousand transactions per month per GSTIN" and up to 3 static IPs (pre-requisites page). Neither page is committed; quoted here. **So most users of this kit reach NIC through a GSP**; the `gsp` package needs a provider interface, with "direct NIC" as one provider.
+- **G2. Crypto (from the pages above plus the portals' Java sample code, which is not committed).** Login payload: JSON → Base64 → RSA with the portal's public key (`RSA/ECB/PKCS1PADDING`, X.509 SubjectPublicKeyInfo PEM). `AppKey`/`app_key`: 32 random bytes (Base64, 44 chars). Response `Sek` is AES-256-ECB (PKCS#7) encrypted with the AppKey; request/response `Data` is AES-256-ECB with the decrypted SEK. e-way bill `GetGSTINDetails` instead returns `data` encrypted with a per-response `rek` (itself encrypted with the SEK) and an `hmac` = HMAC-SHA256 of the Base64 data keyed with `rek`.
+- **G3. Public keys are behind a login.** The sandbox release notes say the signing/encryption public key "is available for download. Please login to download the same". Not captured; needed only for live calls (the user downloads it after sandbox registration).
+- **G4. Header names differ.** e-invoice pages list `client_id`/`client_secret`/`Gstin`/`user_name`/`AuthToken` (plus optional `sup_gstin`), but the e-invoice Java sample sends `client-id`/`client-secret`/`gstin`; the e-way bill pages use `client-id`/`client-secret`/`Gstin`/`authtoken`. Settle on the live sandbox (verify-on-first-call item).
+- **G5. Token.** Valid 360 minutes (60 in the e-invoice sandbox). Calling auth again before expiry returns the **same** token without extending it; `ForceRefreshAccessToken: true` gives a new one only in the last 10 minutes.
+- **G6. Time limits stated in validations.** Cancel IRN: within 24 h, not if an active e-way bill exists. Get e-invoice / IRN by document details: within 3 days of generation. Cancel EWB: 24 h, generator only. Reject EWB: 72 h, other party. Extend validity: 8 h before to 8 h after expiry, current transporter (or generator if none), not beyond 360 days; transMode 1–4 → `consignmentStatus` `M` and blank `transitType`; transMode 5 → `T` and `R`/`W`/`O`. Part-B/vehicle update and consolidated EWB: only while active and valid.
+- **G7. Schema quirks.** Several draft-04 schemas are malformed: cancel-IRN puts `required` inside `properties`; vehicle-update puts `vehicleType` outside `properties`; update-transporter puts `transporterId` outside `properties`; extend-validity requires `TransMode` (capital T) but the property is `transMode`. Transcribe to Zod by hand with conformance tests, as for the IRN schema. Sample values disagree with schema types in places (e.g. `"ewbNo":"161000843009"` string vs `number`; `fromState` `"29"` vs integer).
+- **G8. Lookup fields.** e-invoice GetGSTIN returns `Gstin, TradeName, LegalName, AddrBnm, AddrBno, AddrFlno, AddrSt, AddrLoc, StateCode, AddrPncd, TxpType, Status (ACT/CNL/INA/PRO), BlkStatus (U/''/B), DtReg, DtDReg`; "Considered active only if status='ACT'". `syncgstin` refreshes the IRP's copy from the GST common portal. The e-way bill lookup returns a smaller set (`gstin, tradeName, legalName, address1, address2, stateCode, pinCode, txpType, status, blkStatus`).
+- **G9. Multiple IRPs.** Release notes: error 2295 when the IRN was already generated on another IRP, in addition to 2150 for duplicates on NIC-IRP. The error-code list (`api-error-codes-list.html`) is not captured yet.

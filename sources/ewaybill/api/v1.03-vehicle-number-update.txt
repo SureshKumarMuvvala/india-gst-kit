@@ -1,0 +1,354 @@
+=== #overview ===
+Overview
+
+Attributes
+
+Description
+
+client-id
+
+clientid to be provided by EWAYBILL SYSTEM
+
+client-secret
+
+Secret to be provided by EWAYBILL SYSTEM
+
+Gstin
+
+GSTIN of Requester(Tax payer or Transporter)
+
+Authtoken
+
+Authentication token returned by the E-way bill system
+
+=== #requestPayload ===
+Request Payload
+
+Request Header
+
+Attributes
+
+Description
+
+client-id
+
+clientid to be provided by EWAYBILL SYSTEM
+
+client-secret
+
+Secret to be provided by EWAYBILL SYSTEM
+
+Gstin
+
+GSTIN of Requester(Tax payer or Transporter)
+
+Authtoken
+
+Authentication token returned by the E-way bill system
+
+Request Payload
+
+Description
+
+Value
+
+Action
+
+VEHEWB
+
+Encrypt(Base64(Request JSON),sek)
+
+Vehicle Update JSON string
+
+=== #responsePayload ===
+Response Payload
+
+Attributes
+
+Description
+
+Values
+
+status
+
+Status of request
+
+1-Success;0-Error
+
+Encrypt(Base64
+(Response JSON),sek)
+
+Response of Update Vehicle JSON string,
+The response will have vehicle number and updated date if it is successfully updated. Otherwise the response will have error codes
+
+=== #requestSampleJSON ===
+Sample JSON (Request)
+
+UPDATE VEHICLE Request
+
+ {
+"action":" VEHEWB ",
+"data": "<omitted: long sample value, see source page>"
+}
+
+“data” JSON corresponds to the data element of UPDATE VEHICLE Request above
+
+ {
+"ewbNo": 111000609282,
+"vehicleNo": "PQR1234",
+"fromPlace": "BANGALORE",
+"fromState": 29,
+"reasonCode": "1",
+"reasonRem": "vehicle broke down",
+"transDocNo ": "1234 ",
+"transDocDate ": "12/10/2017 ",
+"transMode": "1",
+"vehicleType": "R"
+}
+
+=== #responseSampleJSON ===
+Sample JSON (Response)
+
+UPDATE VEHICLE Response
+
+ {
+"status":"1",
+"data":"ew0KInZlaFVwZERhdGUiOiIxNS8xMi8yMDE3IDEwOjU2OjAwIEFNIg0KfQ0K",
+"alert":null
+}
+
+“data” JSON corresponds to the data element of UPDATE VEHICLE Response(Success) above
+
+ {
+"vehUpdDate":"15/12/2017 10:56:00 AM",
+"validUpto":"17/09/2017 12.00:00 PM"
+}
+
+JSON(in case of error)
+
+ { 
+"status": "0",
+"error":{"errorCodes": 240}
+}
+
+=== #JSONSchema ===
+JSON Schema
+
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+
+    "ewbNo": {
+      "type": "number",
+       "description":"Ewaybill Number"
+        },
+    "vehicleNo": {
+      "type": "string",
+
+      "minLength": 7,
+
+      "maxLength": 15,
+"description":"Vehicle Number"
+ 
+    },
+ 
+    "fromPlace": {
+      "type": "string",
+      "maxLength": 50,
+      "description":"From Place"
+    },
+    "fromState": {
+      "type": "integer",
+      "maximum": 99,
+"description":"From State"
+ 
+    },
+    "reasonCode": {
+      "type": "string",
+      "maxLength": 1,
+      "minLength": 1,
+"description":"Reason Code"
+ 
+    },
+    "reasonRem": {
+      "type": "string",
+      "maxLength": 50,
+      "description":"Remarks"
+ 
+    },
+    "transDocNo": {
+      "type": "string",
+      "maxLength": 15,
+      "description":"Transport Document Number"
+ 
+    },
+    "transDocDate": {
+      "type": "string",
+      "pattern": "[0-3][0-9]/[0-1][0-9]/[2][0][1-2][0-9]",
+      "description":"Transport Document Date"
+ 
+    },
+    "transMode": {
+      "type": "string",
+      "description":"Transport Mode"
+ 
+    }
+    },
+   "vehicleType": {
+ "type": "string",
+  "description": "Vehicle Type"
+  },"required":[
+ 
+ 
+"fromPlace",
+"fromState",
+"reasonCode",
+"reasonRem",
+"transMode"
+]
+ 
+}
+
+=== #dataStructure ===
+Data Structure
+
+Parameter Name
+
+Type
+
+Description
+
+Values
+
+Sample Data
+
+Allowed character
+
+ewbNo
+
+Number(12)
+
+E-way bill Generated
+
+ 
+
+131000026768 
+
+Numbers
+
+ vehicleNo
+
+Text(15)
+
+Vehicle number
+
+ 
+
+KA12TR1234
+
+Alpha-numeric
+
+fromPlace
+
+Text(50)
+
+Place of Consignor
+
+ 
+
+BANGALORE SOUTH
+
+Alpha-numeric
+
+fromState
+
+Number(2)
+
+State of Consignor
+
+Refer Code list
+
+29
+
+Numbers
+
+reasonCode
+
+Number(1)
+
+Reason code for vehicle updation
+
+Refer Code list
+
+2
+
+Numbers
+
+reasonRem
+
+Text(50)
+
+Reason for Vehicle Updation
+
+Vehicle details updated
+
+Alpha-numeric
+
+transDocNo
+
+Text(15)
+
+Transporter Document number
+
+12-86/3
+
+Alphanumeric, -, /
+
+transDocDate
+
+Text
+
+Transporter Document Date
+
+dd/mm/yyyy format
+
+12/09/2017
+
+transMode
+
+Number(1)
+
+Mode of Transport
+
+Refer Code list
+
+1
+
+Numbers
+
+vehicleType
+
+Char(1)
+
+Type of Vehcile
+
+R or O
+
+R
+
+=== #validations ===
+Validations
+Part-B can be updated by the generator of the e-way bill, if there is no transporter, or by the assigned transporter
+Part-B can be updated only if the e-way bill is active, that is, not cancelled
+Part-B can be updated only if the e-way bill is within validity period, that is, validity is not expired.
+If vehicle is passed, the format of the vehicle number should be valid and as per the format
+In case of road as a transportation mode , the vehicle number should be passed and transport document number is optional
+In case of rail, air or ship as a transportation mode, the transport document number is must
+Limiting generation of E Way Bill within 180 days of Document Date.
+Railways integration for validating Trans Document NO .
+
+=== #faq ===
+Frequently Asked Questions
+
+Content will be updated shortly.

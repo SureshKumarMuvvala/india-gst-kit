@@ -1,0 +1,108 @@
+=== #overview ===
+Overview
+
+This method provides the tax payer and registered transporter’s details for a given GSTIN number.
+
+The format and details of GetGSTIN API request is depicted in following table.
+
+URL
+
+<URL>/Master/GetGSTINDetails
+
+Content-Type
+
+application/json
+
+Method
+
+GET
+
+URL Parameters
+
+GSTIN
+
+URL Parameter Description
+
+GSTIN – GSTIN number for which the details are required
+
+=== #requestPayload ===
+Request Payload
+
+Request Header
+
+Attributes	Description
+
+client-id
+
+clientid to be provided by E-WAY BILL SYSTEM
+
+client-secret
+
+Secret to be provided by E-WAY BILL SYSTEM
+
+Gstin
+
+GSTIN of Requester(Tax payer or Transporter)
+
+authtoken
+
+Authentication token returned by the E-way bill system
+
+=== #responsePayload ===
+Response Payload
+Attributes	Description	Value
+Status	Status of request	1 – Success ; 0 - Error
+
+Encrypt(Base64(Response JSON),rek)
+
+Response of GSTIN details Json string.
+
+Encrypt(rek,sek)
+
+Random encryption key which is encrypted using sek
+
+Hmac ( Base64(JSON data ))
+
+HMAC-SHA256 of Base64 data using AES key (rek) as HMAC Key
+
+=== #SampleJSON ===
+Sample Json for GetGSTIN (GSTIN details)
+
+Get GSTIN Response
+
+ {
+  "status":"1",
+  "data":"<omitted: long sample value, see source page>","rek":"ieJ8YYyua7HW9tpJc7HtNirzoQAS5kMPIi+KEUOyvEgWGDs
+  jNkiwEB76t4u5rai7","hmac":"mFJ+1oFDKg233BLYP9QZjHN+mLJd9YCGz7JJWqwN6no="
+}
+
+"data" JSON (corresponds to the data element of GetGSTIN Response(Success))
+
+ {
+   "gstin":"29AKLPM8755F1Z2",
+   "tradeName":"XYZ Traders",
+   "legalName":"NICTEST",
+   "address1":"SOME STREET",
+   "address2":"SOME CITY",
+   "stateCode":"29",
+   "pinCode":"560079",
+   "txpType":" "
+   "status":"ACT"
+   "blkStatus":"B"
+}
+
+JSON(in case of error)
+
+ {
+  "status": "0",
+  "error":{"errorCodes": 240}
+}
+
+x
+
+=== #validations ===
+Validations
+An attribute "status" has been Added('ACT' or 'CNL' or 'INA' or 'PRO')
+An attribute "blkStatus" has been Added
+i) 'U' or ' ' for Unblocked
+ii) 'B' for blocked

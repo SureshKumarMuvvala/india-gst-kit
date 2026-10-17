@@ -1,0 +1,425 @@
+=== #overview ===
+Overview
+
+The format and details of Extend Validity API request is depicted in following table.
+
+URL
+
+<URL>/ewayapi/
+
+Content-Type
+
+application/json
+
+Method
+
+POST
+
+=== #requestPayload ===
+Request Payload
+
+Request Header
+
+Attributes	Description
+
+client-id
+
+clientid to be provided by E-WAY BILL SYSTEM
+
+client-secret
+
+Secret to be provided by E-WAY BILL SYSTEM
+
+Gstin
+
+GSTIN of  Requester(Taxpayer or Transporter)
+
+authtoken
+
+Authentication token returned by the E-way bill system
+
+Request Payload
+
+Attributes	Description
+Action	EXTENDVALIDITY	EXTENDVALIDITY
+
+Encrypt(Base64(Request JSON),sek)
+
+Extend Validity JSON string.
+
+=== #responsePayload ===
+Response Payload
+
+Attributes
+
+Description
+
+Value
+
+Status
+
+Status of request
+
+1 – Success ; 0 - Error
+
+Encrypt(Base64(Response JSON),sek)
+
+	Response of Extend Validity Json string. The response will have eway bill number for which validity is extended and date of validity if it is successfully updated Otherwise the response will have error codes.
+
+=== #requestSampleJSON ===
+Sample JSON (Request)
+
+Extend Validity Request
+
+ {
+ "action":"EXTENDVALIDITY",
+ "data":"<omitted: long sample value, see source page>"
+}
+
+“data” JSON corresponds to the data element of Extend Validity Request above
+
+ {
+ "ewbNo": 161000843009,
+ "vehicleNo": "PQR1234",
+ "fromPlace":"Bengaluru",
+ "fromState":"29",
+ "remainingDistance":50,
+ "transDocNo": "1234",
+ "transDocDate":"12/10/2017",
+ "transMode":"5",
+ "extnRsnCode":1,
+ "extnRemarks":"Flood",
+ "fromPincode":560090,
+ "consignmentStatus":"T",
+ "transitType":"R",
+ "addressLine1":"Bengaluru",
+ "addressLine2":"Bengaluru",
+ "addressLine3":"Bengaluru"
+}
+
+=== #responseSampleJSON ===
+Sample JSON (Response)
+
+Extend Validity Response
+
+ {
+ "status":"1",
+ "data":"R5cbQqbYz47IbX4HBelv7jWBro2sSloDJNs7
+ PekWVrFUYuSzxUT6Gw22hIaFj9971q8TmZi8YHstvKc97lr1/9q6KJMUXOaG9q
+ 3ETkOoN8jbhKTgp3nXuQ52ClFRTSdvXScp+R1xwihB8/TYvF9jqg==",
+"alert":null
+}
+
+“data” JSON (corresponds to the data element of Extend Validity Response(Success))
+
+ {
+ "ewayBillNo":"161000843009",
+ "updatedDate":"26/04/2018 05:07:00 PM",
+ "validUpto":"21/05/2018 23:59:00 PM"
+}
+
+JSON(in case of error)
+
+ {
+ "status": "0",
+ "error":{"errorCodes": 240}
+}
+
+=== #JSONSchema ===
+JSON Schema
+
+ {
+ "$schema": "http://json-schema.org/draft-04/schema#",
+ "type": "object",
+ "properties": {
+ "ewbNo": {
+   "type": "number",
+   "description":"Ewaybill Number"
+},
+ "vehicleNo": {
+  "type": "string",
+  "minLength": 7,
+  "maxLength": 15,
+  "description":"Vehicle Number"
+},
+ "fromPlace": {
+  "type": "string",
+  "maxLength": 50,
+  "description":"From Place"
+},
+ "fromState": {
+  "type": "integer",
+  "maximum": 99,
+  "description":"From State"
+},
+ "remainingDistance": {
+  "type": "number",
+  "description": "Remaining Distance"
+},
+ "transDocNo": {
+  "type": "string",
+  "maxLength": 15,
+  "description":"Transport Document Number"
+},
+ "transDocDate": {
+  "type": "string",
+  "pattern": "[0-3][0-9]/[0-1][0-9]/[2][0][1-2][0-9]",
+  "description":"Transport Document Date"
+},
+ "transMode": {
+  "type": "string",
+  "description":"Transport Mode"
+},
+ "extnRsnCode": {
+  "type": "number",
+  "description":"Extension Reason Code"
+},
+ "extnRemarks": {
+  "type": "string",
+  "description":"Extension Remarks"
+},
+ "fromPincode": {
+  "type": "number",
+  "description":"From Pincode"
+},
+ "consignmentStatus": {
+  "type": "string",
+  "description":"consignmentStatus(T)"
+},
+ "transitType": {
+  "type": "string",
+  "description":"transit Type"
+},
+ "addressLine1": {
+  "type": "string",
+  "description":"addressLine1"
+},
+ "addressLine2": {
+  "type": "string",
+  "description":"addressLine2"
+},
+ "addressLine3": {
+  "type": "string",
+  "description":"addressLine3"
+}
+},"required":[
+  "fromPlace",
+  "fromState",
+  "fromPincode",
+  "remainingDistance",
+  "TransMode",
+   "ewbNo",
+   "extnRsnCode",
+   "extnRemarks"
+]
+}
+
+=== #dataStructure ===
+Data Structure
+
+Parameter Name
+
+Type
+
+Description
+
+Values
+
+Sample Data
+
+Allowed Character
+
+ewbNo
+
+Number(12)
+
+E-way bill number
+
+ 
+
+131000026768
+
+Numbers
+
+vehicleNo
+
+Text(15)
+
+Vehicle number
+
+ 
+
+KA12TR1234
+
+Alpha-numeric
+
+fromPlace
+
+Text(50)
+
+Current place
+
+ 
+
+BANGALORE SOUTH
+
+Alpha-numeric
+
+fromState
+
+Number(2)
+
+Current State
+
+Refer Master
+
+29
+
+Numbers
+
+remainingDistance
+
+Number
+
+remainingDistance
+
+50
+
+Numbers
+
+transDocNo
+
+Alpha-numeric
+
+transDocNo
+
+TrnDoc123
+
+Alpha-numeric
+
+transDocDate
+
+Date
+
+transDocDate
+
+15/03/2019
+
+Date
+
+extnRemarks
+
+Number
+
+extnRemarks
+
+Refer Master
+
+1
+
+Number
+
+transMode
+
+Number
+
+transMode
+
+Refer Master
+
+1
+
+Number
+
+extnRsnCode
+
+Number
+
+extnRsnCode
+
+1
+
+Number
+
+fromPincode
+
+Number(6)
+
+fromPincode
+
+560090
+
+Numbers
+
+consignmentStatus
+
+string
+
+consignmentStatus
+
+T
+
+string
+
+transitType
+
+string
+
+transitType
+
+R
+
+string
+
+addressLine1
+
+string
+
+addressLine1
+
+Bengaluru
+
+string
+
+addressLine2
+
+string
+
+addressLine2
+
+Bengaluru
+
+string
+
+addressLine3
+
+string
+
+addressLine3
+
+Bengaluru
+
+string
+
+=== #validations ===
+Validations
+To distinguish between the goods either on Road or in transit, new parameter transitType ( R- Road, W - Warehouse, O-Others) are introduced for Extend E-waybill API.
+
+If transmode is 1 to 4 then consignmentStatus value should be M and transitType should be blank ("transitType":"").
+
+If transmode is 5 then consignmentStatus value should be T and transitType value can be either R or W or O.
+The Validity of EWB can be extended only by the current transporter. If transporter is not assigned, then the generator can update.
+The validity of EWB can be extended between 8 hours before expiry time and 8 hours after expiry time.
+The reason code along with reason description for the extension has to be entered.
+The present location of the consignment, at the time of requesting for the extension, has to be entered and distance to travel from there to destination has to be entered.
+If vehicle number is passed, the format of the vehicle number should be valid and as per the format
+In case of road as a transportation mode , the vehicle number should be passed and transport document number is optional.
+In case of rail, air or ship as a transportation mode, the transport document number is must.
+Remaining distance should not be more than the actual distance mentioned during the generation of E-way bill.
+Railways integration for validating Trans Document NO .
+Restriction of extension of E Way Bills beyond 360 days of generation of E Way Bill .
+
+=== #faq ===
+Frequently Asked Questions
+
+Content will be updated shortly.

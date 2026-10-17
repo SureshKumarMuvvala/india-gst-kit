@@ -1,0 +1,176 @@
+=== #overview ===
+Overview
+
+The format and details of Cancellation of E-way bill API request is depicted in following table.
+
+URL	<URL>/ewayapi/
+
+Content-Type
+
+application/json
+
+Method
+
+POST
+
+=== #requestPayload ===
+Request Payload
+
+Request Header
+
+Attributes	Description
+client-id	Client-id to be provided by E-WAY BILL SYSTEM
+client-secret	Secret to be provided by E-WAY BILL SYSTEM
+gstin	GSTIN of Requester(Tax payer or Transporter)
+authtoken	Authentication token returned by the E-way bill system
+
+Request Payload
+
+Attributes
+
+Description
+
+action
+
+CANEWB
+
+CANEWB
+
+Encrypt(Base64(Request JSON),sek)
+
+Cancelled E-way bill JSON string.
+
+=== #responsePayload ===
+Response Payload
+Attributes	Description	Value
+status	Status of request	1 – Success; 0 - Error
+Encrypt(Base64(Response JSON),sek)	Response of Cancelled E-way bill JSON string. The response will have cancelled eway bill number and cancelled date if it is successfully cancelled. Otherwise the response will have error codes
+
+=== #requestSampleJSON ===
+Sample JSON (Request)
+
+CANCEL E-WAY BILL Request
+
+ {
+"action":"CANEWB ",
+"data":"eyAgDQoiZXdiTm8iOiAxMTEwMDA2MDkyODIsDQogImNhbmN lbFJzbkNvZGUiOiAyLA0KImNhbmNlbFJtcmsiOiAiQ2FuY2Vsb GVkIHRoZSBvcmRlciINCn0NCg== "
+}
+
+“data” JSON (corresponds to the data element of Cancel E-WAY BILL Request)
+
+ {  
+"ewbNo": 111000609282,
+"cancelRsnCode": 2,
+"cancelRmrk": "Cancelled the order"
+}
+
+=== #responseSampleJSON ===
+Sample JSON (Response)
+
+ {
+"status":"1",
+"data":"ew0KCSJld2F5QmlsbE5vIjogIjExMTAwMDYwOTI4MiIsDQoJIm NhbmNlbERhdGUiOiAiMTUvMTIvMjAxNyAxMTozN TowMCBBTSINCn0="
+}
+
+“data” JSON (corresponds to the data element of Cancelled EWB Response(Success))
+
+ {   
+"ewayBillNo": 111000609282,
+"cancelDate": "15/12/2017 11:35:00 AM"
+}
+
+JSON(in case of error)
+
+ { 
+"status": "0",
+"error":{"errorCodes": 240}
+}
+
+=== #JSONSchema ===
+JSON Schema
+
+   {
+"$schema": "http://json-schema.org/draft-04/schema#",
+"type": "object",
+"properties": {
+"ewbNo": {
+"type": "number",
+"description": "EwayBill Number"
+},
+"cancelRsnCode": {
+"type": "number",
+"description": "Reason for cancellation"
+},
+"cancelRmrk": {
+"type": "string",
+"description": "Remarks"
+}
+},
+"required": [
+"ewbNo",
+"cancelRsnCode"
+]
+}
+
+=== #dataStructure ===
+Data Structure
+
+Parameter Name
+
+Type
+
+Description
+
+Values
+
+Sample Data
+
+Allowed Character
+
+ewbNo
+
+Number(12)
+
+E-way bill Generated
+
+ 
+
+131000026768   
+
+Numbers
+
+ 
+
+cancelRsnCode
+
+Number(1)
+
+Reason code for cancelling eway bill
+
+Refer Code list
+
+2
+
+Numbers
+
+ cancelRmrk
+
+Text(50)
+
+Reason for - cancelling eway bill
+
+ 
+
+Vehicle details not updated
+
+Alpha-numeric
+
+=== #validations ===
+Validations
+E-way bill can be cancelled by the generator of the e-way bill only.
+E-way bill can be cancelled within 24 hours of generation of e-way bill
+
+=== #faq ===
+Frequently Asked Questions
+
+Content will be updated shortly.

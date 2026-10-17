@@ -1,0 +1,88 @@
+=== #overview ===
+Overview
+
+To access the API, application should first authenticate using the credentials shared and get the access token issued. Same access token to be used to access subsequent APIs. Access token will be configured to expire after 360 minutes. On expiry, same authentication API needs to be invoked to get new Access Token issued. The API header information is used for authentication and authorization purpose.
+
+The format and details of a sample API request is depicted in following table.
+
+URL	<URL>/auth/
+
+Content-Type
+
+application/json
+
+Method
+
+POST
+
+=== #requestPayload ===
+Request Header
+
+Attributes	Description
+
+client-id
+
+Client_id to be provided by E-WAY BILL SYSTEM
+
+client-secret
+
+Secret to be provided by E-WAY BILL SYSTEM
+
+Gstin
+
+GSTIN of the requesting Tax Payer
+
+Request Payload
+Data Json containing the Credentials is encoded using Base64 and then encrypted using e-Waybill public Key
+
+Attributes	Description	Value
+action		ACCESSTOKEN
+username	Username of Tax payer as created on Ewaybill portal for API Integration (Tax payer will use the option Mainmenu->Registration->GSP to register under GSP OR Tax payer will use the option Mainmenu->Registration->API to register directly for API Interface)
+password	Password of Tax payer as in Ewaybill portal for API
+app_key	Any 32 character random unique id generated
+
+=== #responsePayload ===
+Response Payload
+Attributes	Description	Values
+status	Status of Authentication request	0 – for Failure; 1 – for Success
+authtoken	Authorization token is a universally unique identifier (UUID).	Eg:  30431124-5cbd-4045-   9840-4ebb18d70265",
+sek	Session Encryption key (SEK) is a 32 bit random secure key generated using AES 256 algorithm in the EWB system  App_key will be used as key to encrypt the Session Encryption key (SEK) using AES 256 (AES/ECB/PKCS7Padding) algorithm	Eg: "IaxLuJcsqILZuYQX828I TxXlrRUM1ebdEIaqEXnlaK +xK/U7ZuM5xAayg7RB7mWp
+
+=== #Div3 ===
+
+
+=== #requestSampleJSON ===
+Sample JSON (Request)
+Json containing the Credentials is encoded using Base64 and then encrypted using e-Waybill public Key
+
+Authentication Request
+
+ {
+"Data":"<omitted: long sample value, see source page>"
+}
+
+Sample Jsonfile corresponds to the "Data" element of Authentication Request above
+
+{
+"action":"ACCESSTOKEN",
+"username":"nictexxst",
+"password":"abcdef",
+"app_key":"e1d65bgSeTrTatc7atLhKWyUbM/ekfbAWu2dFMfyNuYS+ =="
+}
+
+=== #responseSampleJSON ===
+Sample JSON (Response)
+
+Authentication Response
+
+ {
+"status":"1",
+"authtoken":"a30WKqvWdLMkPH6M5V9X4AY",
+"sek":"crdHoP73uRaLwSsg4o8RZCHgVrfydvF2K5IW3+kc/rI5SqOVJ52Thf1yCI4j"
+}
+
+=== #faq ===
+Frequently Asked Questions
+Getting error 'Invalid Auth Token' while generating an e-Way bill through API and it is getting expired with in 6 Hours.
+
+A. Auth Token will be active for 6 hours since the first successful login. Even If the the Auth API is called again before 6 hours, same token will be returned and the time is not reset. Hence you can generate new Auth token only when it expires after 6 hours. For example: If you have authenticated at 12:00, token will be active till 06:00 If auth API is called at 02:00, still the same token will be active till 06:00 and NOT till 08:00

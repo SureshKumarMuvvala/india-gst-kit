@@ -1,0 +1,123 @@
+=== #overview ===
+Overview
+
+This method provides the Get IRN details for a given doctype, docnum & docdate.
+
+The format and details of Get IRN details by Doc. Details API request is depicted in following table.
+
+URL
+
+<URL>/irnbydocdetails?doctype=/<Doc. Type>&docnum=<Doc. No.>&docdate=<Doc. date>
+
+Content-Type
+
+application/json
+
+Method
+
+GET
+
+URL Parameters
+
+Document type
+
+Document number
+
+Document date
+
+=== #requestPayload ===
+Request Payload
+
+Request Header
+
+Attributes	Description
+client_id
+
+client id to be provided by E-Invoice System
+
+client_secret
+
+client secret to be provided by E-Invoice System
+
+Gstin
+
+GSTIN of the authenticated user
+
+sup_gstin
+
+(Optional) Supplier GSTIN, only in case E Comm. operator is getting IRN details. For RCM invoices recipient GSTIN to be passed
+
+user_name
+
+User name of the authenticated user
+
+AuthToken
+
+Authentication token returned by the E-Invoice system
+
+=== #responsePayload ===
+Response Payload
+Attributes	Description
+Status	Status of the GET e-Invoice details request(values 1-Success and 0- Failure)
+Data	If Status is ‘1’
+ErrorDetails	If Status is ‘0’
+InfoDtls	Any additional message to be conveyed would be passed.
+
+If Status is "1"
+
+Data	Base 64 encoded string of decrypted invoice JSON using Sek.
+After decrypting Data the following attributes are obtained as below.
+Attributes	Description
+AckNo	Transaction number
+AckDt	Date and time on which invoice is registered(Date format is ‘yyyy-MM-dd HH:mm:ss ’).
+Irn	SHA256 hash of Gstin, DocDtls.No, DocDtls.Typ, financial year of DoctDtls.Dt
+SignedInvoice	Complete e-Invoice data digitally signed using JSON Web Token(JWT) and JSON Web Signature (JWS) with “SHA256RSA” algorithm
+SignedQRCode	Complete QR- Code data digitally signed using JSON Web Token(JWT) and JSON Web Signature (JWS) with “SHA256RSA” algorithm
+Status	‘ACT’ for Active and ‘CNL’ for Cancelled
+EwbNo	E Way Bill No. , if E Way Bill is generated
+EwbDt	E Way Bill Date. , if E Way Bill is generated
+EwbValidTill	E Way Bill validity date, if Part B details are provided in the payload
+Remarks	Additional information such as, If distance is passed is 0, shows actual distance calculated for the pair of PIN codes
+
+If Status is "0"
+
+ErrorDetails	Base 64 encoded string.
+On decoding ErrorDetals the following attributes from JSON array are obtained as follows.
+ErrorCode	Unique error code
+ErrorMessage	Error Description
+
+=== #SampleJSON ===
+Sample Response JSON (Success)
+    {
+     "Status":"1",
+     "Data":"<omitted: long sample value, see source page>",
+     "ErrorDetails": null,
+      "InfoDtls":""
+     }
+
+JSON corresponds to the data element of Get e-Waybill Details by IRN Response(Success) above
+      {
+        "AckNo":112010024346950,
+        "AckDt":"2020-11-18 17:22:00",
+        "Irn":"7f8ea31dacf78a197d42b04f0c8dd511fe3649f1ef9062146d053ff26dafe2e3",
+        "SignedInvoice":"<omitted: long sample value, see source page>",
+        "SignedQRCode":"<omitted: long sample value, see source page>",
+        "Status":"ACT",
+        "EwbNo":171009051297,
+        "EwbDt":"2020-11-18 17:22:00",
+        "EwbValidTill":"2020-11-25 23:59:00",
+        "Remarks":null
+      }
+
+=== #example5 ===
+{ 
+"status": "0",
+"Data": null,
+"ErrorDetails":"<Errors JSON >",
+"InfoDtls": "<alert message >"
+}
+
+=== #validations ===
+Validations
+IRN can be retrieved using this API within three days from the date of generation of IRN.
+If e-commerce wants to Get the RCM Invoice details, in the headers the supplier GSTIN value should be the Recipient GSTIN.
