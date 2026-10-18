@@ -1,6 +1,6 @@
 # Spec — `@india-gst-kit/gsp` (v0.1)
 
-Status: **draft 2026-10-17, Phase 1 (spec only), not yet approved.** No package code is written until the owner approves this spec and decides §14. Every legal or official fact here is **UNVERIFIED — needs CA** until a chartered accountant signs it off in `docs/legal-facts.md`. Every API fact here is also **UNVERIFIED until the first live sandbox call** (§15).
+Status: **approved 2026-10-18** (decisions D-G1–D-G27 accepted as recommended, with D-G7 changed: AppKey size configurable). Updated 2026-10-18 for the new sources EI-GEN (F1) and JAVA (F4). Every legal or official fact here is **UNVERIFIED — needs CA** until a chartered accountant signs it off in `docs/legal-facts.md`. Every API fact here is also **UNVERIFIED until the first live sandbox call** (§15).
 
 Sources (all under `sources/`; provenance in `sources/README.md`, section "API documentation"):
 
@@ -14,7 +14,9 @@ Sources (all under `sources/`; provenance in `sources/README.md`, section "API d
 | **EI-DOC** | `einvoice/api/v1.03-get-irn-by-doc-details.txt` | e-invoice v1.03 Get IRN by document details |
 | **EI-EWBGET** | `einvoice/api/v1.03-get-ewaybill-details-by-irn.txt` | e-invoice v1.03 Get e-way bill details by IRN |
 | **EI-EWBCNL** | `einvoice/api/v1.03-cancel-ewaybill-sandbox-only.txt` | e-invoice v1.03 Cancel EWB (sandbox only; not implemented, D-G22) |
-| **C** | `einvoice/generate-irn-json-schema.json`, `generate-irn-validations.txt` | Generate IRN payload schema + validations (no envelope / URL / response page) |
+| **C** | `einvoice/generate-irn-json-schema.json`, `generate-irn-validations.txt` | Generate IRN payload schema + validations |
+| **EI-GEN** | `einvoice/api/v1.03-generate-irn.txt` | e-invoice v1.03 Generate IRN: URL, headers, envelope, response fields (F1) |
+| **JAVA** | `einvoice/api/java-sample-excerpts.md` | file:line excerpts of both portals' Java sample code (F4; finding G10) |
 | **I** | `ewaybill/ewb-by-irn-*.{txt,json}` | e-invoice v1.03 EWB generation by IRN |
 | **EW-AUTH** | `ewaybill/api/v1.03-authentication.txt` | EWB v1.03 Authentication |
 | **EW-VEH** | `ewaybill/api/v1.03-vehicle-number-update.txt` | EWB v1.03 Vehicle number (Part-B) update |
@@ -28,7 +30,7 @@ Sources (all under `sources/`; provenance in `sources/README.md`, section "API d
 | **K1** | `ewaybill/master-codes/*.csv` | EWB master codes (reason codes, modes, consignment status) |
 | **L** | `ewaybill/release-notes.txt` | EWB release notes |
 
-Findings **G1–G9** (`sources/README.md`) are referenced by number. Where a source contradicts this spec, **the source wins** and the conflict is reported in §13. Where two sources disagree, the behaviour is a configurable option with a documented default (§14) and a "verify on first live call" item (§15). Nothing in this spec is filled from memory; anything needed and not in `sources/` is listed in §16.
+Findings **G1–G10** (`sources/README.md`) are referenced by number. Where a source contradicts this spec, **the source wins** and the conflict is reported in §13. Where two sources disagree, the behaviour is a configurable option with a documented default (§14) and a "verify on first live call" item (§15). Nothing in this spec is filled from memory; anything needed and not in `sources/` is listed in §16.
 
 ## 1. Purpose and scope
 
@@ -114,7 +116,8 @@ createNicDirectProvider({
   paths?: Partial<Record<OperationId, string>>,       // override any default below
   headerNames?: { einvoice?: HeaderNameMap, ewaybill?: HeaderNameMap },  // G4, §6.2
   payloadPlaintext?: { einvoice?: "json" | "base64-json", ewaybill?: "json" | "base64-json" }, // D-G6
-  authPlaintext?: "base64-json" | "json",             // default "base64-json" (D-G6)
+  authPlaintext?: "base64-json" | "json",             // default "base64-json" (D-G6; JAVA 46/65)
+  appKeyBytes?: 16 | 32,                                // default 32 (D-G7, G10)
   tokenLifetimeMinutes?: { einvoice?: number, ewaybill?: number },     // fallbacks, §5.1
   proactiveRefresh?: boolean,                          // default true (D-G9)
   verifyHmac?: boolean,                                // default true (D-G12)
@@ -127,7 +130,7 @@ Default path table, transcribed **literally** from the `URL` row of each source 
 | `einvoice.auth` | einvoice | POST | `/v1.04/auth` | — | EI-AUTH |
 | `einvoice.getGstinDetails` | einvoice | GET | `/eivital/v1.04/Master/gstin/{gstin}` | — | EI-GSTIN |
 | `einvoice.syncGstinDetails` | einvoice | GET | `/eivital/v1.04/Master/syncgstin/{gstin}` | — | EI-SYNC |
-| `einvoice.generateIrn` | einvoice | POST | **none** (page not captured; caller must set `paths["einvoice.generateIrn"]`) | — | §16 F1 |
+| `einvoice.generateIrn` | einvoice | POST | `/api/Invoice` | — | EI-GEN |
 | `einvoice.cancelIrn` | einvoice | POST | `/api/Cancel` | — | EI-CNL |
 | `einvoice.getEinvoiceByIrn` | einvoice | GET | `/api/Invoice/irn/{irn}` | — | EI-GET |
 | `einvoice.getIrnByDocDetails` | einvoice | GET | `/irnbydocdetails?doctype={docType}&docnum={docNum}&docdate={docDate}` | — | EI-DOC (stray `/` after `doctype=` dropped, §13 GD14) |
@@ -153,11 +156,11 @@ All functions are pure, take `Uint8Array`/strings, and return result objects (`{
 
 | Function | Spec | Source |
 |---|---|---|
-| `generateAppKey(randomBytes)` | 32 random bytes; returned as `{ bytes, base64 }` (base64 is 44 chars) | EI-AUTH ("random 32 bytes … 44 chars"); EWB uses the same (D-G7) |
+| `generateAppKey(randomBytes, size = 32)` | `size` ∈ {16, 32} random bytes (provider option `appKeyBytes`, default 32); returned as `{ bytes, base64 }` (Base64 is 44 chars for 32 bytes, 24 for 16) | EI-AUTH ("random 32 bytes … 44 chars"); JAVA lines 106–107 / 135–136 use `gen.init(128)` = 16 bytes (G10); D-G7 |
 | `rsaEncryptLogin(plaintext, publicKey)` | `crypto.publicEncrypt({ key, padding: RSA_PKCS1_PADDING }, bytes)` → Base64. Input longer than `modulusBytes − 11` → `reason: "rsa-input-too-large"` (never truncated) | G2 (`RSA/ECB/PKCS1PADDING`, SPKI PEM) |
 | `buildLoginPlaintext(system, creds, appKey, forceRefresh)` | e-invoice JSON `{ UserName, Password, AppKey, ForceRefreshAccessToken }` (boolean); EWB JSON `{ action: "ACCESSTOKEN", username, password, app_key }`. Then Base64 of the UTF-8 JSON when `authPlaintext = "base64-json"` (default; "encoded using Base64 and then encrypted", EI-AUTH, EW-AUTH) | EI-AUTH, EW-AUTH |
-| `decryptSek(sekBase64, appKeyBytes)` | AES-256-ECB, PKCS#7 padding, key = the 32 raw AppKey bytes → SEK; result must be exactly 32 bytes, else `reason: "bad-sek"` | EI-AUTH ("AES/ECB/PKCS7Padding … with AppKey"), EW-AUTH |
-| `aesEcbEncrypt(plain, key32)` / `aesEcbDecrypt(cipherBase64, key32)` | `createCipheriv("aes-256-ecb", key, null)`, PKCS#7 (Node default). Wrong padding / length → `reason: "decrypt-failed"` | G2 |
+| `decryptSek(sekBase64, appKeyBytes)` | AES-ECB (AES-256 for a 32-byte AppKey, AES-128 for a 16-byte one), PKCS#7 padding (= Java's `PKCS5Padding`, JAVA 138), key = the raw AppKey bytes → SEK; result must be exactly 32 bytes, else `reason: "bad-sek"` | EI-AUTH ("AES/ECB/PKCS7Padding … with AppKey"), EW-AUTH |
+| `aesEcbEncrypt(plain, key)` / `aesEcbDecrypt(cipherBase64, key)` | `createCipheriv("aes-256-ecb" \| "aes-128-ecb", key, null)` by key length (32 / 16 bytes; anything else → `reason: "bad-key"`), PKCS#7 (Node default). Wrong padding / length → `reason: "decrypt-failed"` | G2 |
 | `encodePayload(json, sek, form)` | `form = "json"`: Base64(AES(utf8(JSON))). `form = "base64-json"`: Base64(AES(ascii(Base64(utf8(JSON))))) — the literal reading of `Encrypt(Base64(Request JSON), sek)` | EW-* notation; EI-CNL "encrypted … JSON using Sek"; D-G6 |
 | `decodePayload(dataBase64, key)` | AES-decrypt; if the plaintext parses as JSON → done (`form: "json"`); else if it is valid Base64 whose decoding parses as JSON → done (`form: "base64-json"`); else `reason: "bad-response-data"`. The detected form is returned for diagnostics (§15 V5) | tolerant, D-G6 |
 | `decodeRekResponse({ data, rek, hmac }, sek, verify)` | `rekKey = aesEcbDecrypt(rek, sek)` (must be 32 bytes; if it is instead 44 Base64 chars decoding to 32 bytes, accept and record the form, §15 V9); `payload = decodePayload(data, rekKey)`; `expected = HMAC-SHA256(key = rekKey, message = ascii(Base64(utf8(JSON))))` as received in the plaintext (if the plaintext was raw JSON, its Base64 is computed); compare to `Base64-decode(hmac)` with `crypto.timingSafeEqual`. Mismatch → `reason: "hmac-mismatch"` (fail closed, D-G12) | EW-GSTIN, G2 |
@@ -287,7 +290,7 @@ Every operation: `(args) → Promise<GspResult<T>>`, `args = { gstin, …, supGs
 | `auth` (internal; also exported as `einvoice.login`) | §4 | `Session` metadata without secrets: `{ expiresAt, expirySource, reused: boolean }` | EI-AUTH. "Only taxpayer GSTINs enabled for e-invoicing are allowed" |
 | `getGstinDetails({ gstin, target })` | `target` GSTIN in the path | `GstinDetails` (§9) | EI-GSTIN |
 | `syncGstinDetails({ gstin, target })` | same | `GstinDetails` | EI-SYNC |
-| `generateIrn({ gstin, request: IrnRequest, supGstin? })` | `validateIrnRequest` (errors block) → `serializeIrnRequest` → encrypt | `GenerateIrnResponse` (provisional, below) | C; envelope assumed `{ Data }` as for EI-CNL and I; **URL/response page not captured** (§16 F1, D-G23) |
+| `generateIrn({ gstin, request: IrnRequest })` | `validateIrnRequest` (errors block) → `serializeIrnRequest` → encrypt → `{ Data }` | `GenerateIrnResponse` (below) | EI-GEN, C (EI-GEN lists no `sup_gstin` header; none is sent) |
 | `cancelIrn({ gstin, request: CancelIrnRequest, supGstin?, context? })` | `CancelIrnRequestSchema` | `{ Irn, CancelDate }` | EI-CNL; pre-check PC1 |
 | `getEinvoiceByIrn({ gstin, irn, supGstin?, context? })` | `irn` = 64 hex chars (case kept) | `EinvoiceDetails` | EI-GET; pre-check PC2 |
 | `getIrnByDocDetails({ gstin, docType, docNum, docDate, supGstin?, context? })` | `docType` ∈ `INV`/`CRN`/`DBN`, `docNum` per einvoice doc-number rule, `docDate` `DD/MM/YYYY` (as in C; §15 V13) | `EinvoiceDetails` | EI-DOC; pre-check PC2 |
@@ -296,7 +299,7 @@ Every operation: `(args) → Promise<GspResult<T>>`, `args = { gstin, …, supGs
 
 - `CancelIrnRequestSchema` = strictObject `{ Irn: string(64), CnlRsn: enum "1"|"2"|"3"|"4", CnlRem?: string(0..100) }`. Conformance (G7): the source puts `required` **inside** `properties`, which makes nothing required under draft-04; we apply the evident intent (`Irn`, `CnlRsn` required). The sample's `"CnlRsn":"1 "` (trailing space) fails our enum; the conformance test asserts exactly that. Code meanings (EI-CNL): 1 Duplicate, 2 Data entry mistake, 3 Order cancelled, 4 Others — **different from EWB** (§13 GD1, D-G14). Exported as `EINVOICE_CANCEL_REASONS` (own file, Source header).
 - `EinvoiceDetails` = `{ AckNo: Int, AckDt: "yyyy-MM-dd HH:mm:ss", Irn, SignedInvoice, SignedQRCode, Status: string, EwbNo?: Int|null, EwbDt?: string|null, EwbValidTill?: string|null, Remarks?: string|null }`. `Status` values: `ACT`, `CNL`, `REJ` (EI-GET) / `ACT`, `CNL` (EI-DOC); any other value → warning `UNKNOWN_STATUS`, value kept. The client additionally returns `signedInvoice` / `signedQrCode` decoded with `decodeSignedInvoice` / `decodeSignedQrCode` (`signatureVerified: false`).
-- `GenerateIrnResponse` = provisionally the same shape as `EinvoiceDetails` (D-G23). Unknown keys are warnings; the raw decrypted JSON is returned too. Generate is **not idempotent**: no retry; on `outcome: "unknown"` the README directs the caller to `getIrnByDocDetails`.
+- `GenerateIrnResponse` (EI-GEN) = `{ AckNo, AckDt, Irn, SignedInvoice, SignedQRCode, Status: "ACT"|"CNL" (others warn), EwbNo?, EwbDt?, EwbValidTill?, Remarks? }` — the same shape as `EinvoiceDetails`. `Remarks` is in the EI-GEN sample but not in its attribute table (§13 GD24) and is accepted (D-G23). Unknown keys are warnings; the raw decrypted JSON is returned too. Generate is **not idempotent**: no retry; on `outcome: "unknown"` the README directs the caller to `getIrnByDocDetails`.
 
 ### 8.2 e-way bill
 
@@ -386,7 +389,7 @@ Pure functions, also run automatically when the caller passes `context`. They re
 A global setup stubs `globalThis.fetch` with a function that fails the test if called; every test injects a mock. The mock NIC server (`test/mock-nic.ts`) is a `fetch` implementation (no sockets) that holds a test RSA private key, decrypts logins, issues tokens/SEKs, tracks token lifetime with an injected clock, enforces the same-token rule and the 10-minute force-refresh window, records every request, and can be told to return each envelope variant in §7. Only GSTINs from `packages/fixtures/src/gstins.ts` are used.
 
 ### 12.1 Crypto
-- `generateAppKey`: 32 bytes, Base64 length 44, uses the injected `randomBytes`.
+- `generateAppKey`: 32 bytes / Base64 length 44 by default; 16 bytes / 24 with `size 16`; uses the injected `randomBytes`; other sizes throw (programmer error). Login + SEK round-trip with both sizes against the mock.
 - `rsaEncryptLogin` round-trip with a self-generated 2048-bit key pair (test-side `RSA_NO_PADDING` + manual PKCS#1 v1.5 unpad); two encryptions of the same input differ (random padding); input of `modulusBytes − 10` bytes → `rsa-input-too-large`; malformed PEM → `bad-public-key`.
 - `buildLoginPlaintext` for both systems: exact JSON keys, `ForceRefreshAccessToken` boolean, Base64 vs raw per option.
 - AES-256-ECB: fixed key/plaintext vectors (self-generated, asserted byte-for-byte against an independent test implementation); empty, 15-, 16-, 17-byte plaintexts; wrong key → `decrypt-failed`; non-Base64 input → `decrypt-failed`.
@@ -410,7 +413,7 @@ A global setup stubs `globalThis.fetch` with a function that fails the test if c
 ### 12.3 Transport
 - Default header names per system (§6.2), `sup_gstin` only when given, Java-sample preset, custom map.
 - Path table: every default path and method; `{gstin}`/`{irn}` substitution; `getIrnByDocDetails` query encoding of `docNum` containing `/` and `-`; base URL with and without trailing `/` and the source path without leading `/` (I) all join to one `/`.
-- `einvoice.generateIrn` without a configured path ⇒ `config` error `no-path`, nothing sent.
+- A path overridden to `""` ⇒ `config` error `no-path`, nothing sent.
 - Timeout via injected fetch that never resolves ⇒ `transport/timeout`; POST timeout ⇒ `outcome: "unknown"` and **one** request recorded; GET with `getRetries: 2` ⇒ 3 attempts with backoff via injected `sleep`; GET 4xx is not retried; caller `signal` abort ⇒ `transport/aborted`.
 - Action strings sent trimmed; EWB body keys lower-case.
 
@@ -473,18 +476,22 @@ A fake GSP provider (test-only: different base URL, extra header, passthrough co
 - **GD18. Status value sets differ**: EI-GET `ACT`/`CNL`/`REJ`; EI-DOC and EI-EWBGET `ACT`/`CNL`; GSTIN `ACT`/`CNL`/`INA`/`PRO`. Unknown values are warnings.
 - **GD19. Copy-paste text**: EI-CNL's validations mention "Get the RCM Invoice details"; EI-DOC's sample is titled "Get e-Waybill Details by IRN Response". No effect.
 - **GD20. Response dates**: `"21/05/2018 23:59:00 PM"` (24-hour time with PM), `"12.00:00 PM"`, and a vehicle-update `validUpto` earlier than its `vehUpdDate`. Dates kept as strings; warnings only.
-- **GD21. Capture date**: `sources/README.md` says the API pages were captured on **2026-10-18**, one day after this spec's date (2026-10-17) and two days after the other sources (2026-10-16). Probably a typo; the owner should confirm and correct it (no effect on behaviour). Retrieval dates in this spec and in §20 use the date the README states until corrected.
-- **GD22. Crypto details partly rest on uncommitted evidence**: G2 cites the portals' Java sample code, which is not in `sources/`. The RSA padding and key format come only from G2's quote (§16 F4).
+- **GD21. Capture date** of the API pages, 2026-10-18 in `sources/README.md`: confirmed correct by the owner (IST date). Not a deviation.
+- **GD22. Crypto details**: now backed by JAVA (F4): RSA `RSA/ECB/PKCS1PADDING` with an X.509 (SPKI) key, Base64 of the payload before RSA, AES `ECB/PKCS5Padding` for SEK and payloads.
+- **GD24. AppKey size (G10)**: both Java samples generate a 16-byte key (`gen.init(128)`), while EI-AUTH and the JAVA line-136 comment say 32 bytes. Configurable, default 32 (D-G7, V17).
+- **GD25. EWB auth path**: EW-AUTH says `<URL>/auth/`; the EWB Java sample posts to `<URL>/v1.03/auth` (JAVA 69). The API page is the default; the difference is probably the `<URL>` base (with or without `/v1.03`). V1.
+- **GD26. Hyphenated headers in both Java samples** (JAVA 51–53, 70–72) support the hyphen side of G4 for e-invoice; the API pages still list underscores. Default unchanged (D-G5), V2.
+- **GD27. Generate IRN**: EI-GEN's response table lists no `Remarks`, but its sample has `"Remarks": null`; its header table has no `sup_gstin`, unlike the other e-invoice pages.
 - **GD23. Pages list no `user_name` header for EWB** but list it for e-invoice; the EWB GSTIN header is `gstin` on H and `Gstin` elsewhere (case only; harmless).
 
 ## 14. Decisions (proposed; owner to approve. All UNVERIFIED; **Needs CA** where marked)
 - **D-G1 Provider interface.** Core against `GspProvider` (§2); direct-NIC is the only v0.1 provider; GSP adapters later with their own docs. *Recommend: approve.*
 - **D-G2 Result objects, not exceptions** for data/API/transport failures (§7.3), matching the other packages; throw only on programmer/config errors. *Recommend: approve.*
 - **D-G3 Credentials by callback** per `(system, gstin)`; no env; public keys per system/environment from the caller. *Recommend: approve.*
-- **D-G4 No default base URLs** (none in `sources/`); default paths are the sources' literals, overridable; `einvoice.generateIrn` has no default path until F1 is attached. *Recommend: approve.*
+- **D-G4 No default base URLs** (none in `sources/`); default paths are the sources' literals, overridable. *Accepted.*
 - **D-G5 Header names** default to the documented names per system; presets + custom map; settle on the first live call (V2). *Recommend: approve.*
 - **D-G6 Plaintext forms.** Login: Base64(JSON) then RSA (both pages say so). Payloads: EWB `base64-json` (explicit notation), e-invoice `json` (its prose); responses decoded tolerantly and the detected form logged once. *Recommend: approve; revisit after V5.*
-- **D-G7 AppKey** = 32 random bytes, Base64 (44 chars), for both systems; SEK key = the raw bytes. *Recommend: approve.*
+- **D-G7 AppKey** = random bytes, Base64, for both systems; size configurable `appKeyBytes: 16 | 32`, **default 32** (EI-AUTH), because both Java samples use `gen.init(128)` (G10); SEK key = the raw AppKey bytes (AES-128 for 16, AES-256 for 32). *Accepted with this change (owner, 2026-10-18); V17.*
 - **D-G8 Portal timestamps are IST (UTC+05:30)** for `TokenExpiry` and all pre-check dates. *Recommend: approve; V7.*
 - **D-G9 Refresh policy** per §5.3: e-invoice proactive `ForceRefreshAccessToken` only in the last 10 minutes (default on); EWB waits out the skew window and re-logs in after expiry. *Recommend: approve.*
 - **D-G10 Same token on re-auth** never extends `expiresAt`; the newly returned SEK replaces the cached one. *Recommend: approve; V8.*
@@ -500,7 +507,7 @@ A fake GSP provider (test-only: different base URL, extra header, passthrough co
 - **D-G20 Error codes as data**: no shipped table in v0.1; `authErrorCodes` caller-supplied; the official list added later from F2 as its own sourced file. *Recommend: approve.*
 - **D-G21 Session store** injectable, in-memory default, documented as secret-bearing. *Recommend: approve.*
 - **D-G22 e-invoice "Cancel EWB" (sandbox only)** is not implemented; EWB cancel goes through the EWB system (EI-EWBCNL says so for production). *Recommend: approve.*
-- **D-G23 Generate IRN response** is provisional (shape of `EinvoiceDetails`) until F1 is attached; unknown keys warn. *Recommend: approve, and attach F1 before the build if possible.*
+- **D-G23 Generate IRN** is sourced from EI-GEN: path `/api/Invoice`, `{ Data }` envelope, response fields as listed there plus the sample's `Remarks`; unknown keys warn. *Accepted (sourced 2026-10-18).*
 - **D-G24 Dependencies**: `model`, `einvoice`, `ewaybill` (`workspace:^`); no new runtime dependency; `node:crypto` + injectable `fetch`. *Recommend: approve.*
 - **D-G25 Logging**: optional hook, metadata only, redacted, no bodies. *Recommend: approve.*
 - **D-G26 Injectable clock, sleep and randomBytes** for deterministic tests. *Recommend: approve.*
@@ -511,7 +518,7 @@ Run with the sandbox credentials and the downloaded public keys; record each ans
 - **V1** Base URLs and every path in §3.3 (including whether e-invoice paths share one base; the generate-IRN path).
 - **V2** Header names: underscore (`client_id`) vs hyphen (`client-id`) on the e-invoice system; which one the sandbox accepts, for auth and for an authenticated call.
 - **V3** Login: RSA key size and format (SPKI PEM vs certificate); RSA plaintext = Base64(JSON) vs raw JSON; `ForceRefreshAccessToken` boolean accepted.
-- **V4** EWB `app_key`: 32 raw bytes (Base64) works; SEK decrypt key = raw AppKey bytes for both systems.
+- **V4** EWB `app_key`: Base64 of raw bytes works; SEK decrypt key = raw AppKey bytes for both systems.
 - **V5** Payload plaintext form per system (`json` vs `base64-json`) for requests; the form detected in responses.
 - **V6** Sandbox token lifetime (60 min e-invoice per EI-AUTH; EWB unknown).
 - **V7** `TokenExpiry` time zone (compare with the login time).
@@ -524,12 +531,13 @@ Run with the sandbox credentials and the downloaded public keys; record each ans
 - **V14** Whether numeric fields sent as JSON strings are rejected (confirms D-G18).
 - **V15** `sup_gstin`: required for e-commerce operators only; ignored otherwise.
 - **V16** Whether `TransMode` (capital) is also accepted on extend validity.
+- **V17** AppKey size (G10): does a 32-byte AppKey work on both systems, and does a 16-byte one (Java samples)? Is the returned SEK 32 bytes in both cases? Set the default `appKeyBytes` from the answer.
 
 ## 16. Files to attach (not in `sources/`)
-- **F1** e-invoice **Generate IRN** API page: https://einv-apisandbox.nic.in/version1.03/generate-irn.html sections `#overview`, `#requestPayload`, `#responsePayload`, `#responseSampleJSON` (URL path, envelope, response fields). Only the schema and validations are captured. *Needed before `generateIrn` can have a default path and a non-provisional response schema.*
-- **F2** **Error-code lists**: `api-error-codes-list.html` from einv-apisandbox.nic.in and from docs.ewaybillgst.gov.in/apidocs (G9). *Needed for the code table and for `authErrorCodes` guidance; not blocking v0.1.*
-- **F3** **API base URLs** (sandbox and production) for both systems, from an official page (e.g. the e-invoice and EWB API onboarding / "API URLs" pages). *Not blocking: the caller passes base URLs; needed for documentation defaults.*
-- **F4** The portals' **Java (or .NET) sample encryption code** cited in G2, as file:line excerpts like `sources/gstr1/offline-tool/code-excerpts.md` (license permitting; no AGPL/GPL). *Needed to settle V3/V5/V9 without a live call.*
+- **F1** ~~e-invoice Generate IRN API page~~ — **attached 2026-10-18** as `sources/einvoice/api/v1.03-generate-irn.txt` (EI-GEN).
+- **F2** (still unavailable) **Error-code lists**: `api-error-codes-list.html` from einv-apisandbox.nic.in and from docs.ewaybillgst.gov.in/apidocs (G9). *Needed for the code table and for `authErrorCodes` guidance; not blocking v0.1.*
+- **F3** (still unavailable) **API base URLs** (sandbox and production) for both systems, from an official page (e.g. the e-invoice and EWB API onboarding / "API URLs" pages). *Not blocking: the caller passes base URLs; needed for documentation defaults.*
+- **F4** ~~Java sample encryption code~~ — **attached 2026-10-18** as `sources/einvoice/api/java-sample-excerpts.md` (JAVA). It does not settle V5 (whether the EWB `json` is already Base64, JAVA 205) or V9 (no `rek` path in either sample).
 - **F5** The e-invoice **onboarding** and EWB **pre-requisites** pages quoted in G1. *Not blocking.*
 - **F6** e-invoice sandbox **release notes** (source of G9's 2150/2295 statement). *Not blocking.*
 - **F7** For each future GSP adapter: that GSP's API documentation (base URLs, headers, auth). *Later track.*
@@ -552,7 +560,7 @@ As in CLAUDE.md. Specific to this package:
 - Any test that would touch the network is a bug: stop and fix the mock.
 
 ## 20. `docs/legal-facts.md` rows to add (at build time)
-Each row: source URL (the page in the Sources table at the top, under https://einv-apisandbox.nic.in/ or https://docs.ewaybillgst.gov.in/apidocs/), retrieved as stated in `sources/README.md` (GD21), status UNVERIFIED — needs CA. Files under `packages/gsp/src/`.
+Each row: source URL (the page in the Sources table at the top, under https://einv-apisandbox.nic.in/ or https://docs.ewaybillgst.gov.in/apidocs/), retrieved 2026-10-18 (API pages) or 2026-10-16 (K1 master codes), status UNVERIFIED — needs CA. Files under `packages/gsp/src/`.
 - e-invoice cancel reasons 1–4 (`codes/einvoice-cancel-reasons.ts`, EI-CNL).
 - EWB cancel reasons 1–4 (`codes/ewb-cancel-reasons.ts`, K1) and the 2/3 swap vs e-invoice (GD1).
 - EWB vehicle-update reasons 1–4 (`codes/ewb-vehicle-reasons.ts`, K1).
