@@ -5,6 +5,7 @@
     "paths": {
       "@india-gst-kit/model": ["../model/src/index.ts"],
       "@india-gst-kit/einvoice": ["../einvoice/src/index.ts"],
+      "@india-gst-kit/errors": ["../errors/src/index.ts"],
       "@india-gst-kit/ewaybill": ["../ewaybill/src/index.ts"],
       "@india-gst-kit/fixtures": ["../fixtures/src/index.ts"]
     }

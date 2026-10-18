@@ -203,6 +203,7 @@ describe("dependencies", () => {
             "zod",
             "@india-gst-kit/model",
             "@india-gst-kit/einvoice",
+            "@india-gst-kit/errors",
             "@india-gst-kit/ewaybill",
           ].includes(m),
         ),

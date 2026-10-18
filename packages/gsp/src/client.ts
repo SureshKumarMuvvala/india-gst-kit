@@ -25,6 +25,8 @@ import {
   type EwbResponse,
   type GenerateOptions,
 } from "@india-gst-kit/ewaybill";
+import { decorateApiErrors } from "./describe-errors.js";
+import { ErrorCodeInfoSchema, type ErrorCodeInfo } from "./error-codes.js";
 import { failResult, okResult, type GspError, type GspResult, type System } from "./errors.js";
 import {
   checkGstinArgument,
@@ -141,6 +143,11 @@ export type GspClientConfig = {
   getRetries?: number;
   authErrorCodes?: Partial<Record<System, readonly string[]>>;
   expirySkewSeconds?: number;
+  /**
+   * Caller error-code rows whose `message` replaces `officialMessage` on matching api error entries.
+   * Deprecated (spec errors D-E11): the official lists ship in `@india-gst-kit/errors` (spec errors §2, D-E11).
+   */
+  errorCodeTable?: readonly ErrorCodeInfo[];
 };
 
 const fn = <T>(name: string) =>
@@ -180,6 +187,7 @@ const ConfigSchema = z.strictObject({
     })
     .optional(),
   expirySkewSeconds: z.number().min(0).max(600).optional(),
+  errorCodeTable: z.array(ErrorCodeInfoSchema).optional(),
 });
 
 type Common = { gstin: string; signal?: AbortSignal };
@@ -390,6 +398,7 @@ export function createGspClient(config: GspClientConfig) {
   const timeoutMs = config.timeoutMs ?? 30_000;
   const getRetries = config.getRetries ?? 0;
   const authCodes = config.authErrorCodes ?? {};
+  const errorCodeTable = config.errorCodeTable ?? [];
   const redactor = new Redactor();
   const log = (e: GspLogEvent) => {
     if (config.logger !== undefined) config.logger(redactor.deep(e) as GspLogEvent);
@@ -558,7 +567,7 @@ export function createGspClient(config: GspClientConfig) {
               kind: "api",
               system,
               op,
-              errors: env.errors,
+              errors: decorateApiErrors(system, op, env.errors, errorCodeTable),
               httpStatus: r.httpStatus,
               raw: env.raw,
             };
@@ -649,7 +658,7 @@ export function createGspClient(config: GspClientConfig) {
           kind: "api",
           system,
           op: spec.op,
-          errors: env.errors,
+          errors: decorateApiErrors(system, spec.op, env.errors, errorCodeTable),
           httpStatus: r.httpStatus,
           raw: env.raw,
         };

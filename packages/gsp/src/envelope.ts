@@ -5,14 +5,14 @@
 // The pages disagree on key case, status type, the info field's name and the error shape (§13 GD3–GD5), so the
 // NIC envelope is decoded tolerantly (spec §7.1–7.2).
 import { decodeBase64 } from "./crypto.js";
-import type { ApiErrorEntry } from "./errors.js";
+import type { RawApiError } from "./errors.js";
 import { warning, type GspIssue } from "./issues.js";
 
 export type Envelope = {
   status: 0 | 1;
   /** The `data` / `Data` value as received (string, object or null). */
   data: unknown;
-  errors: ApiErrorEntry[];
+  errors: RawApiError[];
   info?: string;
   /** Other documented keys, by lower-case name: `rek`, `hmac`, `authtoken`, `sek`. */
   extra: Record<string, unknown>;
@@ -65,7 +65,7 @@ function lowerKeys(o: Record<string, unknown>): Record<string, unknown> {
 }
 
 /** e-invoice `ErrorDetails`: array, object, JSON string or Base64 JSON of `{ ErrorCode, ErrorMessage }`. */
-export function parseEinvoiceErrors(value: unknown): ApiErrorEntry[] | undefined {
+export function parseEinvoiceErrors(value: unknown): RawApiError[] | undefined {
   const v = unwrap(value);
   const list: unknown[] | undefined = Array.isArray(v)
     ? v
@@ -73,7 +73,7 @@ export function parseEinvoiceErrors(value: unknown): ApiErrorEntry[] | undefined
       ? [v]
       : undefined;
   if (list === undefined) return undefined;
-  const out: ApiErrorEntry[] = [];
+  const out: RawApiError[] = [];
   for (const item of list) {
     if (typeof item !== "object" || item === null) return undefined;
     const l = lowerKeys(item as Record<string, unknown>);
@@ -86,7 +86,7 @@ export function parseEinvoiceErrors(value: unknown): ApiErrorEntry[] | undefined
 }
 
 /** e-way bill `error`: `{ errorCodes: 240 }`, `"240,241"`, or Base64 / JSON-string of that. */
-export function parseEwbErrors(value: unknown): ApiErrorEntry[] | undefined {
+export function parseEwbErrors(value: unknown): RawApiError[] | undefined {
   const v = unwrap(value);
   if (typeof v !== "object" || v === null || Array.isArray(v)) return undefined;
   const codes = asText(lowerKeys(v as Record<string, unknown>).errorcodes);
@@ -134,7 +134,7 @@ export function decodeNicEnvelope(
     };
   }
   const status = s === "1" ? 1 : 0;
-  let errors: ApiErrorEntry[] = [];
+  let errors: RawApiError[] = [];
   if (status === 0) {
     const parsedErrors =
       (l.errordetails !== undefined && l.errordetails !== null
