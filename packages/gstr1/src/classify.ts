@@ -46,6 +46,11 @@ export interface ClassifyContext {
   filer: Gstin;
   /** For notes: the original invoice and the period it was reported in (§3.3). */
   original?: OriginalRef | undefined;
+  /**
+   * For a revised (amended) invoice: the period whose B2CL limit decides its section — the original's period
+   * (spec §17.3, DEC-3). Defaults to `period`.
+   */
+  sectionPeriod?: ReturnPeriod | undefined;
 }
 
 export type Placement =
@@ -182,7 +187,7 @@ export function classifyDocument(doc: GstDocument, ctx: ClassifyContext): Classi
       // I3 / I4
       noRchrg("B2CL and B2CS");
       checkPos(POS_PATTERN);
-      const section = b2cSection(doc, ctx.period);
+      const section = b2cSection(doc, ctx.sectionPeriod ?? ctx.period);
       placement =
         section === "b2cl"
           ? { section: "b2cl" }

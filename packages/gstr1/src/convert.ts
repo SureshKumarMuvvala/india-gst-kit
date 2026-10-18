@@ -1,4 +1,4 @@
-import { ApiSavePayloadSchema, mapApi, type ApiSavePayload } from "./api-payload.js";
+import { ApiSavePayloadSchema, apiWarnings, mapApi, type ApiSavePayload } from "./api-payload.js";
 import { OfflineUploadJsonSchema, mapOffline, type OfflineUploadJson } from "./offline-upload.js";
 import type { Gstr1Return } from "./return-schema.js";
 import { serializeGstr1, sizeIssue } from "./serialize.js";
@@ -8,6 +8,7 @@ import type { z } from "zod";
 function finish<T extends ApiSavePayload | OfflineUploadJson>(
   schema: z.ZodType<T>,
   mapped: unknown,
+  warnings: readonly Gstr1Issue[] = [],
 ): RenderResult<T> {
   const parsed = schema.safeParse(mapped);
   if (!parsed.success) {
@@ -21,7 +22,7 @@ function finish<T extends ApiSavePayload | OfflineUploadJson>(
   }
   const tooLarge = sizeIssue(serializeGstr1(parsed.data));
   if (tooLarge !== undefined) return { ok: false, issues: [tooLarge] };
-  return { ok: true, value: parsed.data };
+  return { ok: true, value: parsed.data, warnings };
 }
 
 /** Output (a): the GSTN API "Save GSTR1 data" payload, S5 v5.0. Pure; validated against its own schema. */
@@ -29,10 +30,12 @@ export function toApiSavePayload(
   ret: Gstr1Return,
   options: { header?: { version?: string; hash?: string } } = {},
 ): RenderResult<ApiSavePayload> {
-  return finish(ApiSavePayloadSchema, mapApi(ret, options.header));
+  return finish(ApiSavePayloadSchema, mapApi(ret, options.header), apiWarnings(ret));
 }
 
 /** Output (b): what the official offline tool 3.2.4 writes (v4.1 shapes + its header). Pure. */
 export function toOfflineUploadJson(ret: Gstr1Return): RenderResult<OfflineUploadJson> {
-  return finish(OfflineUploadJsonSchema, mapOffline(ret));
+  const m = mapOffline(ret);
+  if (m.issues.length > 0) return { ok: false, issues: m.issues };
+  return finish(OfflineUploadJsonSchema, m.value);
 }

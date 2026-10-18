@@ -5,7 +5,6 @@
 // Retrieved: 2026-10-16
 // Status: UNVERIFIED — needs CA
 import {
-  decideTaxSplit,
   isTemporaryId,
   type DocumentKind,
   type Gstin,
@@ -17,7 +16,8 @@ import {
   type OriginalRef,
   type Placement,
 } from "./classify.js";
-import { D, fmt2, trimDecimal, type Dec } from "./decimal.js";
+import { D, fmt2, type Dec } from "./decimal.js";
+import { exportItemsOf, itemsOf } from "./items.js";
 import {
   DocIssueTypeSchema,
   docIssueIssues,
@@ -26,13 +26,26 @@ import {
   type DocIssueType,
 } from "./doc-issue.js";
 import { hsnRows, type Placed } from "./hsn.js";
-import { isS5Gstin } from "./recipient.js";
+import { buildAmendments, type DocumentAmendment } from "./amend.js";
 import {
-  Gstr1ReturnSchema,
-  type ExportItemSchema,
-  type Gstr1Return,
-  type Item,
-} from "./return-schema.js";
+  buildAdvances,
+  buildB2csa,
+  buildEcom,
+  buildNil,
+  buildSupeco,
+  parseEcoMarks,
+} from "./tables.js";
+import type {
+  AdvancesInput,
+  B2csAmendmentInput,
+  EcoMarkInput,
+  EcomInput,
+  NilRowInput,
+  SupecoInput,
+} from "./inputs.js";
+import { periodEnd } from "./classify.js";
+import { isS5Gstin } from "./recipient.js";
+import { Gstr1ReturnSchema, type Gstr1Return, type Item } from "./return-schema.js";
 import {
   issue,
   periodKey,
@@ -41,7 +54,6 @@ import {
   type ReturnPeriod,
   type Section,
 } from "./types.js";
-import type { z } from "zod";
 
 export interface Gstr1Input {
   /** The filer = `supplier.gstin` of every document. */
@@ -58,6 +70,21 @@ export interface Gstr1Input {
     /** Overrides the derivation of doc_issue (§5.3). */
     docIssue?: readonly DocIssueSeries[];
   };
+  // ---- Track A2 (spec §17.2): caller-supplied tables; the package never decides them (D-A1). ----
+  /** Tables 9A / 9C: full revised documents with the original as reported earlier (§17.3). */
+  amendments?: readonly DocumentAmendment[];
+  /** Table 10: revised Table 7 rows with the rows as first reported (§17.4). */
+  b2csAmendments?: readonly B2csAmendmentInput[];
+  /** Table 8: nil rated, exempted and non-GST amounts (§17.5). */
+  nil?: readonly NilRowInput[];
+  /** Table 11: advances received / adjusted and their amendments (§17.6). */
+  advances?: AdvancesInput;
+  /** Documents made through an e-commerce operator attracting TCS (§17.7, §17.21). */
+  ecoMarks?: readonly EcoMarkInput[];
+  /** Table 14 / 14A rows, reported by the supplier (§17.8). */
+  supeco?: SupecoInput;
+  /** Table 15 / 15A rows, reported by the operator (§17.8). */
+  ecom?: EcomInput;
 }
 
 export type Gstr1Result =
@@ -67,45 +94,6 @@ export type Gstr1Result =
       classification: readonly { kind: DocumentKind; number: string; section: Section }[];
     }
   | { ok: false; issues: readonly Gstr1Issue[] };
-
-type ExportItem = z.infer<typeof ExportItemSchema>;
-
-const sum = (xs: readonly string[], sign = 1): Dec =>
-  xs.reduce((a, x) => a.plus(new D(x).mul(sign)), new D(0));
-
-/** One item per distinct rate, in order of first appearance. `igstOnly` for sections S5 restricts to iamt/csamt. */
-function itemsOf(doc: GstDocument, igstOnly: boolean): Item[] {
-  const inter =
-    igstOnly ||
-    decideTaxSplit(doc.supplier.stateCode, doc.placeOfSupply, doc.supplyCategory) === "INTER";
-  const byRate = new Map<string, GstDocument["lines"]>();
-  for (const line of doc.lines) {
-    const rate = trimDecimal(line.gstRate);
-    byRate.set(rate, [...(byRate.get(rate) ?? []), line]);
-  }
-  return [...byRate].map(([rate, lines]) => {
-    const f = (k: "taxableValue" | "igst" | "cgst" | "sgst" | "cess") =>
-      fmt2(sum(lines.map((l) => l[k])));
-    return inter
-      ? { rate, taxableValue: f("taxableValue"), igst: f("igst"), cess: f("cess") }
-      : {
-          rate,
-          taxableValue: f("taxableValue"),
-          cgst: f("cgst"),
-          sgst: f("sgst"),
-          cess: f("cess"),
-        };
-  });
-}
-
-function exportItemsOf(doc: GstDocument): ExportItem[] {
-  return itemsOf(doc, true).map((i) => ({
-    rate: i.rate,
-    taxableValue: i.taxableValue,
-    igst: i.igst ?? "0.00",
-    cess: i.cess,
-  }));
-}
 
 function group<T, V>(map: Map<string, { key: T; list: V[] }>, id: string, key: T, v: V): void {
   const g = map.get(id);
@@ -191,6 +179,19 @@ function rangeIssues(ret: Gstr1Return): Gstr1Issue[] {
     for (const [i, v] of g.notes.entries()) doc(v, ["cdnr", gi, "notes", i]);
   }
   for (const [i, v] of ret.cdnur.entries()) doc(v, ["cdnur", i]);
+  for (const [gi, g] of (ret.b2ba ?? []).entries()) {
+    for (const [i, v] of g.invoices.entries()) doc(v, ["b2ba", gi, "invoices", i]);
+  }
+  for (const [gi, g] of (ret.b2cla ?? []).entries()) {
+    for (const [i, v] of g.invoices.entries()) doc(v, ["b2cla", gi, "invoices", i]);
+  }
+  for (const [gi, g] of (ret.cdnra ?? []).entries()) {
+    for (const [i, v] of g.notes.entries()) doc(v, ["cdnra", gi, "notes", i]);
+  }
+  for (const [i, v] of (ret.cdnura ?? []).entries()) doc(v, ["cdnura", i]);
+  for (const [gi, g] of (ret.expa ?? []).entries()) {
+    for (const [i, v] of g.invoices.entries()) doc(v, ["expa", gi, "invoices", i]);
+  }
   for (const [gi, g] of ret.exp.entries()) {
     for (const [i, v] of g.invoices.entries()) {
       const path = ["exp", gi, "invoices", i];
@@ -302,6 +303,45 @@ export function buildGstr1(input: Gstr1Input): Gstr1Result {
 
   const ret = emptyReturn(gstin, period);
 
+  // ---- e-commerce marks (§17.7): only b2b R non-RCM and b2cl invoices ----
+  const etinOf = new Map<string, string>();
+  if (input.ecoMarks !== undefined) {
+    const m = parseEcoMarks(input.ecoMarks);
+    issues.push(...m.issues);
+    for (const mark of m.marks) {
+      const doc = documents.find((d) => d.kind === mark.kind && d.number === mark.number);
+      if (doc === undefined) {
+        issues.push(
+          issue("ECO_UNKNOWN_DOCUMENT", `no ${mark.kind} ${mark.number} among the documents`, {
+            path: mark.path,
+            documentNumber: mark.number,
+          }),
+        );
+        continue;
+      }
+      const p = placed.find((x) => x.doc === doc)?.placement;
+      if (p === undefined) continue; // the document's own issues are already reported
+      const ok =
+        (p.section === "b2b" && p.invoiceType === "R" && !doc.reverseCharge) ||
+        p.section === "b2cl";
+      if (!ok) {
+        issues.push(
+          issue(
+            "ECO_NOT_APPLICABLE",
+            `${mark.number} (${p.section}) cannot be marked: only regular B2B invoices without reverse charge and B2CL invoices`,
+            { path: mark.path, documentNumber: mark.number },
+          ),
+        );
+        continue;
+      }
+      etinOf.set(`${doc.kind}|${doc.number}`, mark.etin);
+    }
+  }
+  const etin = (doc: GstDocument) => {
+    const e = etinOf.get(`${doc.kind}|${doc.number}`);
+    return e === undefined ? {} : { etin: e };
+  };
+
   // ---- sections ----
   const b2b = new Map<string, { key: string; list: Gr1B2bInvoice[] }>();
   const b2cl = new Map<string, { key: string; list: Gr1B2clInvoice[] }>();
@@ -318,11 +358,16 @@ export function buildGstr1(input: Gstr1Input): Gstr1Result {
           pos: doc.placeOfSupply,
           reverseCharge: doc.reverseCharge,
           invoiceType: placement.invoiceType,
+          ...etin(doc),
           items: itemsOf(doc, false),
         });
         break;
       case "b2cl":
-        group(b2cl, doc.placeOfSupply, doc.placeOfSupply, { ...head, items: itemsOf(doc, true) });
+        group(b2cl, doc.placeOfSupply, doc.placeOfSupply, {
+          ...head,
+          ...etin(doc),
+          items: itemsOf(doc, true),
+        });
         break;
       case "cdnr":
         group(cdnr, placement.ctin, placement.ctin, {
@@ -393,6 +438,59 @@ export function buildGstr1(input: Gstr1Input): Gstr1Result {
         : { cgst: fmt2(a.cgst), sgst: fmt2(a.sgst) }),
       cess: fmt2(a.cess),
     }));
+
+  // ---- Track A2 tables (§17.3–§17.8); keys are set only when there is data, so v0.1 output is unchanged ----
+  const supplierState = gstin.slice(0, 2);
+  if (input.amendments !== undefined && input.amendments.length > 0) {
+    const a = buildAmendments({
+      filer: gstin,
+      period,
+      documents,
+      amendments: input.amendments,
+      findOriginal,
+    });
+    issues.push(...a.issues);
+    for (const k of ["b2ba", "b2cla", "expa", "cdnra", "cdnura"] as const) {
+      if (a.sections[k].length > 0) Object.assign(ret, { [k]: a.sections[k] });
+    }
+  }
+  if (input.b2csAmendments !== undefined) {
+    const t = buildB2csa(input.b2csAmendments, { period, supplierState });
+    issues.push(...t.issues);
+    if (t.rows.length > 0) ret.b2csa = t.rows;
+  }
+  if (input.nil !== undefined) {
+    const t = buildNil(input.nil);
+    issues.push(...t.issues);
+    if (t.rows.length > 0) ret.nil = t.rows;
+  }
+  if (input.advances !== undefined) {
+    const t = buildAdvances(input.advances, { period, supplierState });
+    issues.push(...t.issues);
+    const a = t.advances;
+    if (
+      a !== undefined &&
+      a.received.length +
+        a.adjusted.length +
+        a.receivedAmendments.length +
+        a.adjustedAmendments.length >
+        0
+    ) {
+      ret.advances = a;
+    }
+  }
+  if (input.supeco !== undefined) {
+    const t = buildSupeco(input.supeco, { period });
+    issues.push(...t.issues);
+    const v = t.supeco;
+    if (v !== undefined && Object.values(v).some((l) => l.length > 0)) ret.supeco = v;
+  }
+  if (input.ecom !== undefined) {
+    const t = buildEcom(input.ecom, { period, periodEnd: periodEnd(period) });
+    issues.push(...t.issues);
+    const v = t.ecom;
+    if (v !== undefined && Object.values(v).some((l) => l.length > 0)) ret.ecom = v;
+  }
 
   // ---- hsn ----
   const hsn = hsnRows(placed, options.aatoAbove5Cr === true);

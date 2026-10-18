@@ -30,7 +30,10 @@ const igstDet = (it: Item): Obj => ({
   csamt: it.cess,
 });
 
-export function mapSections(ret: Gstr1Return): Obj {
+/** `withEtin`: output (b) writes the e-commerce operator GSTIN of marked invoices (spec §17.7, O8). */
+export function mapSections(ret: Gstr1Return, withEtin = false): Obj {
+  const etin = (v: { etin?: string | undefined }): Obj =>
+    withEtin && v.etin !== undefined ? { etin: v.etin } : {};
   const out: Obj = {};
   if (ret.b2b.length > 0) {
     out["b2b"] = ret.b2b.map((g) => ({
@@ -42,6 +45,7 @@ export function mapSections(ret: Gstr1Return): Obj {
         pos: v.pos,
         rchrg: yn(v.reverseCharge),
         inv_typ: v.invoiceType,
+        ...etin(v),
         itms: items(v.items),
       })),
     }));
@@ -53,6 +57,7 @@ export function mapSections(ret: Gstr1Return): Obj {
         inum: v.number,
         idt: wireDate(v.date),
         val: v.value,
+        ...etin(v),
         itms: v.items.map((it) => ({ num: itemNum(it.rate), itm_det: igstDet(it) })),
       })),
     }));
