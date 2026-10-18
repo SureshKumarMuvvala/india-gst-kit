@@ -724,3 +724,15 @@ Each row: source `sources/gstr3b/…` (developer.gst.gov.in, Draft v7.1, retriev
 
 - **Sources fetched.** F1 and F4 were found on gstcouncil.gov.in as the CGST Rules Part B (Forms) consolidated to 18-05-2021 (FG). They settle G1–G4 and G6–G10, the credit-note sign (Q-H7, for taxable value), the Table 8 split (Q-H8), 3.2 scope and subset (Q-H11, D-H6 (d)), the 4C formula (Q-H9, formula only), 5A vs 5B (Q-H5) and 7A(1)/7B(1) (Q-H6). They do **not** settle 3.1.1, 5.1 / late fee (C1), CGST = SGST (Q-H10), the SV code ↔ row link (Q-H1), RCM in Table 6 (G5, Q-H4) or anything about AC's other suffixes (Q-H2). The URLs tried are in `sources/gstr3b/README.md`.
 - **Added check V11** (`T32_EXCEEDS_31A`, warning), because FG-3B states that 3.2 is "of the supplies shown in 3.1 (a)".
+- **Source details the spec missed, now transcribed (AC).**
+  - **C15.** Twelve AC nodes (`inter_sup.osup_unreg_3_2.det.tbl15b2c`, `tbl15urp2c`, `tbl15b2ca`, `tbl15urp2ca` in each block) are `type: "array"` with `properties` and no `items`. As JSON Schema that means "any array"; we read it as an array of those row objects (Ajv and we agree on rows and on rejecting an object).
+  - **C16.** AC has 30 `anyOf` constraints: 3.1 (d) and every `elgitc` box need `det` or `det_q`, and some `det` nodes need one of their rows. AC arrays of POS rows carry `minItems 1` / `maxItems 40` (251 arrays). Both are enforced. The generator (`scripts/gen-autocalc-shape.mjs`) refuses any keyword it does not handle.
+  - **C4, sharpened.** AC `#pos` is unanchored and its group repeats zero or more times, so it matches **every** string; only `maxLength 2` constrains it ("AB" passes Ajv and us).
+  - **C5, more.** Besides the 35 object/array paths, required sets differ too (e.g. `liabitcr1` `osup_3_1b.det.ims_*_eb2b` rows require `camt`/`samt`; `liabitc`'s do not). The shape is transcribed per block, so all of these are encoded.
+- **Deviations from the spec (build).**
+  - `INTRA_ITEM_IN_32` is **info**, not a warning: FG-3B says 3.2 is inter-State only, so leaving an intra-State item out is expected.
+  - `itcNet` takes `{ label, amounts }` (not bare amounts), so a supplied 4C carries a label like every caller figure. 4C cannot be a `CallerEntry` box. With no `itcNet`, 4C stays `0.00` and V8 warns if 4A − 4B ≠ 0.
+  - `notCovered` entries are `"<box>:<AC key>"` strings.
+  - `compareWithAutoCalc` needs `options.trail` for `detail`; `uncompared` rows for `itc4b2`/`itc4d2` carry `portalPath` and no `box`.
+  - `parseSavePayloadJson` / `parseAutoCalcJson` return `{ ok, value?, issues }` with our issue codes (not Zod's result type).
+  - Number literals with an exponent (`1e3`) are rejected although they are valid JSON numbers for SV/AC (spec §2 kept); AC dates get a calendar check AC's pattern does not have.

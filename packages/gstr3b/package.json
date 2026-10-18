@@ -1,0 +1,39 @@
+{
+  "name": "@india-gst-kit/gstr3b",
+  "version": "0.0.0",
+  "description": "GSTR-3B for India GST: assemble the return from GSTR-1-derived outward figures and caller-supplied ITC figures with a provenance trail, render the Save v7.1 payload, diff against the portal's Auto Calc. Never decides taxability, ITC, reversals, interest or late fee.",
+  "license": "MIT",
+  "author": "Suresh Kumar Muvvala",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@india-gst-kit/gstr1": "workspace:^",
+    "@india-gst-kit/model": "workspace:^",
+    "@india-gst-kit/recon": "workspace:^",
+    "decimal.js": "^10.6.0"
+  },
+  "peerDependencies": {
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "ajv": "^8.20.0",
+    "zod": "4.5.4"
+  }
+}
