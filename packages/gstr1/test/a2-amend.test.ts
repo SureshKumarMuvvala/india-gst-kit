@@ -1,13 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { toApiSavePayload, toOfflineUploadJson, serializeGstr1 } from "../src/index.js";
 import {
-  api,
   build,
   codes,
   first,
   list,
   mkDoc,
-  offline,
   parties,
   rec,
   ret,
@@ -16,6 +14,7 @@ import {
   validateS5,
   type DocSpec,
 } from "./helpers.js";
+import { api, offline } from "./a2-helpers.js";
 
 // Spec §17.3 / §17.13 "9A / 9C". Originals are reported in earlier periods; the return period is 102026.
 

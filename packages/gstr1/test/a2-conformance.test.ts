@@ -400,6 +400,33 @@ describe("Track A2 golden period", () => {
   }
 });
 
+describe.each([
+  "amendments",
+  "b2csAmendments",
+  "nil",
+  "advances",
+  "ecoMarks",
+  "supeco",
+  "ecom",
+] as const)("(a) vs (b), one A2 section at a time: %s", (key) => {
+  it("valid against S5 / S4 and equal after normalisation steps 1–5", () => {
+    const g = a2Golden();
+    const r = buildGstr1({
+      gstin: FILER,
+      period: PERIOD,
+      documents: key === "ecoMarks" ? g.documents : [],
+      ...(g.extra.options === undefined ? {} : { options: g.extra.options }),
+      [key]: g.extra[key],
+    });
+    if (!r.ok) throw new Error(JSON.stringify(r.issues));
+    const a = apiJson(r.value);
+    const b = offJson(r.value);
+    expect(validateS5(a) || JSON.stringify(validateS5.errors)).toBe(true);
+    expect(validateS4(b) || JSON.stringify(validateS4.errors)).toBe(true);
+    expect(normalise(b, "offline")).toEqual(normalise(a, "api"));
+  });
+});
+
 describe("Track A2: the Zod transcriptions and Ajv agree (§17.13)", () => {
   type Case = { name: string; mutate: (j: Json) => void; s5: boolean; s4: boolean };
   const cases: Case[] = [

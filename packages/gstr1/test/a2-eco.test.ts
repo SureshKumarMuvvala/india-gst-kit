@@ -1,13 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { buildGstr1, toApiSavePayload, toOfflineUploadJson } from "../src/index.js";
 import {
-  api,
   codes,
   FILER,
   GSTINS,
   list,
   mkDoc,
-  offline,
   parties,
   PERIOD,
   rec,
@@ -16,6 +14,7 @@ import {
   validateS4,
   validateS5,
 } from "./helpers.js";
+import { api, offline } from "./a2-helpers.js";
 
 // Spec §17.7, §17.8, §17.21 / §17.13 "4C / 5B", "Tables 14 / 15".
 

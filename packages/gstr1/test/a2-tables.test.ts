@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { toApiSavePayload, toOfflineUploadJson } from "../src/index.js";
-import { api, codes, GSTINS, list, offline, rec, ret, validateS4, validateS5 } from "./helpers.js";
+import { codes, GSTINS, list, rec, ret, validateS4, validateS5 } from "./helpers.js";
+import { api, offline } from "./a2-helpers.js";
 
 // Spec §17.4–§17.6 / §17.13 "Table 10", "Table 8", "Table 11". Filer state = 29 (Karnataka).
 
