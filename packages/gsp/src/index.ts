@@ -59,11 +59,15 @@ export type { Envelope } from "./envelope.js";
 export {
   ApiErrorEntrySchema,
   GspErrorSchema,
+  RawApiErrorSchema,
   SystemSchema,
   failResult,
   okResult,
 } from "./errors.js";
-export type { ApiErrorEntry, GspError, GspResult, System } from "./errors.js";
+export type { ApiErrorEntry, GspError, GspResult, RawApiError, System } from "./errors.js";
+export { decorateApiErrors, summarizeGspError } from "./describe-errors.js";
+export type { GspErrorSummary } from "./describe-errors.js";
+export { SESSION_ERROR_CODES } from "@india-gst-kit/errors";
 export { GspIssueSchema } from "./issues.js";
 export type { GspIssue } from "./issues.js";
 export { Secret, REDACTED } from "./secret.js";

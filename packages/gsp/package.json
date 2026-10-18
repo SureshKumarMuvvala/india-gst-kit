@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@india-gst-kit/einvoice": "workspace:^",
+    "@india-gst-kit/errors": "workspace:^",
     "@india-gst-kit/ewaybill": "workspace:^",
     "@india-gst-kit/model": "workspace:^"
   },

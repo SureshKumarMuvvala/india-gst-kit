@@ -1,0 +1,175 @@
+// Regenerates src/data/*.ts from the official error-code lists in sources/errors/ (spec errors §4.3). Run:
+//   node packages/errors/scripts/gen-error-data.mjs
+// Refuses to run when sources/errors/SHA256SUMS does not match, when a header row differs, when a row has the wrong
+// number of columns, or when a code is empty or repeats within a list. Every non-empty cell is copied verbatim; an
+// empty cell becomes an absent key. test/data-conformance.test.ts calls render() and compares it with the files.
+import { createHash } from "node:crypto";
+import { readFileSync, writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+const SOURCES_DIR = new URL("../../../sources/errors/", import.meta.url);
+const OUT_DIR = new URL("../src/data/", import.meta.url);
+const RETRIEVED = "2026-10-18";
+const STATUS = "UNVERIFIED — needs CA";
+
+const FULL_HEADER = ["Error Code", "Error Messege", "Reason for Error", "Resolution"];
+
+/** One entry per source file, in a fixed order. */
+export const LISTS = [
+  {
+    key: "einvoice/VITAL",
+    file: "einvoice-error-codes-VITAL.json",
+    out: "einvoice-vital.ts",
+    exportName: "EINVOICE_VITAL_ERRORS",
+    url: "https://einvoice1.gst.gov.in/others/geterrorcodes/VITAL",
+    title: "e-invoice error codes, VITAL list (auth, user, GSTIN)",
+    header: FULL_HEADER,
+    columns: ["code", "message", "reason", "resolution"],
+  },
+  {
+    key: "einvoice/INV",
+    file: "einvoice-error-codes-INV.json",
+    out: "einvoice-inv.ts",
+    exportName: "EINVOICE_INV_ERRORS",
+    url: "https://einvoice1.gst.gov.in/others/geterrorcodes/INV",
+    title: "e-invoice error codes, INV list (IRN generation, cancel, get)",
+    header: FULL_HEADER,
+    columns: ["code", "message", "reason", "resolution"],
+  },
+  {
+    key: "einvoice/EWB",
+    file: "einvoice-error-codes-EWB.json",
+    out: "einvoice-ewb.ts",
+    exportName: "EINVOICE_EWB_ERRORS",
+    url: "https://einvoice1.gst.gov.in/others/geterrorcodes/EWB",
+    title: "e-invoice error codes, EWB list (e-way bill through the IRP)",
+    header: ["Error Code", "Error Messege"],
+    columns: ["code", "message"],
+  },
+  {
+    key: "ewaybill/API",
+    file: "ewaybill-api-error-codes.json",
+    out: "ewaybill-api.ts",
+    exportName: "EWAYBILL_API_ERRORS",
+    url: "https://docs.ewaybillgst.gov.in/apidocs/api-error-codes-list.html",
+    title: "e-way bill system API error codes",
+    header: ["Error Code", "Error Description"],
+    columns: ["code", "message"],
+  },
+];
+
+function fail(message) {
+  throw new Error(`gen-error-data: ${message}`);
+}
+
+/** Parses sources/errors/SHA256SUMS into { file: sha256 }. */
+export function readChecksums(dir = SOURCES_DIR) {
+  const sums = {};
+  for (const line of readFileSync(new URL("SHA256SUMS", dir), "utf8").split("\n")) {
+    if (line.trim() === "") continue;
+    const m = /^([0-9a-f]{64}) {2}(\S+)$/.exec(line);
+    if (m === null) fail(`bad SHA256SUMS line: ${line}`);
+    sums[m[2]] = m[1];
+  }
+  return sums;
+}
+
+/** Reads one list: checks its checksum, header, columns and codes; returns { sha256, rows }. */
+export function readList(list, dir = SOURCES_DIR) {
+  const bytes = readFileSync(new URL(list.file, dir));
+  const sha256 = createHash("sha256").update(bytes).digest("hex");
+  const expected = readChecksums(dir)[list.file];
+  if (expected === undefined) fail(`${list.file} is not in SHA256SUMS`);
+  if (sha256 !== expected)
+    fail(`${list.file}: sha256 ${sha256} does not match SHA256SUMS ${expected}`);
+  const table = JSON.parse(bytes.toString("utf8"));
+  if (!Array.isArray(table) || table.length < 2) fail(`${list.file}: not a table`);
+  const [header, ...body] = table;
+  if (JSON.stringify(header) !== JSON.stringify(list.header))
+    fail(
+      `${list.file}: header ${JSON.stringify(header)} differs from ${JSON.stringify(list.header)}`,
+    );
+  const seen = new Set();
+  const rows = body.map((cells, i) => {
+    if (!Array.isArray(cells) || cells.length !== list.columns.length)
+      fail(`${list.file}: row ${i + 1} does not have ${list.columns.length} columns`);
+    const row = {};
+    list.columns.forEach((name, c) => {
+      const cell = cells[c];
+      if (typeof cell !== "string")
+        fail(`${list.file}: row ${i + 1} column ${c + 1} is not a string`);
+      if (cell !== "") row[name] = cell;
+    });
+    if (row.code === undefined) fail(`${list.file}: row ${i + 1} has no code`);
+    if (row.message === undefined) fail(`${list.file}: row ${i + 1} (${row.code}) has no message`);
+    if (seen.has(row.code)) fail(`${list.file}: code ${row.code} repeats`);
+    seen.add(row.code);
+    return row;
+  });
+  return { sha256, rows };
+}
+
+function renderList(list, { sha256, rows }) {
+  const lines = [
+    `// Source: ${list.url} — sources/errors/${list.file}`,
+    `// Retrieved: ${RETRIEVED}`,
+    `// Status: ${STATUS}`,
+    `// ${list.title}; ${rows.length} rows.`,
+    `// GENERATED by scripts/gen-error-data.mjs from the file above (sha256 ${sha256}) — do not edit by hand.`,
+    `// Text is verbatim, including the portal's spelling mistakes; an empty cell is an absent key.`,
+    `import type { OfficialErrorRow } from "../schemas.js";`,
+    ``,
+    `export const ${list.exportName}: readonly OfficialErrorRow[] = [`,
+    ...rows.map(
+      (row) =>
+        `  { ${Object.entries(row)
+          .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
+          .join(", ")} },`,
+    ),
+    `];`,
+    ``,
+  ];
+  return lines.join("\n");
+}
+
+function renderSources(read) {
+  const lines = [
+    `// Source: sources/errors/README.md and sources/errors/SHA256SUMS (the four lists' pages and checksums)`,
+    `// Retrieved: ${RETRIEVED}`,
+    `// Status: ${STATUS}`,
+    `// GENERATED by scripts/gen-error-data.mjs — do not edit by hand.`,
+    `import type { ErrorListKey, ErrorListSource } from "../schemas.js";`,
+    ``,
+    `export const ERROR_LIST_SOURCES: Readonly<Record<ErrorListKey, ErrorListSource>> = {`,
+    ...LISTS.map((list, i) =>
+      [
+        `  ${JSON.stringify(list.key)}: {`,
+        `    url: ${JSON.stringify(list.url)},`,
+        `    file: ${JSON.stringify(`sources/errors/${list.file}`)},`,
+        `    retrieved: ${JSON.stringify(RETRIEVED)},`,
+        `    sha256: ${JSON.stringify(read[i].sha256)},`,
+        `    status: ${JSON.stringify(STATUS)},`,
+        `  },`,
+      ].join("\n"),
+    ),
+    `};`,
+    ``,
+  ];
+  return lines.join("\n");
+}
+
+/** Every generated file as { path (relative to src/data/), text }. Pure apart from reading the sources. */
+export function render(dir = SOURCES_DIR) {
+  const read = LISTS.map((list) => readList(list, dir));
+  return [
+    ...LISTS.map((list, i) => ({ path: list.out, text: renderList(list, read[i]) })),
+    { path: "sources.ts", text: renderSources(read) },
+  ];
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  for (const { path, text } of render()) {
+    writeFileSync(new URL(path, OUT_DIR), text);
+    console.log(`wrote src/data/${path}`);
+  }
+}

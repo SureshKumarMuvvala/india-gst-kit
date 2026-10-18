@@ -8,6 +8,7 @@ export default defineConfig({
     alias: {
       "@india-gst-kit/model": src("model"),
       "@india-gst-kit/einvoice": src("einvoice"),
+      "@india-gst-kit/errors": src("errors"),
       "@india-gst-kit/ewaybill": src("ewaybill"),
       "@india-gst-kit/fixtures": src("fixtures"),
     },

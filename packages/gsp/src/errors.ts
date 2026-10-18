@@ -1,12 +1,31 @@
 import { z } from "zod";
+import { ErrorCategorySchema, ErrorListIdSchema, ErrorNoteSchema } from "@india-gst-kit/errors";
 import { GspIssueSchema, type GspIssue } from "./issues.js";
 
 export const SystemSchema = z.enum(["einvoice", "ewaybill"]);
 export type System = z.infer<typeof SystemSchema>;
 
+/** One error as decoded from the envelope: the code and, on e-invoice, the message the portal returned. */
+export const RawApiErrorSchema = z.strictObject({
+  code: z.string(),
+  message: z.string().optional(),
+});
+export type RawApiError = z.infer<typeof RawApiErrorSchema>;
+
+/**
+ * One error of an `api` error, described by `@india-gst-kit/errors` (spec errors §8.1). `message` is what the portal
+ * returned; `officialMessage` comes from the official list; `category` and `userMessage` are the library's (not
+ * official).
+ */
 export const ApiErrorEntrySchema = z.strictObject({
   code: z.string(),
   message: z.string().optional(),
+  system: SystemSchema,
+  list: ErrorListIdSchema.nullable(),
+  category: ErrorCategorySchema,
+  officialMessage: z.string().nullable(),
+  userMessage: z.string(),
+  notes: z.array(ErrorNoteSchema),
 });
 export type ApiErrorEntry = z.infer<typeof ApiErrorEntrySchema>;
 

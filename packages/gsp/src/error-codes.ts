@@ -2,8 +2,10 @@ import { z } from "zod";
 import { SystemSchema, type System } from "./errors.js";
 
 /**
- * One row of an official error-code table. v0.1 ships no table: the lists are not captured (spec §7.4, D-G20,
- * §16 F2). A later build adds the official one as its own sourced file; callers may pass their own.
+ * One row of a caller-supplied error-code table.
+ * Deprecated (spec errors D-E11): the official lists ship in `@india-gst-kit/errors` and every `api` error entry
+ * carries their text. Kept for one minor version; a table passed as `errorCodeTable` still overrides
+ * `officialMessage`.
  */
 export const ErrorCodeInfoSchema = z.strictObject({
   system: SystemSchema,
@@ -14,6 +16,10 @@ export const ErrorCodeInfoSchema = z.strictObject({
 });
 export type ErrorCodeInfo = z.infer<typeof ErrorCodeInfoSchema>;
 
+/**
+ * Looks a code up in a caller-supplied table.
+ * Deprecated (spec errors D-E11): use `describeError` from `@india-gst-kit/errors`.
+ */
 export function describeErrorCode(
   system: System,
   code: string,

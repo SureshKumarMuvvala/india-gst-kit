@@ -52,6 +52,12 @@ importers:
         specifier: 4.5.4
         version: 4.5.4
 
+  packages/errors:
+    devDependencies:
+      zod:
+        specifier: 4.5.4
+        version: 4.5.4
+
   packages/ewaybill:
     dependencies:
       '@india-gst-kit/einvoice':
@@ -82,6 +88,9 @@ importers:
       '@india-gst-kit/einvoice':
         specifier: workspace:^
         version: link:../einvoice
+      '@india-gst-kit/errors':
+        specifier: workspace:^
+        version: link:../errors
       '@india-gst-kit/ewaybill':
         specifier: workspace:^
         version: link:../ewaybill

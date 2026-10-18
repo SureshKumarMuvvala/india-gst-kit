@@ -1,0 +1,33 @@
+{
+  "name": "@india-gst-kit/errors",
+  "version": "0.0.0",
+  "description": "Official e-invoice (IRP) and e-way bill API error codes (India) as verbatim data, with lookup, safe placeholder filling, library categories and plain-English messages.",
+  "license": "MIT",
+  "author": "Suresh Kumar Muvvala",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "gen": "node scripts/gen-error-data.mjs"
+  },
+  "peerDependencies": {
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "zod": "4.5.4"
+  }
+}
