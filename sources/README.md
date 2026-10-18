@@ -193,3 +193,12 @@ File digests: `einvoice/api/SHA256SUMS`, `ewaybill/api/SHA256SUMS`. Raw page SHA
 - **G7. Schema quirks.** Several draft-04 schemas are malformed: cancel-IRN puts `required` inside `properties`; vehicle-update puts `vehicleType` outside `properties`; update-transporter puts `transporterId` outside `properties`; extend-validity requires `TransMode` (capital T) but the property is `transMode`. Transcribe to Zod by hand with conformance tests, as for the IRN schema. Sample values disagree with schema types in places (e.g. `"ewbNo":"161000843009"` string vs `number`; `fromState` `"29"` vs integer).
 - **G8. Lookup fields.** e-invoice GetGSTIN returns `Gstin, TradeName, LegalName, AddrBnm, AddrBno, AddrFlno, AddrSt, AddrLoc, StateCode, AddrPncd, TxpType, Status (ACT/CNL/INA/PRO), BlkStatus (U/''/B), DtReg, DtDReg`; "Considered active only if status='ACT'". `syncgstin` refreshes the IRP's copy from the GST common portal. The e-way bill lookup returns a smaller set (`gstin, tradeName, legalName, address1, address2, stateCode, pinCode, txpType, status, blkStatus`).
 - **G9. Multiple IRPs.** Release notes: error 2295 when the IRN was already generated on another IRP, in addition to 2150 for duplicates on NIC-IRP. The error-code list (`api-error-codes-list.html`) is not captured yet.
+
+## Additions for the gsp spec (2026-10-18)
+
+- `einvoice/api/v1.03-generate-irn.txt`: Generate IRN page, sections overview, request payload, response payload and response sample (spec F1). Same method as above. Raw page SHA-256 `bb6ef70084b29cd53c48d0ca0337e5eadeec90c41e9136d6d770e8f36c7f4b2c`. The request sample section is left out: it duplicates `einvoice/SampleJson.json` and the schema.
+- `einvoice/api/java-sample-excerpts.md`: file:line excerpts of both portals' Java sample code (spec F4). **G10:** both samples generate the AppKey with `gen.init(128)` (16 bytes), against "32 bytes" in the text.
+- **Not captured (spec F2, F3):**
+  - The e-way bill error-code list (`docs.ewaybillgst.gov.in/apidocs/api-error-codes-list.html`, one table of 374 rows, raw page SHA-256 `21c6657a…a07365`) is reachable but not transcribed, because spec D-G20 ships no error table.
+  - The e-invoice error codes are not on the sandbox portal. They are on `https://einvoice1.gst.gov.in/others/geterrorcodes/{VITAL,INV,EWB}`, which was not opened.
+  - No official base URL appears on any captured page; the pages write `<URL>`.
