@@ -77,6 +77,22 @@ importers:
         specifier: 4.5.4
         version: 4.5.4
 
+  packages/gsp:
+    dependencies:
+      '@india-gst-kit/einvoice':
+        specifier: workspace:^
+        version: link:../einvoice
+      '@india-gst-kit/ewaybill':
+        specifier: workspace:^
+        version: link:../ewaybill
+      '@india-gst-kit/model':
+        specifier: workspace:^
+        version: link:../model
+    devDependencies:
+      zod:
+        specifier: 4.5.4
+        version: 4.5.4
+
   packages/gstr1:
     dependencies:
       '@india-gst-kit/model':
