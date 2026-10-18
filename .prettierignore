@@ -5,3 +5,8 @@ sources
 docs
 .changeset
 packages/gstr3b/src/autocalc-shape.ts
+packages/errors/src/data/einvoice-vital.ts
+packages/errors/src/data/einvoice-inv.ts
+packages/errors/src/data/einvoice-ewb.ts
+packages/errors/src/data/ewaybill-api.ts
+packages/errors/src/data/sources.ts
