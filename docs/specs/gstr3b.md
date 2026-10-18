@@ -739,7 +739,7 @@ Each row: source `sources/gstr3b/…` (developer.gst.gov.in, Draft v7.1, retriev
 
 ## 22. Track A2 (draft 2026-10-18): GSTR-1 tables added by `gstr1` v0.2
 
-Status: **proposal, spec only.** The details, decisions D-A1–D-A16, contradictions X1–X12 and files FA-1–FA-4 are in `docs/specs/gstr1.md` §17. This section records only what changes in `gstr3b`. Each change is **UNVERIFIED — needs CA**.
+Status: **approved** 2026-10-18 (PR #25). **Build update:** Notification 26/2022-CT (gstr1 §17.21) **omitted GSTR-1 Tables 4C and 5B** and moved those supplies into 4A/5A. So rows **G1′ and G6′ are not built**: marked invoices feed `tbl4a`/`tbl5a` like any other, and `tbl4c`/`tbl5b` stay in `notCovered`. Everything else below is built as written. The details, decisions D-A1–D-A16, contradictions X1–X12 and files FA-1–FA-4 are in `docs/specs/gstr1.md` §17. Each change is **UNVERIFIED — needs CA**.
 
 ### 22.1 Inputs
 
@@ -777,15 +777,15 @@ Mapping M (§4.2) is unchanged; it is AC as quoted. The new rows, with their AC 
 
 | Box | AC det keys still not covered |
 |---|---|
-| `3.1a` | `tbl4f`, `tbl11c_1_2_4`, `tbl11d_1_2_4`, `tbl11_i_a_1`, `tbl11_i_a_2`, `tbl11_i_b_1`, `tbl11_i_b_2`, `tbl11_ii`, `ims_9b_cn`, `ims_9c_cn`, `ims_9a_9c_dn`; plus `tbl11a_1_2_4`, `tbl11b_1_2_4` while `confirmAdvanceMapping` is off |
+| `3.1a` | `tbl4c`, `tbl4f`, `tbl5b` (build, N26), `tbl11c_1_2_4`, `tbl11d_1_2_4`, `tbl11_i_a_1`, `tbl11_i_a_2`, `tbl11_i_b_1`, `tbl11_i_b_2`, `tbl11_ii`, `ims_9b_cn`, `ims_9c_cn`, `ims_9a_9c_dn`; plus `tbl11a_1_2_4`, `tbl11b_1_2_4` while `confirmAdvanceMapping` is off |
 | `3.1b` | `tbl9bSezEco`, `tbl9cSezEco`, `tbl9bSezEcourp2b`, `tbl9cSezEcourp2b`, `tbl11a_5`, `tbl11b_5`, `tbl11c_3`, `tbl11c_5`, `tbl11d_3`, `tbl11d_5`, `tbl15b2b`, `tbl15urp2b`, `tbl15b2ba`, `tbl15urp2ba`, all `ims_*`; plus `tbl11a_3`, `tbl11b_3` while the flag is off |
 | `3.2unreg` | `tbl11_i_a_2`, `tbl11_i_b_2`, `tbl11_ii`, `tbl11c_4_5`, `tbl11d_4_5`, `tbl15b2c`, `tbl15urp2c`, `tbl15b2ca`, `tbl15urp2ca`; plus `tbl11a_4_5`, `tbl11b_4_5` while the flag is off |
-| `3.2comp`, `3.2uin` | `tbl11c_1_5`, `tbl11d_1_5`, `tbl15b2b`, `tbl15urp2b`, `tbl15b2ba`, `tbl15urp2ba`; plus `tbl11a_1_5`, `tbl11b_1_5` while the flag is off |
+| `3.2comp`, `3.2uin` | `tbl4c` (build, N26), `tbl11c_1_5`, `tbl11d_1_5`, `tbl15b2b`, `tbl15urp2b`, `tbl15b2ba`, `tbl15urp2ba`; plus `tbl11a_1_5`, `tbl11b_1_5` while the flag is off |
 | `3.1c`, `3.1e` | none (G11) |
 | `3.1.1i`, `3.1.1ii` | every key (Tables 14, 15, IMS); unchanged |
 | `3.1d` | unchanged (GSTR-2B) |
 
-Newly covered: `tbl4c` (3.1a, 3.2comp, 3.2uin), `tbl5b`, `tbl8` (3.1c, 3.1e), `tbl9a` and `tbl9c` (3.1a, 3.1b, all three 3.2 lists), `tbl10a`, `tbl10b` (3.1a, 3.2unreg), and with the flag `tbl11a/b_{1_2_4,3,4_5,1_5}`.
+Newly covered (build: `tbl4c` and `tbl5b` stay **not covered** in every box, per N26): `tbl8` (3.1c, 3.1e), `tbl9a` and `tbl9c` (3.1a, 3.1b, all three 3.2 lists), `tbl10a`, `tbl10b` (3.1a, 3.2unreg), and with the flag `tbl11a/b_{1_2_4,3,4_5,1_5}`.
 
 ### 22.4 Changes to earlier sections and decisions
 
@@ -810,3 +810,10 @@ Newly covered: `tbl4c` (3.1a, 3.2comp, 3.2uin), `tbl5b`, `tbl8` (3.1c, 3.1e), `t
 ### 22.6 Changeset
 
 Build PR: `"@india-gst-kit/gstr3b": minor` (new `ctx` flag, new G rows, smaller `notCovered`), together with the `gstr1` minor (gstr1 §17.19). This spec PR has no changeset.
+
+### 22.7 Build notes (2026-10-18)
+
+- **G1′ and G6′ are not built (N26):** see the status line above. The tests check that a marked invoice feeds `tbl4a`/`tbl5a`.
+- **Advance mapping rows** are a separate constant, `AC_ADVANCE_MAP`, applied only with `confirmAdvanceMapping`. So `AC_NOT_COVERED` (flag off) is still exactly "AC det keys minus `AC_GSTR1_MAP`", and the derivation adds back nothing when the flag is on.
+- **RCM `B2B` advances** are `RCM_NOT_MAPPED` (gstr1 §17.21).
+- **`AC_GSTR1_MAP` rows for `3.1c`/`3.1e`** (`tbl8`, `taxableValue`) are added. `AcMapRow.box` widens to these two boxes.

@@ -1,0 +1,232 @@
+Excerpt: Notification No. 26/2022 - Central Tax, New Delhi, 26th December, 2022 (Central Goods and Services Tax
+(Fifth Amendment) Rules, 2022), paragraph 21 "In the said rules, in FORM GSTR-1, -" (amendments to FORM GSTR-1:
+Tables 4A/4C/5A/5B/7/9/10/11/12 changed, Tables 14, 14A, 15, 15A(I), 15A(II) inserted, instructions substituted),
+verbatim from pdftotext -layout (poppler) of sources/gstr1/notification-26-2022-ct.pdf, text lines 325-543.
+Commencement (para 1(2) of the notification): "Save as otherwise provided in these rules, they shall come into force
+on the date of their publication in the Official Gazette."
+URL: https://gstcouncil.gov.in/sites/default/files/2024-05/ct26-2022.pdf (listed at https://gstcouncil.gov.in/cgst-tax-notification)
+Retrieved 2026-10-18. PDF SHA-256 c8306fb2e0fbeca3c582784b0776e8ac09abf69170c6466fcd0ba089779c4413. Status: UNVERIFIED - needs CA.
+This is an amending notification, not a consolidation: read it together with form-gstr1-excerpt-18052021.txt.
+Later GSTR-1 amendments found: Notification 12/2024-CT para 28 (B2CL / Table 7B limit Rs 2.5 lakh -> Rs 1 lakh from
+01-08-2024; not stored, see README). No other paragraph amending FORM GSTR-1 was found in the notifications checked
+(list in README).
+----
+21.            In the said rules, in FORM GSTR-1, -
+       (a) in the box,-
+                   (i) for the word, “Year”, the words, “Financial Year” shall be substituted;
+                   (ii) for the word, “Month”, the words, “Tax period” shall be substituted;
+       (b) for Table 3, the following table shall be substituted, namely:-
+                     “3.       (a)         ARN                    <Auto>
+                               (b)         Date of ARN            <Auto>”
+
+
+       (c) in Table 4A, for the brackets, letters and words, “(i) attracting reverse charge and (ii) supplies made
+               through e-commerce operator”, the words, brackets and letters, “attracting reverse charge (including
+               supplies made through e-commerce operator attracting TCS)” shall be substituted;
+       (d) Table 4C and entries relating thereto shall be omitted;
+       (e) In Table 5A, for the figure, letters, words and brackets, “5A. Outward supplies (other than supplies
+               made through e-commerce operator, rate wise)”, the words, brackets, letters, “Outward supplies
+               (including supplies made through e-commerce operator, rate wise)” shall be substituted;
+       (f) Table 5B and entries relating thereto shall be omitted;
+       (g) for the Table 7, the following table shall be substituted, namely:-
+
+
+  Rate of tax              Total Taxable value                                      Amount
+
+                                                    Integrated            Central       State Tax/UT Tax      Cess
+
+           1                         2                   3                  4                  5                 6
+
+ 7A. Intra-State supplies
+
+ Consolidated rate wise outward supplies [including supplies made through e-commerce operator attracting
+ TCS]
+
+
+
+
+ 7B. Inter-State Supplies where invoice value is upto Rs 2.5 Lakh [Rate wise]–Consolidated rate wise
+ outward supplies [including supplies made through e-commerce operator attracting TCS]
+
+ Place of Supply (Name of State)
+
+
+
+
+    (h) in Table 9, -
+             (i) in the heading, for the words and letters “debit notes, credit notes, refund vouchers”, the
+                   words, “debit and credit notes” shall be substituted;
+             (ii) for the words and letter, “Revised details of document or details of original Debit or Credit
+                   Notes or refund vouchers”, the words and letter, “Revised details of document or details of
+                   original Debit or Credit Notes” shall be substituted;
+             (iii) in the sub-heading, in column no. 2 and 3, the word, “Inv.” shall be omitted;
+             (iv) in the sub-heading, in column no. 5 and 6, for the word, “Invoice”, the word “Document” shall
+                   be substituted;
+    (i) in Table 9A, for the words, “If the invoice/Shipping bill details furnished earlier were incorrect”, the
+         words, “Amendment of invoice/Shipping bill details furnished earlier” shall be substituted;
+    (j) in Table 9B, the words, “/Refund voucher” shall be omitted;
+    (k) In Table 9C, for the words and brackets, “Debit Notes/Credit Notes/Refund voucher [amendments
+         thereof]”, the words and brackets, “Debit Notes/Credit Notes [Amended]” shall be substituted;
+    (l) in Table 10, for the word, “Month”, the words, “Month/Quarter” shall be substituted;
+    (m) Table 10A (1) and entries relating thereto shall be omitted;
+    (n) Table 10B (1) and entries relating thereto shall be omitted;
+    (o) in Table 11, in the heading, after the words, “earlier tax period”, the brackets and words, “(Net of
+         refund vouchers, if any)” shall be inserted;
+    (p) in Table 12, in the sub-heading, in column no. 3, the brackets and words, “(Optional if HSN is
+         provided)” shall be omitted;
+    (q) After Table 13 and before Verification, the following tables shall be inserted, namely:-
+
+
+“14. Details of the supplies made through e-commerce operators on which e-commerce operators are
+liable to collect tax under section 52 of the Act or liable to pay tax u/s 9(5) [Supplier to report]
+   Nature of supply             GSTIN of           Net value                    Tax amount
+                                e-commerce         of           Integrated   Central     State /       Cess
+                                operator           supplies         tax         tax     UT tax
+
+               1                        2               3           4           5          6             7
+   (a) Supplies on which e-
+                   commerce operator is
+                   liable to collect tax u/s 52
+                   (b) Supplies on which e-
+                   commerce operator is
+                   liable to pay tax u/s 9(5)
+
+
+                14A. Amendment to details of the supplies made through e-commerce operators on which e-commerce
+                operators are liable to collect tax under section 52 of the Act or liable to pay tax u/s 9(5) [Supplier to
+                report]
+           Nature of supply              Original details              Revised     Net value                         Tax amount
+                                                                       details     of
+                                Month /        GSTIN of             GSTIN of       supplies
+                                Quarter        e-commerce           e-commerce
+                                                                                                Integrated       Central   State /         Cess
+                                               operator             operator
+                                                                                                        tax          tax   UT tax
+                    1                2                3                  4              5               6            7          8           9
+           (a) Supplies on
+           which e-
+           commerce
+           operator is liable
+           to collect tax u/s
+           52
+           (b) Supplies on
+           which e-
+           commerce
+           operator is liable
+           to pay tax u/s
+           9(5)
+
+
+                15. Details of the supplies made through e-commerce operators on which e-commerce operator is liable to
+                pay tax u/s 9(5) [e-commerce operator to report]
+Type of         Type of         GSTIN        GSTIN        Document Document Rate               Value                       Tax amount                  Place
+supplier        recipient       of           of           no.           date                   of             Integrated Central State          Cess   of
+                                supplier recipient                                             supplies          tax       tax        /                supply
+                                                                                               made                                  UT
+                                                                                                                                     tax
+     1                  2            3            4             5              6        7           8            9         10         11        12          13
+Registered      Registered
+                Unregistered
+Unregistered Registered
+                Unregistered
+               15A (I). Amendment to details of the supplies made through e-commerce operators on which e-commerce
+               operator is liable to pay tax u/s 9(5) [e-commerce operator to report, for registered recipients]
+Type of                    Original details                             Revised details                     Value                 Tax amount               Place
+supplier       GSTIN GSTIN                  Doc. Doc. GSTIN              GSTIN      Doc. Doc. Rate of                                                      of
+               of             of            no.     date   of            of         no.       date          supplies                                       supply
+               supplier recipient                          supplier recipient                               made
+                                                                                                                       Integrated Central State     Cess
+                                                                                                                          tax      tax         /
+                                                                                                                                              UT
+                                                                                                                                              tax
+     1              2              3            4      5        6             7      8         9      10       11         12       13          14   15      16
+Registered
+Unregistered
+
+
+               15A (II). Amendment to details of the supplies made through e-commerce operators on which e-
+               commerce operator is liable to pay tax u/s 9(5) [e-commerce operator to report, for unregistered
+               recipients]
+                Type of                Original details     Revised Rate            Value                       Tax amount               Place
+                supplier                                    details                 of                                                   of
+                                       GSTIN Tax            GSTIN                   supplies                                             supply
+                                       of           period of                       made           Integrated Central State /    Cess
+                                       supplier             supplier                                  tax       tax    UT tax
+                          1                 2          3            4         5           6           7         8         9       10          11
+                Registered
+                Unregistered                                                                                                             ”;
+
+
+                        (r) For the instructions, the following shall be substituted, namely:-
+               “A.            General Instructions
+                              1. Terms used:
+                                       a.       GSTIN:      Goods and Services Tax Identification Number
+                                       b.       UIN:        Unique Identity Number
+                                       c.       UQC:        Unit Quantity Code
+                                       d.       HSN:        Harmonized System of Nomenclature
+                                       e.       POS:        Place of Supply (Respective State)
+                                       f.       TCS:        Tax collection at source by e-commerce operator
+                                       g.       SEZ:        Special Economic Zone
+                                       h.       ECO:        E-commerce operator
+                                       i.       DTA:        Domestic Tariff Area
+                                       j.       B to B:     Supplies from one registered person to another registered person
+                   k.   B to C:         Supplies from registered person to unregistered person
+
+
+             2. Quarterly taxpayers filing invoice details through GSTR-1 or IFF for the first two month(s) of
+             the quarter shall not repeat such details while filing GSTR-1 of the quarter.
+B.Table specific instructions-
+Sr. No.   Table No.                                                   Instructions
+   1           2                                                           3
+   1.         4A             i.      Supplies made to registered persons including supplies made through e-
+                                     commerce operator attracting TCS u/s 52, but excluding supplies attracting tax
+                                     on reverse charge basis, shall be reported.
+                            ii.      Supplies made u/s 9(5) for which e-commerce operator is liable to pay tax shall
+                                     not be reported in this table.
+                           iii.      The supplies made by SEZ on cover of a bill of entry shall not be reported by
+                                     SEZ unit /developer.
+   2.         4B         Supplies made to registered persons, attracting tax on reverse charge basis, shall be
+                         reported. Supplies made u/s 9(5) for which e-commerce operator is liable to pay tax shall
+                         not be reported in this table.
+   3.          5         Inter-State supplies made to unregistered persons having invoice value more than Rs.
+                         2.50 lakh shall be reported.
+   4.         6A         Exports with or without IGST shall be reported. Shipping bill details, if applicable, can
+                         be provided later through table 9 if such details are not available at the time of filing the
+                         statement.
+   5.         6B         Supplies made to SEZ units or SEZ developers, with or without IGST, shall be reported.
+   6.         6C         Deemed export supplies shall be reported.
+   7.          7         Supplies made to unregistered persons other than those reported in table 5 shall be
+                         reported. Values shall be net of credit and debit notes.
+   8.          8         Supplies having no tax liability (Nil rated, exempted and non-GST supplies) shall be
+                         reported. Supplies made through E-commerce Operator under section 9(5) shall not be
+                         included under exempted supplies of supplier.
+   9.         9A         Amendment of values reported in table 4A, 4B, 5, 6A, 6B and 6C shall be reported.
+  10.         9B         Credit and debit notes issued during the period shall be reported.
+  11.         9C         Amendment of credit and debit notes reported in table 9B shall be reported.
+  12.         10         Amendment of unregistered supplies reported in table 7 shall be reported.
+  13.       11(I)A       Advances received shall be reported. The values shall be net of refund vouchers, if any.
+  14.       11(I)B       Advances adjusted during the period shall be reported.
+  15.        11(II)      Amendment to advances received or adjusted shall be reported.
+  16.         12         HSN details as per notifications issued by Government from time to time shall be
+                         reported.
+  17.         13         Details of the documents issued during the period shall be reported.
+        Sr. No.         Table No.                                                   Instructions
+              1               2                                                           3
+             18.             14(a)      Details of the supplies reported in any table from 4 to 10, made through e-commerce
+                                        operator on which ECO is liable to collect tax at source (TCS) under section 52, shall be
+                                        reported by the supplier.
+             19.             14(b)      Details of supplies made through ECO, on which ECO is liable to pay tax u/s 9(5), shall
+                                        be reported by the supplier. Tax on such supplies shall be paid by the ECO and not by
+                                        the supplier.
+             20.            14A(a)      Amendment to supplies reported in table 14(a) in earlier tax period shall be reported.
+             21.            14A(b)      Amendment to supplies reported in table 14(b) in earlier tax period shall be reported.
+             22.              15        (i) ECO shall report details of the supplies made through him/her on which he/she is
+                                        liable to pay tax u/s 9(5).
+                                        (ii) GSTIN of supplier and recipient, if registered, shall be reported.
+                                        (iii) Details of the documents issued by ECO shall be reported, if recipient is registered.
+             23.            15A(I)      Amendment to the details reported in table 15 in earlier tax periods in respect of
+                                        registered recipients shall be reported.
+             24.            15A(II)     Amendment to the details reported in table 15 in earlier tax periods in respect of
+                                        unregistered recipients shall be reported.”.
+
+

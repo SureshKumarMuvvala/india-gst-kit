@@ -95,3 +95,21 @@ GSTN replaces the zip in place when it releases a new tool version, so a hash mi
 | `form-gstr1-excerpt-18052021.txt` | `sources/gstr3b/cgst-rules-2017-part-b-forms-18052021.pdf` (https://gstcouncil.gov.in/sites/default/files/2024-04/18052021-cgst-rules-2017-part-b-forms.pdf, PDF SHA-256 `9b5ae908fae791b25f903795eb5dfcd30485f18d68f6f34b6b30e1a41b1fdafa`), pages 107–116 (printed 100–109): FORM GSTR-1 [See rule 59(1)], Tables 1–13 and Instructions 1–18 | `pdftotext -layout` output, verbatim, with a provenance header. **Consolidation as of 18-05-2021**: later amendments (e.g. Tables 14/15, the B2CL limit change) are not in it. Retrieved 2026-10-18 by the build session; UNVERIFIED — needs CA. | `e0720a5f917a4f0dc3166a2473accd73e946fdec1ea4c50a2376b88edd8e4e47` |
 
 The PDF is stored once, under `sources/gstr3b/`; details and the URLs tried are in `sources/gstr3b/README.md`.
+
+## Form GSTR-1 after Tables 14/15 (FA-1 of `docs/specs/gstr1.md` §17.17) — fetched 2026-10-18
+
+No CGST Rules **consolidation** newer than 18-05-2021 was found. Tried on 2026-10-18:
+- https://gstcouncil.gov.in/cgst-rules and https://gstcouncil.gov.in/en/CGST-Rules: list only `2024-04/01062021-cgst-rules-2017-part-a-rules.pdf` and `2024-04/18052021-cgst-rules-2017-part-b-forms.pdf` (already stored under `sources/gstr3b/`).
+- https://gstcouncil.gov.in/cgst-rules-2017 and https://gstcouncil.gov.in/en/central-tax-notification: 404.
+- https://cbic-gst.gov.in/ and https://cbic-gst.gov.in/gst-acts.html: no rules or forms consolidation linked; https://cbic-gst.gov.in/cgst-rules.html and `/central-tax-notifications.html`: 404.
+
+What **was** found is the amending notification itself, from the Central Tax notification list https://gstcouncil.gov.in/cgst-tax-notification (pages 0–16, 2020–2025):
+
+| File | Origin | Notes | SHA-256 |
+|---|---|---|---|
+| `notification-26-2022-ct.pdf` | https://gstcouncil.gov.in/sites/default/files/2024-05/ct26-2022.pdf | Notification No. 26/2022 – Central Tax, 26-12-2022, CGST (Fifth Amendment) Rules, 2022; 18 pages, 332,106 bytes, verbatim. In force on publication in the Gazette (para 1(2)). Paragraph 21 amends FORM GSTR-1. | `c8306fb2e0fbeca3c582784b0776e8ac09abf69170c6466fcd0ba089779c4413` |
+| `notification-26-2022-ct-gstr1-excerpt.txt` | the PDF above, text lines 325–543 of `pdftotext -layout` (poppler 24.02.0) | Para 21 only, verbatim, with a provenance header: Table 4C and 5B **omitted**, 4A/5A now include supplies through an e-commerce operator attracting TCS, Table 7 substituted (7A(2)/7B(2) gone), Table 9 wording, 10A(1)/10B(1) omitted, Table 11 "(Net of refund vouchers, if any)", Tables 14, 14A, 15, 15A(I), 15A(II) inserted, instructions substituted (Table-specific instructions 1–24). | `c28ad6bb1b9879244dc0dc7bcc54a2166db213a41d758f56fa25a30e4fe6b91c` |
+
+Other notifications downloaded and searched (`pdftotext`, grep for "FORM GSTR-1" and the table numbers): 27/2021, 32/2021, 35/2021, 37/2021, 40/2021, 14/2022, 19/2022, 22/2022, 24/2022, 04/2023, 38/2023, 45/2023, 51/2023, 52/2023, 12/2024, 20/2024, 07/2025, 11/2025 – Central Tax. None amends the FORM GSTR-1 tables except **12/2024** para 28 (https://gstcouncil.gov.in/sites/default/files/2024-09/central-tax-12-2024-11072024.pdf, SHA-256 `10e879eeac36d78c58e31ff96091fec8d78a80525ed18d62bb827fdae77e9017`, not stored): from 01-08-2024 the Table 5 / 7B limit "Rs. 2.5 lakh" becomes "Rs. 1 lakh" (agrees with the tool's `B2CL_MIN_VAL_STR_PRD = "082024"`). 19/2022 para 14 omits FORM GSTR-1A, GSTR-2 and GSTR-3; 12/2024 para 29 re-inserts a new FORM GSTR-1A (out of scope).
+
+Status of every fact from these files: **UNVERIFIED — needs CA**. Being an amending notification read against the 2021 consolidation, a later amendment not in this list could still change the form.
