@@ -37,7 +37,7 @@ Every such amount is an **explicit caller input**, and it is recorded as one in 
 **Out of scope / deferred (§14)**
 - Fetching, saving, offsetting or filing (that is `gsp` and later tracks).
 - Quarterly / QRMP filers (`det_q`), IFF and GSTR-1A.
-- GSTR-1 tables the `gstr1` package does not build: 4C, 8, 9A, 9C, 10, 11, 14, 15, and the IMS rows.
+- GSTR-1 tables the `gstr1` package does not build: 4C, 8, 9A, 9C, 10, 11, 14, 15, and the IMS rows. **Track A2 (§22, proposed)** maps 4C, 5B, 8, 9A, 9C and 10, and optionally 11; 4F, 14, 15, advance amendments and the IMS rows stay caller input.
 - Late fee. SV v7.1 has no field for it (§13 C1).
 - Interest computation (AC lists separate APIs 3330/3332, not downloaded).
 - Ledger, RCM and ITC opening-balance APIs.
@@ -152,7 +152,7 @@ type TrailEntry = {
 
 - **Invariant.** For every box, field and 3.2 POS, the value in `return` equals the sum of that box's trail entries. A box with no entries is `0.00`. `validateGstr3b` checks this (V1).
 - **Caller labels.** Every caller amount carries a `label`, such as `"4B per CA working 2026-10"`. An empty label is an error (`CALLER_LABEL_MISSING`). This is how "caller input, recorded as such" is enforced.
-- **Boxes the package never fills.** `3.1c`, `3.1d`, `3.1e`, all of 3.1.1, 4A–4D, 5 and 5.1 can only have `CALLER`, `GSTR2B_SUM` (4A and `3.1d` only; §5) or `COMPUTED` (4C only) entries. `GSTR1` entries are limited to `3.1a`, `3.1b` and 3.2 (§4).
+- **Boxes the package never fills.** (Track A2, §22, proposes `GSTR1` entries for `3.1c`/`3.1e` from caller-supplied GSTR-1 Table 8, D-A13.) `3.1c`, `3.1d`, `3.1e`, all of 3.1.1, 4A–4D, 5 and 5.1 can only have `CALLER`, `GSTR2B_SUM` (4A and `3.1d` only; §5) or `COMPUTED` (4C only) entries. `GSTR1` entries are limited to `3.1a`, `3.1b` and 3.2 (§4).
 
 ## 4. Outward side — `outwardFromGstr1(gstr1, ctx)`
 
@@ -227,7 +227,7 @@ All of this follows from M as quoted.
 
 ### 4.3 What the derivation does not cover
 
-`notCovered` lists every AC det key under `osup_3_1a`, `osup_3_1b` and the three 3.2 nodes that G cannot reach. The caller must add those amounts as `CALLER` entries if they apply.
+`notCovered` lists every AC det key under `osup_3_1a`, `osup_3_1b` and the three 3.2 nodes that G cannot reach. (Track A2, §22.3, shrinks this table.) The caller must add those amounts as `CALLER` entries if they apply.
 
 | Box | AC det keys not covered |
 |---|---|
@@ -594,7 +594,7 @@ Fixtures must be synthetic and use only GSTINs registered in `packages/fixtures/
 ## 14. Deferred
 
 - QRMP / quarterly (`det_q`, `form`, IFF); GSTR-1A (`liabitcr1a` is only parsed).
-- GSTR-1 tables `4C`, `4F`, `5B`, 8, 9A, 9C, 10, 11, 14, 15 and the IMS rows. These arrive as `gstr1` grows; until then they are caller input.
+- GSTR-1 tables `4C`, `4F`, `5B`, 8, 9A, 9C, 10, 11, 14, 15 and the IMS rows. These arrive as `gstr1` grows; until then they are caller input. Track A2 (§22) proposes 4C, 5B, 8, 9A, 9C, 10 and (opt-in) 11.
 - Late fee (C1). Interest computation. Payment, offset and filing APIs (2271, 2272), and the "Validate against AutoCalculated" API (3198).
 - 3.2 for UIN holders from model data. The model has no `UIN_HOLDER` (model §12), so it is caller input through `recipientTypes`.
 - Rounding to whole rupees; CGST = SGST; 3.2 ⊆ 3.1. Each waits on a source (§16).
@@ -736,3 +736,77 @@ Each row: source `sources/gstr3b/…` (developer.gst.gov.in, Draft v7.1, retriev
   - `compareWithAutoCalc` needs `options.trail` for `detail`; `uncompared` rows for `itc4b2`/`itc4d2` carry `portalPath` and no `box`.
   - `parseSavePayloadJson` / `parseAutoCalcJson` return `{ ok, value?, issues }` with our issue codes (not Zod's result type).
   - Number literals with an exponent (`1e3`) are rejected although they are valid JSON numbers for SV/AC (spec §2 kept); AC dates get a calendar check AC's pattern does not have.
+
+## 22. Track A2 (draft 2026-10-18): GSTR-1 tables added by `gstr1` v0.2
+
+Status: **proposal, spec only.** The details, decisions D-A1–D-A16, contradictions X1–X12 and files FA-1–FA-4 are in `docs/specs/gstr1.md` §17. This section records only what changes in `gstr3b`. Each change is **UNVERIFIED — needs CA**.
+
+### 22.1 Inputs
+
+- `outwardFromGstr1(gstr1, ctx)` reads the new `Gstr1Return` sections:
+  - `b2ba`, `b2cla`, `expa`, `cdnra`, `cdnura`, each with the original's items, which `gstr1` keeps internally;
+  - `b2csa`, with the caller's original row;
+  - `nil`;
+  - `at`, `txpd`;
+  - the e-commerce marks on `b2b` / `b2cl` invoices.
+- `ctx` gains `confirmAdvanceMapping?: boolean` (default `false`).
+- Tables 14/15 (`supeco`, `ecom`) and the advance amendments (`ata`, `txpda`) are read but **never mapped** (gstr1 §17.11.3).
+
+### 22.2 Mapping G — new rows
+
+Mapping M (§4.2) is unchanged; it is AC as quoted. The new rows, with their AC paths, fields and basis, are in gstr1 §17.11.1 (G1′, G6′, G11–G15). In short:
+
+| Row | Data | AC (under `liabitc.`) | Sign | Basis |
+|---|---|---|---|---|
+| G1′ | `b2b` R, no RCM, e-commerce-marked | `sup_details.osup_3_1a.det.tbl4c`; `inter_sup.osup_comp_3_2.det.tbl4c[]` / `osup_uin_3_2.det.tbl4c[]` per `recipientTypes` | + | sourced (FG-1 4A/4C, Ins. 5(i)(c)). It **replaces** G1 for marked invoices: a marked invoice never also feeds `tbl4a` |
+| G6′ | `b2cl`, marked | `…osup_3_1a.det.tbl5b` (txval, iamt, csamt); no 3.2 key in AC | + | sourced (FG-1 5B). It replaces G6, and so is **not** in `3.2unreg` (AC has no `tbl5b` there) |
+| G11 | `nil` | `…osup_3_1c.det.tbl8` ← Σ(`nil_amt` + `expt_amt`); `…osup_3_1e.det.tbl8` ← Σ `ngsup_amt` | as given | sourced (FG-1 Table 8; FG-3B 3.1 (c), (e); Q-H8) |
+| G12 | `b2ba`, `b2cla`, `expa` | `tbl9a` in `3.1a` (R, DE, B2CL) or `3.1b` (SEWP, SEWOP, WPAY, WOPAY); `3.2comp`/`3.2uin` `tbl9a[]` (R, per `recipientTypes`); `3.2unreg` `tbl9a[]` (B2CL) | revised − original | 9A sourced (FG-1 Ins. 13(i)); routing proposal (as D-H6 (c)); difference D-A12 |
+| G13 | `cdnra`, `cdnura` | `tbl9c`, routed as G12 by the note's type (EXPWP/EXPWOP → 3.1b; B2CL → 3.1a and 3.2unreg) | revised − original, with the note sign (D-H6 (b)) on both sides | 9C sourced (FG-1 Ins. 13(iii)); routing proposal |
+| G14 | `b2csa` | INTRA → `…osup_3_1a.det.tbl10a` (txval, camt, samt, csamt); INTER → `…osup_3_1a.det.tbl10b` (txval, iamt, csamt) and `…osup_unreg_3_2.det.tbl10b[]` (pos, txval, iamt) | revised − original | sourced (FG-1 10A/10B); difference D-A12 |
+| G15 | `at`, `txpd` (only with `confirmAdvanceMapping`) | `at` B2B/B2C → `3.1a tbl11a_1_2_4`; `txpd` B2B/B2C → `3.1a tbl11b_1_2_4`; EXPORT → `3.1b tbl11a_3` / `tbl11b_3`; INTER B2C → `3.2unreg tbl11a_4_5[]` / `tbl11b_4_5[]`; INTER B2B with comp/UIN → `3.2comp`/`3.2uin` `tbl11a_1_5[]` / `tbl11b_1_5[]` | `at` +, `txpd` − | signs sourced (FG-3B Ins. 1; AC `tbl11b_*` `#negtxamt`); keys proposal (suffixes undefined, Q-H2; gstr1 §17.15 X5) |
+
+**Rules carried over:**
+- Only IGST enters 3.2 (D-H6 (d)); an intra item stays `INTRA_ITEM_IN_32`.
+- RCM amendments are unmapped (`RCM_NOT_MAPPED`, Q-H4).
+- The field restriction of §4.2 applies. For example, G6′ adds no `camt`/`samt`, and G11 adds `txval` only.
+
+**Difference and POS (D-A12).** An amendment adds revised − original per (box, AC key, `pos`) and per head. If the POS changed, the original POS row gets −original and the new POS row gets +revised. A difference may be negative. AC `tbl9a`, `tbl9c` and `tbl10*` are signed `#txamt`, and SV 3.1/3.2 are `#negVal`.
+
+### 22.3 `notCovered` (replaces §4.3 when `gstr1` v0.2 is used)
+
+| Box | AC det keys still not covered |
+|---|---|
+| `3.1a` | `tbl4f`, `tbl11c_1_2_4`, `tbl11d_1_2_4`, `tbl11_i_a_1`, `tbl11_i_a_2`, `tbl11_i_b_1`, `tbl11_i_b_2`, `tbl11_ii`, `ims_9b_cn`, `ims_9c_cn`, `ims_9a_9c_dn`; plus `tbl11a_1_2_4`, `tbl11b_1_2_4` while `confirmAdvanceMapping` is off |
+| `3.1b` | `tbl9bSezEco`, `tbl9cSezEco`, `tbl9bSezEcourp2b`, `tbl9cSezEcourp2b`, `tbl11a_5`, `tbl11b_5`, `tbl11c_3`, `tbl11c_5`, `tbl11d_3`, `tbl11d_5`, `tbl15b2b`, `tbl15urp2b`, `tbl15b2ba`, `tbl15urp2ba`, all `ims_*`; plus `tbl11a_3`, `tbl11b_3` while the flag is off |
+| `3.2unreg` | `tbl11_i_a_2`, `tbl11_i_b_2`, `tbl11_ii`, `tbl11c_4_5`, `tbl11d_4_5`, `tbl15b2c`, `tbl15urp2c`, `tbl15b2ca`, `tbl15urp2ca`; plus `tbl11a_4_5`, `tbl11b_4_5` while the flag is off |
+| `3.2comp`, `3.2uin` | `tbl11c_1_5`, `tbl11d_1_5`, `tbl15b2b`, `tbl15urp2b`, `tbl15b2ba`, `tbl15urp2ba`; plus `tbl11a_1_5`, `tbl11b_1_5` while the flag is off |
+| `3.1c`, `3.1e` | none (G11) |
+| `3.1.1i`, `3.1.1ii` | every key (Tables 14, 15, IMS); unchanged |
+| `3.1d` | unchanged (GSTR-2B) |
+
+Newly covered: `tbl4c` (3.1a, 3.2comp, 3.2uin), `tbl5b`, `tbl8` (3.1c, 3.1e), `tbl9a` and `tbl9c` (3.1a, 3.1b, all three 3.2 lists), `tbl10a`, `tbl10b` (3.1a, 3.2unreg), and with the flag `tbl11a/b_{1_2_4,3,4_5,1_5}`.
+
+### 22.4 Changes to earlier sections and decisions
+
+- **§3.3 / D-H2.** `GSTR1` entries are allowed in `3.1c` and `3.1e` (G11). The nil/exempt/non-GST split was the caller's decision, made in the `gstr1` input (D-A13). All other "never fills" boxes stay as they are.
+- **§4.1 G1/G6 limitation note.** It is lifted for marked documents (G1′/G6′). Unmarked invoices still go to `tbl4a`/`tbl5a`.
+- **§13.** New observations come from AC itself: the two advance families (gstr1 X5), and the signs of `tbl11c_*`/`tbl11d_*` (X6).
+- **§16.** Q-H2 now also covers `tbl11a–d` suffixes and the legacy `tbl11_i_*` family. Q-H12 (3.1.1 vs 3.1) blocks any Table 15 mapping.
+- **§17.** F3 also settles D-A14, so G15 could become default-on.
+
+### 22.5 Tests (added to §12)
+
+- **One test per row:** G1′, G6′, G11–G15.
+- **Marked invoices.** A marked b2b R invoice feeds `tbl4c` and **not** `tbl4a`. A marked b2cl invoice feeds `tbl5b` and no 3.2 list.
+- **Table 8.** It goes to `3.1c` (nil + exempt) and `3.1e` (non-GST); the trail `ref` is `tbl8`.
+- **Difference.** An original b2ba ₹1,000 + 18 % IGST, revised to ₹1,200, gives `3.1a tbl9a` txval `+200.00` and iamt `+36.00`. A revision downward gives negative entries. A cdnra credit note 500 → 400 gives `+100.00` (the note sign on both sides).
+- **POS change** in `b2ba` with a composition recipient: 3.2comp gets −original at the old POS and +revised at the new POS.
+- **RCM.** An RCM b2ba → `RCM_NOT_MAPPED`.
+- **Advances.** With the flag off: no `tbl11*` entries, and the keys are in `notCovered`. With it on: `at` is positive, `txpd` negative, EXPORT is in 3.1b, and INTER B2C is in 3.2unreg.
+- **`notCovered`** equals §22.3 in both flag states. It is checked against `AC_NOT_COVERED`, and independently against AC's det keys minus `AC_GSTR1_MAP`.
+- **Never mapped.** `supeco`, `ecom`, `ata` and `txpda` data produce no entries.
+
+### 22.6 Changeset
+
+Build PR: `"@india-gst-kit/gstr3b": minor` (new `ctx` flag, new G rows, smaller `notCovered`), together with the `gstr1` minor (gstr1 §17.19). This spec PR has no changeset.
