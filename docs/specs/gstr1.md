@@ -716,7 +716,7 @@ type AdvancesInput = {
 - **Where a mark is allowed** (`ECO_NOT_APPLICABLE` otherwise): a tax invoice that classifies to `b2b` with `inv_typ R` and no reverse charge, or to `b2cl`. FG-1 Table 4 excludes Table 6 supplies, 4A separates reverse charge from e-commerce, and FG-1 does not say whether a reverse-charge supply can be 4C (Q-A7). B2CS rows are not marked; see the last bullet.
 - **Checks.** `ECO_GSTIN_FORMAT`: `etin` matches S4 `#etin`, a PAN-structured GSTIN with `C` in position 14. `ECO_UNKNOWN_DOCUMENT`: the mark names no document in `documents`. `DUPLICATE_DOCUMENT`: the same document is marked twice.
 - **Output (b), offline-upload.** `etin` on the `b2b`/`b2cl` invoice, as the tool writes it (T §3 b2b, b2cl; S4).
-- **Output (a), API (S5 v5.0).** S5 has **no** `etin` in `b2b` or `b2cl`. It was removed in v5.0 (§4.2). The invoice is rendered without it and the result carries the warning `ECO_NOT_IN_API_SHAPE`, once per marked document (D-A8). See §17.15 X1.
+- **Output (a), API (S5 v5.0).** S5 has **no** `etin` in `b2b` or `b2cl`. It was removed in v5.0 (§4.2). The invoice is rendered without it and the result carries `ECO_NOT_IN_API_SHAPE` (an **info**-level issue since §17.22; first specified as a warning), once per marked document (D-A8). See §17.15 X1.
 - **Other outputs.** HSN, doc_issue and B2CS are unchanged by marks.
 - **B2CS `typ "E"`** is **not** emitted. S4 and S5 both allow `typ "E"` and C `b2cs.csv` has a sample row with "E", but the tool rejects any Excel Type other than `OE` (T §3 b2cs, `/^(OE)$/`). FG-1 7A(2)/7B(2) are "out of" rows of 7A(1)/7B(1), and AC has no key for them. §17.15 X2.
 
@@ -757,7 +757,7 @@ New rows for the §4.4 table (differences allowed between (a) and (b); nothing e
 
 | # | Item | (b) offline-upload | (a) API | Source of (b) |
 |---|---|---|---|---|
-| O8 | `etin` on `ecoMarks` documents | emitted | not emitted, with warning `ECO_NOT_IN_API_SHAPE` | S4 `#etin`; T §3 b2b/b2cl; S5 |
+| O8 | `etin` on `ecoMarks` documents | emitted | not emitted, with the info-level `ECO_NOT_IN_API_SHAPE` (§17.22) | S4 `#etin`; T §3 b2b/b2cl; S5 |
 | O9 | key order of new sections | each amendment key right after its base key (`b2b, b2ba, b2cl, b2cla, …`, as T §2's template shows for `b2ba`); `nil, at, ata, txpd, txpda, supeco, supecoa, ecom, ecoma` before `doc_issue`, in S4 order **[infer]** | S5 order | T §2 (partial); S4 order |
 | O10 | advances | **flat** S4 rows `at[] / txpd[] / ata[] / txpda[] = { pos, sply_ty, [omon], itms }`. The `B2B` and `B2C` rows of one (`pos`, `sply_ty`[, `omon`]) are **merged** and their items summed per rate | split objects `at_b2b` / `at_b2c` / `at_exp` | S4 `at`; C `at.csv`, `atadj.csv` (columns: POS, rate, amount, cess only) |
 | O11 | advances S4 cannot express | issue `NOT_IN_OFFLINE_SHAPE`, and (b) fails: an `EXPORT` row (S4 `pos` is required and `#state_cd` has no export value); a `B2B` row with POS `96` (S4 `#state_cd`); a negative `txpd`/`txpda` amount (S4 `#nonEmptyCost` ≥ 0); an `ata`/`txpda` row whose revised POS ≠ original POS (S4 has one `pos`, which C `ata.csv` calls "Original Place Of Supply") | expressed | S4; C |
@@ -826,7 +826,7 @@ After that the two outputs must be deep-equal for every test case that (b) can e
 
 `AMENDMENT_PERIOD`, `AMENDMENT_KIND_MISMATCH`, `AMENDMENT_SECTION_CHANGE`, `AMENDMENT_RECIPIENT_CHANGE`, `AMENDMENT_POS_CHANGE`, `AMENDMENT_USE_TABLE_10`, `AMENDMENT_ORIGINAL_IN_PERIOD`, `DUPLICATE_AMENDMENT`, `DUPLICATE_B2CS_AMENDMENT`, `B2CS_TAX_SPLIT`, `DUPLICATE_NIL_ROW`, `ADVANCE_TAX_SPLIT`, `ADVANCE_PARTY_CHANGE`, `ECO_GSTIN_FORMAT`, `ECO_NOT_APPLICABLE`, `ECO_UNKNOWN_DOCUMENT`, `TAX_SPLIT` (Tables 14/15), `NOT_IN_OFFLINE_SHAPE` (converter (b) only).
 
-The one **warning** is `ECO_NOT_IN_API_SHAPE`, from converter (a), returned in `warnings` (D-A8).
+`ECO_NOT_IN_API_SHAPE`, from converter (a), is **info**-level (`severity: "info"`), returned in `RenderResult.info` (§17.22; first specified as the one warning, D-A8).
 
 ### 17.13 Test list (Vitest; written first)
 
@@ -893,7 +893,7 @@ The fixtures are synthetic, use only the GSTINs in `packages/fixtures/src/gstins
   - (a) still renders in all of these cases.
 
 **4C / 5B**
-- A marked b2b R invoice: (b) has `etin`; (a) has none and returns warning `ECO_NOT_IN_API_SHAPE`.
+- A marked b2b R invoice: (b) has `etin`; (a) has none and returns the info-level `ECO_NOT_IN_API_SHAPE` (§17.22).
 - A marked b2cl invoice: the same.
 - Marking an exp, b2cs, RCM or SEZ invoice → `ECO_NOT_APPLICABLE`.
 - A mark on an unknown number → `ECO_UNKNOWN_DOCUMENT`.
@@ -933,7 +933,7 @@ The fixtures are synthetic, use only the GSTINs in `packages/fixtures/src/gstins
 | D-A5 | **Table 8** codes are mapped by name (`INTR*` = inter-State, `INTRA*` = intra-State). Negative amounts are accepted (S5). | approve; FA-3 confirms the codes |
 | D-A6 | **Advances.** The party decides the array (`B2B` if there is a recipient GSTIN, `EXPORT`, otherwise `B2C`). `sply_ty` is derived; exports are `INTER`. `RC` is never emitted; the e-commerce sub-arrays are not built; an amendment keeps its party kind. | approve; **needs CA** (Q-A3, Q-A4) |
 | D-A7 | **(b) advances** are merged into S4's flat rows. Anything S4 cannot express is `NOT_IN_OFFLINE_SHAPE` and (b) fails; nothing is dropped. | approve |
-| D-A8 | **E-commerce marks:** only on b2b R non-RCM and b2cl invoices. (b) writes `etin`. (a) cannot, and warns (`ECO_NOT_IN_API_SHAPE`); `RenderResult` gains `warnings`. | approve; X1 is the top question for GSTN docs (Q-A7) |
+| D-A8 | **E-commerce marks:** only on b2b R non-RCM and b2cl invoices. (b) writes `etin`. (a) cannot, and notes it (`ECO_NOT_IN_API_SHAPE`, info-level since §17.22); `RenderResult` gains `warnings` (and `info`, §17.22). | approve; X1 is the top question for GSTN docs (Q-A7) |
 | D-A9 | **Tables 14/15** are caller rows only: validated, rendered, never derived. `flag` comes only from the caller (required for Table 15, optional for Table 14 as in S5) and is never defaulted. 14 `clttx`/`paytx` are matched to the two natures by name. | approve |
 | D-A10 | **HSN and doc_issue** are unaffected by the new tables. | approve; **needs CA** (Q-A11) |
 | D-A11 | **DEC-7 extended** by O8–O14. The (b) key order for new sections is inferred until FA-3. | approve |
@@ -1041,7 +1041,7 @@ Each row has source `sources/gstr1/…`, retrieved 2026-10-16/18, status UNVERIF
   - **X1 explained.** S5 v5.0 dropped `etin` because the form no longer has per-invoice operator rows. Operator-wise totals now go in Table 14(a).
   - **X2 explained.** The tool's rejection of B2CS `typ "E"` matches the omitted 7A(2)/7B(2).
   - **D-A15 is superseded.** Marked invoices are ordinary 4A / 5A supplies. `gstr3b` G1′/G6′ are **not built**: a marked invoice feeds `tbl4a` / `tbl5a` like any other. AC `tbl4c`/`tbl5b` stay in `notCovered`; they can only hold periods before the amendment.
-  - **D-A8 is kept as accepted.** The marks still produce `etin` in output (b), because the tool still writes it, and the warning `ECO_NOT_IN_API_SHAPE` in output (a). The warning now records a fact the current form does not ask for per invoice. **Q-A15 (new, owner):** should the warning be dropped, now that 4C/5B no longer exist?
+  - **D-A8 is kept as accepted.** The marks still produce `etin` in output (b), because the tool still writes it, and `ECO_NOT_IN_API_SHAPE` (info-level since §17.22) in output (a). The warning now records a fact the current form does not ask for per invoice. **Q-A15 (new, owner):** should the warning be dropped, now that 4C/5B no longer exist?
   - The rule "marks only on b2b R non-RCM and b2cl" (§17.7) is unchanged. N26 Ins. 1–2 keep reverse-charge supplies out of 4A, and 9(5) supplies out of 4A and 4B.
 - **Q-A8** is partly answered. N26 Ins. 18: Table 14(a) = supplies "reported in any table from 4 to 10" that went through an operator collecting TCS. Table 14 stays caller rows (D-A9, unchanged). A cross-check against the marks would cover only b2b/b2cl, so it is not built.
 
@@ -1053,3 +1053,16 @@ Each row has source `sources/gstr1/…`, retrieved 2026-10-16/18, status UNVERIF
 - Reverse-charge `B2B` advances are not mapped into GSTR-3B (`RCM_NOT_MAPPED`), as for RCM invoices and notes (gstr3b Q-H4).
 - An amendment is `AMENDMENT_SECTION_CHANGE` also when a `cdnur` note's type (B2CL ↔ export) changes.
 - New input fields are validated by Zod. A malformed value (an amount with 3 decimals, an unknown key) is a `SCHEMA` issue with its path.
+
+### 17.22 Q-A15 answered (owner, 2026-10-18): `ECO_NOT_IN_API_SHAPE` is info-level
+
+- **Decision.** `ECO_NOT_IN_API_SHAPE` is kept but downgraded from a warning to an **info-level** issue. Notification 26/2022-CT omitted Tables 4C/5B (§17.21), so the API payload loses nothing the current form asks for per invoice. The message now points to Table 14 (`supeco`), where supplies through an operator collecting TCS are reported operator-wise (N26 Ins. 18).
+- **API (additive).**
+  - `Gstr1Issue` gains an optional `severity: "info"`; when absent, the issue is an error, or a warning when it is in `warnings`.
+  - The successful `RenderResult` gains `info: readonly Gstr1Issue[]`.
+  - `toApiSavePayload` returns one info issue per marked invoice in `info`, and leaves `warnings` empty for them.
+- **Test** (`a2-eco.test.ts`, written first):
+  - `warnings` is `[]`.
+  - `info` holds one `ECO_NOT_IN_API_SHAPE` with `severity: "info"` per marked invoice, and each message mentions Table 14 and 26/2022.
+  - An unmarked return has empty `warnings` and `info`.
+- **Changeset:** `@india-gst-kit/gstr1` patch.

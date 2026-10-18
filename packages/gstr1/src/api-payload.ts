@@ -1,7 +1,9 @@
 // Source: GSTN API "GSTR1 – Save GSTR1 data" v5.0 (FINAL, published 23-02-2026) — sources/gstr1/gstr1-save-v5.0-schema.json.
 //         The in-scope sections of S5 are transcribed to Zod; S5 itself is the test oracle (Ajv). Track A2 sections
 //         (spec §17.9): b2ba, b2cla, b2csa, cdnra, cdnura, nil, expa, at, txpd, ata, txpda, ecom, ecoma, supeco,
-//         supecoa; S5 has no `etin`, so e-commerce marks give the warning ECO_NOT_IN_API_SHAPE (D-A8).
+//         supecoa; S5 has no `etin`, so e-commerce marks give the info-level ECO_NOT_IN_API_SHAPE (D-A8, downgraded
+//         from a warning by the owner's answer to Q-A15: Notification 26/2022-CT omitted Tables 4C/5B and the operator
+//         totals belong in Table 14 — sources/gstr1/notification-26-2022-ct-gstr1-excerpt.txt; spec §17.22).
 // Retrieved: 2026-10-16 (Track A2: 2026-10-18)
 // Status: UNVERIFIED — needs CA
 import { z } from "zod";
@@ -98,15 +100,17 @@ export function mapApi(
   return out;
 }
 
-/** ECO_NOT_IN_API_SHAPE: one warning per e-commerce-marked invoice (spec §17.7, D-A8). */
-export function apiWarnings(ret: Gstr1Return): Gstr1Issue[] {
+/** ECO_NOT_IN_API_SHAPE: one info-level note per e-commerce-marked invoice (spec §17.7, §17.22). */
+export function apiInfo(ret: Gstr1Return): Gstr1Issue[] {
   const out: Gstr1Issue[] = [];
   const warn = (number: string, path: (string | number)[]) => {
     out.push(
       issue(
         "ECO_NOT_IN_API_SHAPE",
-        `${number}: the e-commerce operator GSTIN cannot be written in the v5.0 API payload (S5 has no etin)`,
-        { documentNumber: number, path },
+        `${number}: the e-commerce operator GSTIN is not written to the v5.0 API payload (S5 has no etin). ` +
+          "Notification 26/2022-CT omitted Tables 4C/5B; report supplies through an operator collecting TCS " +
+          "operator-wise in Table 14 (supeco)",
+        { documentNumber: number, path, severity: "info" },
       ),
     );
   };
