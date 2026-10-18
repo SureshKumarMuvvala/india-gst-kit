@@ -1,6 +1,6 @@
 # Spec — `@india-gst-kit/gstr1` (v0.1)
 
-Status: **draft for review** (2026-10-16). Decisions in §13 were taken by the owner on 2026-10-16. Every legal/official fact and every decision here is **UNVERIFIED — needs CA** until a chartered accountant signs it off in `docs/legal-facts.md`.
+Status: **draft for review** (2026-10-16). **Track A2 (2026-10-18): §17 adds the remaining tables (spec only, not built).** Decisions in §13 were taken by the owner on 2026-10-16. Every legal/official fact and every decision here is **UNVERIFIED — needs CA** until a chartered accountant signs it off in `docs/legal-facts.md`.
 
 Sources (all under `sources/gstr1/`; URLs, dates and SHA-256 in its README):
 - **S5** = `gstr1-save-v5.0-schema.json`: GSTN API "GSTR1 – Save GSTR1 data" **v5.0** (FINAL, published 23-02-2026). **Authoritative** for every key, type, pattern and range in this spec. Cited as "S5 `#def`" or "S5 path".
@@ -40,11 +40,11 @@ No sample payload was offered on the portal for either schema version.
 
   Table numbers are from `offline-tool/data/uploadtablename.json`.
 - **Periods:** return periods from **`052025`** only. Both S5 and S4 accept only the bifurcated `hsn` object (`hsn_b2b` / `hsn_b2c`). The earlier `{ "data": [...] }` form (T §2) is in neither schema, so earlier periods cannot be expressed: `PERIOD_NOT_SUPPORTED`.
-- **Out of scope / deferred (§12):**
-  - amendments
-  - advances (`at`, `atadj`/`txpd`; restructured in v5.0, §4.2)
-  - `nil` (Table 8)
-  - e-commerce (Tables 14/15, `ecom`, `supeco`)
+- **Out of scope / deferred (§12)** in v0.1. Track A2 (§17) proposes the first four for v0.2:
+  - amendments (§17.3, §17.4)
+  - advances (`at`, `atadj`/`txpd`; restructured in v5.0, §4.2; §17.6)
+  - `nil` (Table 8; §17.5)
+  - e-commerce (Tables 14/15, `ecom`, `supeco`; 4C/5B marks; §17.7, §17.8)
   - quarterly/IFF filers
   - the delete flow (`flag: "D"`)
   - file splitting
@@ -475,7 +475,7 @@ Output (b) deliberately keeps V1 and V4 as the tool writes them, and allows V2 (
 - POS `99` rejected
 
 ## 12. Deferred
-- Amendment sections; advances (`at_b2b`/`at_b2c` in v5.0); `nil` and bills of supply; e-commerce (`etin` removed in v5.0; `eco_typ`/`estin`, `ecom`, `supeco`).
+- Amendment sections; advances (`at_b2b`/`at_b2c` in v5.0); `nil` and bills of supply; e-commerce (`etin` removed in v5.0; `eco_typ`/`estin`, `ecom`, `supeco`). **Proposed for v0.2 in §17**, except bills of supply, `eco_typ`/`estin`, and the `at_ecom` family.
 - `diff_percent` (65 %); `CBW`; `sez_auth`; IRN fields (`irn`, `irngendate`, `srctyp`).
 - Export details `sbpcode`, `sbnum`, `sbdt`: optional in S5 and not in the model.
 - Delete flow (`flag: "D"`); quarterly/IFF; periods before 052025; file splitting; HSN master check; `offlineUploadFileName()`.
@@ -550,3 +550,478 @@ Tests:
 ### 16.2 Ship-to / dispatch-from
 GSTR-1 has no ship-to or dispatch-from field in S4/S5, and classification uses `placeOfSupply` and the recipient only. `doc.shipTo` / `doc.dispatchFrom` are ignored.
 - Test: a document with `shipTo` (in another state than the POS) and `dispatchFrom` produces exactly the same `Gstr1Return`, API payload and offline JSON as the same document without them.
+
+## 17. Track A2 (draft 2026-10-18): the remaining GSTR-1 tables
+
+Status: **draft for review — spec only**. Nothing in this section is built yet. Decisions D-A1–D-A16 (§17.14) are proposals for the owner, and every one of them is **UNVERIFIED — needs CA**. §1–§16 above stay in force unless this section says otherwise.
+
+**Principle (unchanged).** The package **assembles and checks**. It never decides taxability, exemption, nil rating, whether a supply is non-GST, whether an advance is taxable, or whether a supply goes through an e-commerce operator. Every such fact is **caller input**. An amendment always refers to an **original that the caller supplies**; the package never looks up an earlier return.
+
+**Extra sources for this section** (all already in the repo):
+- **C** = the official CSV templates in `sources/gstr1/offline-tool/csv/` (redacted samples), cited by file name, e.g. "C `b2ba.csv`". Only their **header rows** are used as a source. The sample values are illustrations.
+- **FG-1** = Form GSTR-1 (CGST Rules, Part B, consolidated 18-05-2021): `sources/gstr1/form-gstr1-excerpt-18052021.txt`, with "Ins. n" for an instruction. It **predates** Tables 14 and 15.
+- **FG-3B** = Form GSTR-3B (same consolidation): `sources/gstr3b/form-gstr3b-excerpt-18052021.txt`.
+- **AC** = the GSTR-3B Auto Calc v7.1 response schema (`sources/gstr3b/`), used only for the effect on `gstr3b` (§17.11).
+- **UT** = `offline-tool/data/uploadtablename.json`.
+
+**What the sources do not contain.** The tool's code excerpts (T) cover only the v0.1 sections. The Help sheet excerpt (H) has no rows for `b2ba`, `b2cla`, `b2csa`, `cdnra`, `cdnura`, `expa`, `at`, `ata`, `atadj`, `atadja` or the e-commerce sheets (its row 3 lists those sheets). FG-1 has no Table 14 or 15. Where this section needs one of those, it says so, and the file that settles it is in §17.17.
+
+### 17.1 Scope: table by table
+
+| GSTR-1 table | S5 key(s) | v0.2 status | Basis |
+|---|---|---|---|
+| 4C (B2B through an e-commerce operator, TCS) | `b2b` (no S5 field marks it) | **Partly built.** The caller marks documents (§17.7). (b) writes `etin`; (a) **cannot** say it (§17.15 X1). The `gstr3b` derivation uses the mark | FG-1 4C, Ins. 5(i)(c); S4 `#etin`; T §3 b2b |
+| 5B (B2CL through an e-commerce operator) | `b2cl` (as 4C) | Partly built, as 4C | FG-1 5B |
+| 8 (nil rated, exempted, non-GST) | `nil` | **Built from caller amounts** (§17.5) | FG-1 Table 8; S5 `nil`; C `exemp.csv`; H r233–237 |
+| 9A (amended B2B, B2CL, EXP invoices) | `b2ba`, `b2cla`, `expa` | **Built** (§17.3) | FG-1 Table 9, Ins. 13; S5; C headers; UT |
+| 9C (amended credit/debit notes) | `cdnra`, `cdnura` | **Built** (§17.3) | FG-1 9C, Ins. 13(iii); S5; C headers |
+| 10 (amended B2CS) | `b2csa` | **Built from caller rows** (§17.4) | FG-1 Table 10, Ins. 14; S5; C `b2csa.csv` |
+| 11A / 11B (advances received / adjusted), 11 II (amendments) | `at`, `txpd`, `ata`, `txpda` | **Built from caller rows**, except the e-commerce sub-arrays (§17.6) | FG-1 Table 11, Ins. 15; S5; S4; C `at*.csv` |
+| 14 / 14A (supplies made through an e-commerce operator, reported by the supplier) | `supeco`, `supecoa` | **Caller rows, rendered and checked only** (§17.8) | S5; C `eco.csv`, `ecoa.csv`. **No form text** (FA-1) |
+| 15 / 15A (supplies on which the operator pays tax u/s 9(5), reported by the operator) | `ecom`, `ecoma` | **Caller rows, rendered and checked only** (§17.8) | S5; C `eco*b2b.csv` …; H r8. **No form text** (FA-1) |
+| 4F, 7A(2)/7B(2), 10A(1)/10B(1), IMS rows | — | **Not built** (§17.11.3) | no S5 field (7A(2), 10A(1)) or no source (4F, IMS) |
+
+Unchanged from v0.1: quarterly/IFF, the delete flow (`flag: "D"`), `diff_percent`, `CBW`, `sez_auth`, IRN fields, shipping-bill fields, file splitting.
+
+### 17.2 Inputs (API additions)
+
+`Gstr1Input` gains optional, caller-supplied tables. All amounts are decimal **strings** (repo rule) and all objects are `z.strictObject`.
+
+```ts
+type Gstr1Input = {
+  gstin; period; documents; options?;               // as §2
+  amendments?: readonly DocumentAmendment[];        // 9A / 9C (§17.3)
+  b2csAmendments?: readonly B2csAmendment[];        // 10 (§17.4)
+  nil?: readonly NilRow[];                          // 8 (§17.5)
+  advances?: AdvancesInput;                         // 11 (§17.6)
+  ecoMarks?: readonly { kind: DocumentKind; number: string; etin: string }[]; // 4C / 5B (§17.7)
+  supeco?: SupecoInput;                             // 14 / 14A (§17.8)
+  ecom?: EcomInput;                                 // 15 / 15A (§17.8)
+};
+
+type DocumentAmendment = {
+  original: { document: GstDocument; period: ReturnPeriod }; // as reported earlier; passed parseGstDocument
+  revised: GstDocument;                                       // the full revised document; passed parseGstDocument
+};
+
+type B2csAmendment = {
+  originalPeriod: ReturnPeriod;      // S5 omon
+  pos: string; rate: string;         // the Table 7 row being revised
+  revised:  { taxableValue: string; igst?: string; cgst?: string; sgst?: string; cess: string };
+  original: { taxableValue: string; igst?: string; cgst?: string; sgst?: string; cess: string }; // as reported; used only by gstr3b (D-A4)
+};
+
+type NilRow = { supply: "INTER_REGISTERED" | "INTRA_REGISTERED" | "INTER_UNREGISTERED" | "INTRA_UNREGISTERED";
+                nilRated: string; exempted: string; nonGst: string };
+
+type AdvanceParty =
+  | { kind: "B2B"; recipientGstin: string; pos: string; invoiceType: "R" | "DE" | "SEWP" | "SEWOP"; reverseCharge: boolean }
+  | { kind: "B2C"; pos: string }
+  | { kind: "EXPORT"; exportType: "WPAY" | "WOPAY" };
+type AdvanceItem = { rate: string; amount: string; igst?: string; cgst?: string; sgst?: string; cess?: string };
+type AdvanceRow = { party: AdvanceParty; items: readonly AdvanceItem[] };
+type AdvancesInput = {
+  received?: readonly AdvanceRow[];                                   // 11A  → at
+  adjusted?: readonly AdvanceRow[];                                   // 11B  → txpd
+  receivedAmendments?: readonly { originalPeriod: ReturnPeriod; original: AdvanceParty; revised: AdvanceRow }[]; // 11 II → ata
+  adjustedAmendments?: readonly { originalPeriod: ReturnPeriod; original: AdvanceParty; revised: AdvanceRow }[]; // 11 II → txpda
+};
+```
+
+`SupecoInput` and `EcomInput` mirror the S5 shapes of §17.8 with neutral names and decimal strings.
+
+- **Classification and aggregation stay in `buildGstr1`.** The converters stay pure (DEC-7). `Gstr1Return` gains the new sections in neutral form, plus, for every amendment, the **original's** items in internal form. Those are never emitted; `gstr3b` needs them for the difference (§17.11).
+- **`RenderResult` gains warnings** (D-A8): `{ ok: true; value: T; warnings: readonly Gstr1Issue[] }`. Today's callers that read only `value` are unaffected. Nothing is ever dropped silently: a fact one output cannot carry is a warning (when the rest is still correct) or an error.
+
+### 17.3 Amendments of invoices and notes — Tables 9A and 9C
+
+**What a 9A/9C row is.** It is the **full revised document** plus the original's number and date, not a difference. FG-1 Table 9 has "Details of original document" columns and "Revised details of document" columns. C `b2ba.csv` has "Original Invoice Number, Original Invoice date, Revised Invoice Number, Revised Invoice date, Invoice Value, …, Rate, Taxable Value, Cess Amount". S5 `b2ba` requires `inum`, `idt`, `oinum`, `oidt`, `val`, `itms`, and the rest.
+
+**Section.** The original is classified exactly as in §3, **under its own period** (DEC-3 already does this for notes; FG-1 Ins. 13(i): 9A amends Tables 4, 5 and 6). The original note's own original invoice is found as in §3.3, through `documents` or `options.originalInvoices`.
+
+| Original's section | Amendment section | S5 shape (key order as S5) | Source |
+|---|---|---|---|
+| `b2b` | `b2ba` | `[{ ctin, inv: [{ inum, idt, oinum, oidt, val, pos, rchrg, inv_typ, itms: [{ num, itm_det }] }] }]` | S5 `b2ba`; C `b2ba.csv` |
+| `b2cl` | `b2cla` | `[{ pos, inv: [{ inum, idt, oinum, oidt, val, itms: [{ num, itm_det: { rt, txval, iamt, csamt } }] }] }]`. Group `pos` = the **original** POS; the invoice has no `pos` | S5 `b2cla`; C `b2cla.csv` "Original Place Of Supply" |
+| `exp` | `expa` | `[{ exp_typ, inv: [{ inum, idt, val, oinum, oidt, itms: [{ txval, rt, iamt, csamt }] }] }]` | S5 `expa`; C `expa.csv` |
+| `cdnr` | `cdnra` | `[{ ctin, nt: [{ pos, rchrg, inv_typ, val, ntty, nt_num, nt_dt, ont_num, ont_dt, itms }] }]` | S5 `cdnra`; C `cdnra.csv` |
+| `cdnur` | `cdnura` | `[{ typ, pos?, val, ntty, nt_num, nt_dt, ont_num, ont_dt, itms }]`; `pos` required for `B2CL`, forbidden for `EXPWP`/`EXPWOP` (S5 `anyOf`), as `cdnur` | S5 `cdnura`; C `cdnura.csv` |
+| `b2cs` | — | issue `AMENDMENT_USE_TABLE_10`: Table 7 is amended as a rate/POS row in Table 10, never per invoice (FG-1 Ins. 14) | FG-1 Tables 7, 10 |
+| a b2cs-netted note (N4) | — | the same issue | DEC-2 |
+
+**Field values.** `inum`/`nt_num`, `idt`/`nt_dt`, `val`, `pos`, `rchrg`, `inv_typ`, `ntty`, `typ`, `exp_typ` and the items come from the **revised** document, built exactly as §4 (one item per rate, `num = rt × 100 + 1`, same sums, same IGST/CGST rules). `oinum`/`oidt` and `ont_num`/`ont_dt` are the original's number and date. Ranges are §4.1's. No `flag`, `diff_percent`, `sez_auth`, `eco_typ` or `estin` is emitted.
+
+**Checks** (each failure is an issue; the amendment is not placed):
+
+| Code | Rule | Basis |
+|---|---|---|
+| `AMENDMENT_PERIOD` | `072017 ≤ original.period < period` (the year is compared first) | FG-1 Table 9 "furnished in returns for earlier tax periods"; §3.1 date floor |
+| `AMENDMENT_KIND_MISMATCH` | `revised.kind === original.document.kind` | design (D-A2) |
+| `AMENDMENT_SECTION_CHANGE` | the revised document, classified under the **original's** period, lands in the same section as the original (so a B2CL invoice revised below the limit, or an unregistered recipient revised to a registered one, is refused) | D-A2; no source states what happens then (Q-A5) |
+| `AMENDMENT_RECIPIENT_CHANGE` | `b2ba`/`cdnra`: same recipient GSTIN. C `b2ba.csv`/`cdnra.csv` have one "GSTIN/UIN of Recipient" column and S5 one `ctin` per group | C; S5 |
+| `AMENDMENT_POS_CHANGE` | `b2cla`: revised POS = original POS. S5 `b2cla` has only the group `pos` and C `b2cla.csv` calls it "Original Place Of Supply" | S5; C |
+| `AMENDMENT_USE_TABLE_10` | see the table above | FG-1 Ins. 14 |
+| `DUPLICATE_AMENDMENT` | no two amendments of the same original (kind, number, date); no revised number twice among the revised invoices, or among the revised notes | H r401 (a later upload overwrites) |
+| `AMENDMENT_ORIGINAL_IN_PERIOD` | the original is not also in `documents` | it would then be a current-period document, not an earlier one |
+| §3.1 rules | every §3.1 precondition also applies to the **revised** document (supplier, GSTIN formats, rates, POS patterns, ranges, `REVERSE_CHARGE_B2C`, …). `DATE_OUT_OF_RANGE` checks the revised date against the end of `period` | §3.1 |
+
+- No time limit for amending is checked: no source in the repo states one (Q-A6; never filled from memory).
+- **Not checked:** that the original matches what the portal holds. The caller supplied it and is responsible for it.
+- An amended note keeps its own `ntty` and positive amounts, as in §3.3.
+
+### 17.4 Amendments of B2CS — Table 10
+
+- **Input.** One `B2csAmendment` per revised Table 7 row (`originalPeriod`, `pos`, `rate`). The package cannot rebuild an earlier Table 7 row from invoices, so both the **revised** row and the row **as originally reported** are caller input (D-A4). The original amounts are used only by `gstr3b`.
+- **Section `b2csa` (S5).** `[{ typ: "OE", sply_ty, pos, omon, itms: [{ rt, txval, iamt | camt+samt, csamt }] }]`. Rows are grouped by (`omon`, `pos`, `sply_ty`); `itms` has one entry per rate. `sply_ty` = `INTRA` if `pos = S`, else `INTER` (the §3.2 I4 rule). `typ` is always `"OE"` (§17.7: e-commerce marking of B2CS is not supported).
+- **Signs.** `txval` and the amounts may be negative: S5 `b2csa` items use `#txvalue`/`#nonEmptyNil`, which have no minimum (as `b2cs`, DEC-2; C `b2cs.csv` has a negative sample). Range: ≤ 99 999 999 999.99.
+- **Checks.** `AMENDMENT_PERIOD` on `originalPeriod`; `POS_NOT_ACCEPTED` (S5 `#state_cd`, no `96`); `RATE_NOT_ACCEPTED`; `B2CS_TAX_SPLIT` (an `INTRA` row has `cgst`/`sgst` and no `igst`; an `INTER` row the reverse; FG-1 Table 10 columns); `DUPLICATE_B2CS_AMENDMENT` for the same (`originalPeriod`, `pos`, `rate`).
+- **Not checked:** CGST = SGST (as `gstr3b` Q-H10).
+
+### 17.5 Nil rated, exempted and non-GST — Table 8
+
+- **Input.** Up to four `NilRow`s, each with the three columns of FG-1 Table 8. Classifying a supply as nil rated, exempt or non-GST is a **taxability decision**, so it is always caller input. The package never derives Table 8 from documents. H r235: the nil-rated column "should exclude amount already declared in B2B and B2CL table as line items in tax invoice".
+- **Rows.** The `supply` codes map to S5 `sply_ty` by name (D-A5): `INTER_REGISTERED → INTRB2B`, `INTRA_REGISTERED → INTRAB2B`, `INTER_UNREGISTERED → INTRB2C`, `INTRA_UNREGISTERED → INTRAB2C`. FG-1 8A–8D and C `exemp.csv` name the four rows ("Inter-State supplies to registered persons", …), but no source states which code is which row (FA-3).
+- **Output (S5).** `nil: { inv: [{ sply_ty, nil_amt, expt_amt, ngsup_amt }] }`, rows in FG-1 order 8A, 8B, 8C, 8D, absent rows omitted. All three amounts are always emitted (S5 requires them). `nil` is omitted when no row is given.
+- **Range and sign.** S5 `#nonEmptyNil`: ≤ 99 999 999 999.99, **no minimum**, `multipleOf 0.01`. Negative values are accepted, as S5 allows (Q-A9).
+- **Checks.** `DUPLICATE_NIL_ROW` (the same `supply` twice); `AMOUNT_OUT_OF_RANGE`.
+
+### 17.6 Advances — Table 11
+
+**Input.** Caller rows (§17.2). Whether an advance is taxable, at which rate, and which invoice it is adjusted against, are all caller facts. FG-1 Ins. 15: Table 11A is advances received in the period for which no invoice was issued in the same period; Table 11B is the adjustment of advances reported earlier against invoices of this period.
+
+**Section (S5 v5.0).** `at` (11A) and `txpd` (11B) are **objects** in S5, split by party:
+
+| Party | S5 array | S5 row (required keys) | Notes |
+|---|---|---|---|
+| `B2B` | `at.at_b2b` / `txpd.txpd_b2b` | `rtin, pos, sply_ty, inv_typ, rchrg, itms` | `rtin` = `#ctin`; `pos` = `#state_cd_foreign` (96 allowed); `inv_typ` enum `R, RC, DE, SEWP, SEWOP`. We never emit `RC` (Q-A3) |
+| `B2C` | `at.at_b2c` / `txpd.txpd_b2c` | `pos, sply_ty, itms` | `pos` = `#state_cd` |
+| `EXPORT` | `at.at_exp` / `txpd.txpd_exp` | `exp_typ, sply_ty, itms` | **no `pos`** in S5 |
+| e-commerce | `at.at_ecom.{at_ecomurp2b, at_ecomurp2c}`, `txpd.txpd_ecom.*` | — | **not built**: no source says what they are (Q-A4, FA-1/FA-4) |
+
+- **Items.** `itms: [{ ad_amt, iamt | camt+samt, csamt, rt }]`, one per rate, summed per row key. Row keys: `B2B` (`rtin`, `pos`, `inv_typ`, `rchrg`); `B2C` (`pos`); `EXPORT` (`exp_typ`). `ad_amt` = Σ `amount`.
+- **`sply_ty`.** For `B2B`/`B2C`: `INTRA` if `pos = S`, else `INTER`, and always `INTER` for `SEWP`/`SEWOP` (T §4 `getSupplyType`). For `EXPORT`: `INTER` (D-A6).
+- **Range and sign.** S5 `#nonEmptyCostAT`: ±99 999 999 999.99, so negatives are allowed in all four sections (C `at.csv` has a negative "Gross Advance Received" sample). `rt` 0 … 999.99 and in the §3.1 rate list.
+- **Amendments (11 II).** `ata` / `txpda` have the same split, plus `omon` (original period) and the original's party: `opos`, `oinv_typ`, `ortin`, `orchrg` for `B2B`; `opos` for `B2C`; `oexp_typ` for `EXPORT`. The row carries the **revised** figures; FG-1 Table 11 II says "[Furnish revised information]".
+- **Checks.**
+  - `ADVANCE_TAX_SPLIT`: an `INTRA` row has `cgst`/`sgst` and no `igst`; an `INTER` row the reverse. FG-1 Table 11 splits 11A(1)/11B(1) intra-State and 11A(2)/11B(2) inter-State.
+  - `RECIPIENT_GSTIN_FORMAT` on `recipientGstin` (S5 `#ctin`); `POS_NOT_ACCEPTED` per the patterns above; `RATE_NOT_ACCEPTED`; `AMOUNT_OUT_OF_RANGE`.
+  - `REVERSE_CHARGE_B2C` does not arise: only `B2B` has `rchrg`.
+  - `ADVANCE_PARTY_CHANGE`: an amendment's revised party has the same `kind` as its original (D-A6).
+  - `AMENDMENT_PERIOD` on `originalPeriod`.
+  - **Not checked:** tax = amount × rate (no rounding rule for advances is in the sources; Q-A10); adjusted ≤ received earlier (the package has no history).
+
+### 17.7 E-commerce marking — Tables 4C and 5B
+
+- **Input.** `ecoMarks` names documents made "through e-commerce operator attracting TCS" (FG-1 4C, 5B). Whether a supply is one is a caller fact.
+- **Where a mark is allowed** (`ECO_NOT_APPLICABLE` otherwise): a tax invoice that classifies to `b2b` with `inv_typ R` and no reverse charge, or to `b2cl`. FG-1 Table 4 excludes Table 6 supplies, 4A separates reverse charge from e-commerce, and FG-1 does not say whether a reverse-charge supply can be 4C (Q-A7). B2CS rows are not marked; see the last bullet.
+- **Checks.** `ECO_GSTIN_FORMAT`: `etin` matches S4 `#etin`, a PAN-structured GSTIN with `C` in position 14. `ECO_UNKNOWN_DOCUMENT`: the mark names no document in `documents`. `DUPLICATE_DOCUMENT`: the same document is marked twice.
+- **Output (b), offline-upload.** `etin` on the `b2b`/`b2cl` invoice, as the tool writes it (T §3 b2b, b2cl; S4).
+- **Output (a), API (S5 v5.0).** S5 has **no** `etin` in `b2b` or `b2cl`. It was removed in v5.0 (§4.2). The invoice is rendered without it and the result carries the warning `ECO_NOT_IN_API_SHAPE`, once per marked document (D-A8). See §17.15 X1.
+- **Other outputs.** HSN, doc_issue and B2CS are unchanged by marks.
+- **B2CS `typ "E"`** is **not** emitted. S4 and S5 both allow `typ "E"` and C `b2cs.csv` has a sample row with "E", but the tool rejects any Excel Type other than `OE` (T §3 b2cs, `/^(OE)$/`). FG-1 7A(2)/7B(2) are "out of" rows of 7A(1)/7B(1), and AC has no key for them. §17.15 X2.
+
+### 17.8 Tables 14 and 15 — caller rows, rendered and checked only
+
+FG-1 (2021) has neither table. Their meaning comes only from S5 field descriptions, C headers and H r8 ("Table 15 - Supplies U/s 9(5) - B2B / URP2B … Table 15 is applicable from Oct 2022 and Table 15A is applicable from Nov 2022"). So the package **never derives** them from documents (D-A9). It validates caller rows against S5, renders them, and transcribes them into (b).
+
+**Table 14 — `supeco` / `supecoa` (S5).**
+- `supeco: { clttx: [Row], paytx: [Row] }`, `Row = { etin, suppval, igst, cgst, sgst, cess?, flag? }`.
+- `supecoa: { clttxa: [ARow], paytxa: [ARow] }`, `ARow = Row + { oetin, omon }`.
+- C `eco.csv` "Nature of Supply" has two values, "Liable to collect tax u/s 52(TCS)" and "Liable to pay tax u/s 9(5)". Our input names the arrays `collectsTcs` → `clttx` and `paysTax95` → `paytx`, matched **by name** (D-A9, FA-1).
+- Amounts are `#nonEmptyCostAT` (±). `etin`/`oetin` are `#ctin` in S5, and a loose `^[a-zA-Z0-9._\s]+$` in S4.
+
+**Table 15 — `ecom` / `ecoma` (S5).** These rows are filed by the **operator**: `stin` is "GSTIN/UID of the Supplier taxpayer" (S5) and `rtin` the recipient. The arrays:
+- `ecom.b2b`: `[{ stin, rtin, inv: [{ inum, idt, val, pos, sply_ty, inv_typ, flag, itms }] }]`
+- `ecom.urp2b`: `[{ rtin, inv: [...] }]` (no supplier GSTIN)
+- `ecom.b2c`: `[{ stin, pos, sply_ty, rt, txval, iamt?, camt?, samt?, csamt?, flag }]`
+- `ecom.urp2c`: as `b2c` without `stin`
+- `ecoma`: `b2ba`, `urp2ba` (with `oinum`, `oidt`), `b2ca` (`[{ pos, posItms: [{ stin, ostin, omon, sply_ty, flag, itms }] }]`) and `urp2ca` (`omon`)
+- `inv_typ` in `ecom` is `R, DE, SEWP, SEWOP` (no `CBW`).
+
+**`flag` is required** in every `ecom`/`ecoma` invoice and row in both S5 and S4 (`#ecomFlag` `N`, `E`, `D`). It is optional in S5 `supeco` and **required** in S4 `supeco`. No source defines the values. So `flag` is a **required caller input** on every Table 15 row, optional on a Table 14 row (as in S5), and never defaulted (D-A9, Q-A1). A Table 14 row without `flag` renders in (a) and is `NOT_IN_OFFLINE_SHAPE` in (b) (O13).
+
+**Checks.** S5 patterns: `#ctin` on `stin`/`rtin`/`etin`; POS patterns; the `MMYYYY` `omon`; the rate list; ranges. Also `TAX_SPLIT` per `sply_ty`, and `DUPLICATE_DOCUMENT` among the `ecom` invoice numbers per supplier.
+
+**Not checked.**
+- Whether the filer is an operator. The model has no such registration type (Q-A2).
+- That Table 14 equals the sum of the `ecoMarks` documents. That is plausible, but no source states it (Q-A8).
+
+**Schema quirk.** S5 and S4 write `ecom.*.inv[].itms` as tuple-form `items: [ {...} ]`, so only the **first** item is checked by the JSON Schema. Our Zod schema checks every item (stricter, §17.15 X9).
+
+### 17.9 Outputs (a) and (b) for the new sections (extends §4, §4.4 and DEC-7)
+
+- **(a) key order** = S5 property order: `gstin, fp, [hash, version], b2b, b2ba, b2cl, b2cla, b2cs, b2csa, cdnr, cdnra, cdnur, cdnura, nil, exp, expa, at, txpd, ata, txpda, ecom, ecoma, supeco, supecoa, hsn, doc_issue`. Inside each object the order is S5's, as transcribed.
+- **(b)** uses S4's shapes. S4 vs S5 for the amendment sections, `nil`, `expa`, `ecom`/`ecoma`, `supeco`/`supecoa` differs only in `etin` (S4), `diff_percent`, `sez_auth`, `eco_typ`/`estin` (S5 `cdnra`), `ntty "R"` and `flag "D"` (S5), and the items listed in O12–O13. The `at` family differs structurally (O10). For the **new** sections, (b) follows **S4 only**: the tool's code for them is not in T (FA-3).
+
+New rows for the §4.4 table (differences allowed between (a) and (b); nothing else may differ):
+
+| # | Item | (b) offline-upload | (a) API | Source of (b) |
+|---|---|---|---|---|
+| O8 | `etin` on `ecoMarks` documents | emitted | not emitted, with warning `ECO_NOT_IN_API_SHAPE` | S4 `#etin`; T §3 b2b/b2cl; S5 |
+| O9 | key order of new sections | each amendment key right after its base key (`b2b, b2ba, b2cl, b2cla, …`, as T §2's template shows for `b2ba`); `nil, at, ata, txpd, txpda, supeco, supecoa, ecom, ecoma` before `doc_issue`, in S4 order **[infer]** | S5 order | T §2 (partial); S4 order |
+| O10 | advances | **flat** S4 rows `at[] / txpd[] / ata[] / txpda[] = { pos, sply_ty, [omon], itms }`. The `B2B` and `B2C` rows of one (`pos`, `sply_ty`[, `omon`]) are **merged** and their items summed per rate | split objects `at_b2b` / `at_b2c` / `at_exp` | S4 `at`; C `at.csv`, `atadj.csv` (columns: POS, rate, amount, cess only) |
+| O11 | advances S4 cannot express | issue `NOT_IN_OFFLINE_SHAPE`, and (b) fails: an `EXPORT` row (S4 `pos` is required and `#state_cd` has no export value); a `B2B` row with POS `96` (S4 `#state_cd`); a negative `txpd`/`txpda` amount (S4 `#nonEmptyCost` ≥ 0); an `ata`/`txpda` row whose revised POS ≠ original POS (S4 has one `pos`, which C `ata.csv` calls "Original Place Of Supply") | expressed | S4; C |
+| O12 | `ata`/`txpda` `rt` | S4 `#nonEmptyRate` max **999.9**; every listed rate fits | max 999.99 | S4 |
+| O13 | Table 14 `flag` | required (S4); absent → `NOT_IN_OFFLINE_SHAPE` | optional; emitted when given | S4 / S5 `supeco` |
+| O14 | Table 14 `etin` pattern | S4 loose pattern | S5 `#ctin` | S4 / S5. Every valid S5 value is a valid S4 value, so this is never a difference in practice |
+
+The DEC-7 normalisation test (§9) is extended. Besides steps 1–3, it:
+4. re-merges (a)'s `at_b2b`/`at_b2c` into S4 rows (O10);
+5. drops `etin` (O8).
+
+After that the two outputs must be deep-equal for every test case that (b) can express.
+
+### 17.10 HSN and doc_issue are unchanged
+
+- **HSN (Table 12)** is still built only from current-period `documents` (§5.2). Amendments, Table 10, advances, Table 8 and Tables 14/15 do not feed it (D-A10, Q-A11).
+- **doc_issue (Table 13)** is still derived from `documents` only (§5.3). Revised documents are not counted as "Revised Invoice" (`doc_num 3`); use the `options.docIssue` override (D-A10).
+
+### 17.11 Effect on `gstr3b` (`outwardFromGstr1`)
+
+`gstr3b` reads the new sections from `Gstr1Return`. Mapping M is unchanged: it is quoted from AC (gstr3b §4.2). Only mapping G grows. Each new row is marked **sourced** (FG-1/FG-3B) or **proposal**. The full text goes into gstr3b §22.
+
+#### 17.11.1 New G rows
+
+| Row | `Gstr1Return` data | AC key(s) | Basis |
+|---|---|---|---|
+| G1′ | `b2b` R, no RCM, **e-commerce-marked** | `3.1a tbl4c` (all heads); `3.2comp`/`3.2uin tbl4c` per `recipientTypes` | **sourced**: FG-1 4A "other than … (ii) supplies made through e-commerce operator", 4C, Ins. 5(i)(c); AC `tbl4c` in 3.1a and both 3.2 lists |
+| G6′ | `b2cl`, marked | `3.1a tbl5b` (iamt, csamt). Not 3.2: AC `osup_unreg_3_2` has **no** `tbl5b` | **sourced**: FG-1 5B; mapping M as quoted |
+| G11 | `nil` | `3.1c tbl8` (`txval` = Σ `nil_amt` + `expt_amt` over all rows); `3.1e tbl8` (`txval` = Σ `ngsup_amt`) | **sourced**: FG-1 Table 8 columns; FG-3B 3.1 (c) "Nil rated, exempted" and (e) "Non-GST"; gstr3b Q-H8 (settled) |
+| G12 | `b2ba` / `b2cla` / `expa` | `tbl9a` in `3.1a` (from `R`, `DE`, B2CL) or `3.1b` (from `SEWP`, `SEWOP`, `WPAY`, `WOPAY`); `3.2comp`/`3.2uin tbl9a` (from `R`, per `recipientTypes`); `3.2unreg tbl9a` (from B2CL) | 9A = amendments of Tables 4/5/6: **sourced** (FG-1 Ins. 13(i)). Routing by invoice type: **proposal**, as gstr3b D-H6 (c) |
+| G13 | `cdnra` / `cdnura` | `tbl9c`, routed as G12 by the note's `inv_typ`/`typ` (`EXPWP`/`EXPWOP` → 3.1b) | 9C: **sourced** (FG-1 9C, Ins. 13(iii)); routing: **proposal** |
+| G14 | `b2csa` | `3.1a tbl10a` (`INTRA`: txval, camt, samt, csamt); `3.1a tbl10b` and `3.2unreg tbl10b` (`INTER`: txval, iamt, csamt / pos, txval, iamt) | **sourced**: FG-1 10A intra-State, 10B inter-State; AC field sets |
+| G15 | advances `at` / `txpd` | **opt-in only** (`ctx.confirmAdvanceMapping: true`, D-A14): `at` `B2B`/`B2C` → `3.1a tbl11a_1_2_4` (+); `txpd` → `tbl11b_1_2_4` (−); `EXPORT` → `3.1b tbl11a_3` / `tbl11b_3`; `INTER` `B2C` → `3.2unreg tbl11a_4_5` / `tbl11b_4_5`; `INTER` `B2B` with comp/UIN → `tbl11a_1_5` / `tbl11b_1_5` | Signs: **sourced** (FG-3B Ins. 1 "+ value of advances received … – value of advances adjusted"; AC `tbl11b_*` is `#negtxamt` ≤ 0). Keys: **proposal**. The suffixes are undefined (gstr3b Q-H2), and AC also has a second family `tbl11_i_*`/`tbl11_ii` in the same boxes (§17.15 X5) |
+
+#### 17.11.2 Amounts of an amendment (D-A12)
+
+- An amendment contributes **revised − original**, per head and per (box, AC key, `pos`). This uses the original items held in `Gstr1Return` (§17.2).
+- Basis:
+  - FG-3B Ins. 3: "Amendment in any details to be adjusted and not shown separately".
+  - AC `tbl9a`, `tbl9c`, `tbl10a` and `tbl10b` are signed `#txamt`.
+- The difference itself is **our reading**; needs CA (Q-A12).
+- Notes keep the sign rule of gstr3b D-H6 (b) on both sides of the difference.
+- When an amended invoice's POS changes, the old POS row gets −original and the new POS row gets +revised.
+- RCM amendments are `RCM_NOT_MAPPED`, as in gstr3b G5 and Q-H4. AC has no `tbl9a` taxable-value-only key like `tbl4b`.
+
+#### 17.11.3 Still not covered (stays caller input)
+
+| AC key(s) | Why |
+|---|---|
+| `tbl4f` | not in FG-1 (2021); meaning unknown (FA-1) |
+| `tbl11c_*`, `tbl11d_*`, `tbl11_ii` (advance amendments) | AC `tbl11c_*` is `#nonzerotxamt` (≥ 0), which does not fit a revised − original difference. Unclear whether AC holds revised or differential figures (§17.15 X6, Q-A13) |
+| `tbl11_i_a_1`, `tbl11_i_a_2`, `tbl11_i_b_1`, `tbl11_i_b_2` | the legacy family; never fed together with `tbl11a/b_*` (X5) |
+| all `tbl11*` without `confirmAdvanceMapping` | D-A14 |
+| `tbl15*`, `tbl14b`, `tbl14b_A`, `tbl9bSezEco*`, `tbl9cSezEco*`, `tbl9burp2b`, `tbl9curp2b` | Tables 14/15 are not derived (D-A9). The same `tbl15*` key appears under 3.1b, 3.1.1(i) and 3.2, and no source says which rows go where (gstr3b Q-H12). 14(b) ↔ `paytx` is unsourced (FA-1, F3) |
+| `ims_*` | Invoice Management System actions are the recipient's, not in GSTR-1 |
+
+#### 17.11.4 API and spec changes in `gstr3b` (minor)
+
+- `ctx.confirmAdvanceMapping?: boolean` (default `false`).
+- `AC_GSTR1_MAP` gains the rows above.
+- `AC_NOT_COVERED` shrinks to §17.11.3. The advance keys are listed only while the flag is off.
+- gstr3b §3.3 "boxes the package never fills": **3.1c and 3.1e may now hold `GSTR1` entries** (from caller-supplied Table 8, G11). The nil/exempt/non-GST decision was the caller's, made in the `gstr1` input (D-A13).
+- `unmapped` gains `AMENDMENT_RCM_NOT_MAPPED` (or reuses `RCM_NOT_MAPPED` with section `b2ba`/`cdnra`).
+
+### 17.12 Issue codes (additions to §8)
+
+`AMENDMENT_PERIOD`, `AMENDMENT_KIND_MISMATCH`, `AMENDMENT_SECTION_CHANGE`, `AMENDMENT_RECIPIENT_CHANGE`, `AMENDMENT_POS_CHANGE`, `AMENDMENT_USE_TABLE_10`, `AMENDMENT_ORIGINAL_IN_PERIOD`, `DUPLICATE_AMENDMENT`, `DUPLICATE_B2CS_AMENDMENT`, `B2CS_TAX_SPLIT`, `DUPLICATE_NIL_ROW`, `ADVANCE_TAX_SPLIT`, `ADVANCE_PARTY_CHANGE`, `ECO_GSTIN_FORMAT`, `ECO_NOT_APPLICABLE`, `ECO_UNKNOWN_DOCUMENT`, `TAX_SPLIT` (Tables 14/15), `NOT_IN_OFFLINE_SHAPE` (converter (b) only).
+
+The one **warning** is `ECO_NOT_IN_API_SHAPE`, from converter (a), returned in `warnings` (D-A8).
+
+### 17.13 Test list (Vitest; written first)
+
+The fixtures are synthetic, use only the GSTINs in `packages/fixtures/src/gstins.ts`, and add one synthetic TCS-shaped `etin` (position 14 = `C`) with a computed check digit.
+
+**Schema conformance (extends §9)**
+- Every (a) output in the new tests validates against **S5**, and every (b) output against **S4** (Ajv, `strict: false`).
+- The Zod and Ajv agreement tables gain rows for:
+  - `b2ba` without `oinum`
+  - `b2cla` with an invoice-level `pos` (invalid)
+  - `cdnura` `EXPWP` with `pos` (invalid)
+  - `nil` row missing `ngsup_amt`
+  - `at` as an array in (a) (invalid) and as an object in (b) (invalid)
+  - `txpd` with a negative `ad_amt`: valid S5, invalid S4
+  - `at_b2b` `inv_typ "RC"`: valid S5, never emitted
+  - `ecom.b2b` invoice without `flag` (invalid)
+  - an `ecom.b2b` second item that only Zod rejects (X9)
+  - `supeco` row without `flag`: valid S5, invalid S4
+
+**9A / 9C**
+- An original b2b invoice in fp `062025` revised in fp `092025` → `b2ba` with revised `inum`/`idt`/`val`/items and the original `oinum`/`oidt`.
+- B2CL original → `b2cla` grouped by the original POS. A revised POS → `AMENDMENT_POS_CHANGE`.
+- Threshold: an original ₹1.5 lakh inter-state invoice from fp `072024` was B2CS then, so its amendment → `AMENDMENT_USE_TABLE_10`.
+- The same invoice reported in fp `082024` → `b2cla`. Revised to ₹90,000 → `AMENDMENT_SECTION_CHANGE`.
+- Export original → `expa`, `exp_typ` from the revised invoice. WOPAY items have `iamt`/`csamt` `0.00`.
+- Note originals: cdnr → `cdnra` with `ont_num`/`ont_dt`; cdnur EXPWOP → `cdnura` without `pos`; cdnur B2CL → `cdnura` with `pos`.
+- A b2cs-netted note → `AMENDMENT_USE_TABLE_10`.
+- Each error:
+  - original period = current, or `062017` → `AMENDMENT_PERIOD`
+  - kind changed → `AMENDMENT_KIND_MISMATCH`
+  - recipient changed → `AMENDMENT_RECIPIENT_CHANGE`
+  - two amendments of one original → `DUPLICATE_AMENDMENT`
+  - original also in `documents` → `AMENDMENT_ORIGINAL_IN_PERIOD`
+  - revised date after the period end → `DATE_OUT_OF_RANGE`
+  - revised rate `0.5` → `RATE_NOT_ACCEPTED`
+- `Gstr1Return` holds the original items. Neither output emits them (a scan for the original's amounts finds nothing).
+
+**Table 10**
+- Intra row → `b2csa` `INTRA` with `camt`/`samt`; inter row → `INTER` with `iamt`.
+- Two rates for the same (`omon`, `pos`) → one row, two `itms`.
+- A negative revised `txval` is emitted.
+- Errors: `igst` on an INTRA row → `B2CS_TAX_SPLIT`; POS `96` → `POS_NOT_ACCEPTED`; duplicate key → `DUPLICATE_B2CS_AMENDMENT`.
+
+**Table 8**
+- Four rows → `nil.inv` in 8A–8D order with the four codes.
+- A missing column is emitted as `0.00`.
+- A negative amount is accepted.
+- No rows → no `nil` key.
+- Duplicate `supply` → `DUPLICATE_NIL_ROW`.
+
+**Table 11**
+- `B2B` intra row → `at_b2b` with `rtin`, `sply_ty INTRA`, `camt`/`samt`.
+- `SEWP` → `INTER` even when `pos = S`.
+- `B2C` inter → `at_b2c`. `EXPORT` → `at_exp` with `sply_ty INTER` and no `pos`.
+- Rows with the same key merge; items sum per rate.
+- `txpd` mirrors `at`.
+- `ata` carries `omon`, `opos`, `oinv_typ`, `ortin`, `orchrg`.
+- Errors: `ADVANCE_TAX_SPLIT`, `ADVANCE_PARTY_CHANGE`, `RECIPIENT_GSTIN_FORMAT`.
+- (b):
+  - `B2B` + `B2C` with the same (`pos`, `sply_ty`) merge into one S4 `at` row with summed items.
+  - `EXPORT` → `NOT_IN_OFFLINE_SHAPE`.
+  - negative `txpd` → `NOT_IN_OFFLINE_SHAPE`.
+  - `ata` revised POS ≠ original → `NOT_IN_OFFLINE_SHAPE`.
+  - (a) still renders in all of these cases.
+
+**4C / 5B**
+- A marked b2b R invoice: (b) has `etin`; (a) has none and returns warning `ECO_NOT_IN_API_SHAPE`.
+- A marked b2cl invoice: the same.
+- Marking an exp, b2cs, RCM or SEZ invoice → `ECO_NOT_APPLICABLE`.
+- A mark on an unknown number → `ECO_UNKNOWN_DOCUMENT`.
+- An `etin` without `C` at position 14 → `ECO_GSTIN_FORMAT`.
+- b2cs `typ` is always `OE`.
+
+**Tables 14 / 15**
+- `supeco` `collectsTcs`/`paysTax95` → `clttx`/`paytx`; amendments → `clttxa`/`paytxa` with `oetin`/`omon`.
+- `ecom` b2b/urp2b/b2c/urp2c and `ecoma` b2ba/urp2ba/b2ca/urp2ca render as S5 with the caller's `flag`.
+- A missing `flag` is a schema error for Table 15, and `NOT_IN_OFFLINE_SHAPE` for Table 14 in (b) only.
+- No Table 14/15 data is ever produced from `documents`.
+
+**Unchanged behaviour**
+- HSN and doc_issue are byte-identical with and without amendments, Table 10, nil, advances and Tables 14/15.
+- Every v0.1 test stays green unchanged, apart from `RenderResult` gaining `warnings: []`.
+
+**DEC-7 normalisation** with steps 4–5 (§17.9), over every new case that (b) can express.
+
+**Golden tests (a) and (b)** gain one mixed synthetic period with every new section that (b) can express. Each is committed, and validated against S5 and S4 respectively.
+
+**`gstr3b` (in its own test list, gstr3b §22)**
+- One test per new G row.
+- A delta test: original ₹1,000 / revised ₹1,200 → `+200.00` in `tbl9a`.
+- A POS-change test.
+- An RCM-amendment test → unmapped.
+- Advances are absent without the flag, present with it, with the right signs.
+- `notCovered` equals §17.11.3 in both flag states.
+
+### 17.14 Decisions (proposed; owner to approve) — each **UNVERIFIED — needs CA**
+
+| ID | Decision | Recommend |
+|---|---|---|
+| D-A1 | **Assemble, never decide.** Tables 8, 10, 11, 14 and 15 and the e-commerce marks are caller input. The package derives only the section of a 9A/9C amendment (from the caller's original) and the `gstr3b` differences. | approve |
+| D-A2 | **9A/9C amendments** take a full revised `GstDocument` plus a caller-supplied original with its period. The section follows the original, classified under its own period (DEC-3). A change of kind, section or recipient, a B2CL POS change, or a B2CS original is an error. | approve; **needs CA** (Q-A5) |
+| D-A3 | **Amendment window:** `072017 ≤ original period < period`. No statutory time limit is checked (not in sources). | approve; **needs CA** (Q-A6) |
+| D-A4 | **Table 10** rows are caller input, revised **and** as originally reported. The original is used only by `gstr3b`. | approve |
+| D-A5 | **Table 8** codes are mapped by name (`INTR*` = inter-State, `INTRA*` = intra-State). Negative amounts are accepted (S5). | approve; FA-3 confirms the codes |
+| D-A6 | **Advances.** The party decides the array (`B2B` if there is a recipient GSTIN, `EXPORT`, otherwise `B2C`). `sply_ty` is derived; exports are `INTER`. `RC` is never emitted; the e-commerce sub-arrays are not built; an amendment keeps its party kind. | approve; **needs CA** (Q-A3, Q-A4) |
+| D-A7 | **(b) advances** are merged into S4's flat rows. Anything S4 cannot express is `NOT_IN_OFFLINE_SHAPE` and (b) fails; nothing is dropped. | approve |
+| D-A8 | **E-commerce marks:** only on b2b R non-RCM and b2cl invoices. (b) writes `etin`. (a) cannot, and warns (`ECO_NOT_IN_API_SHAPE`); `RenderResult` gains `warnings`. | approve; X1 is the top question for GSTN docs (Q-A7) |
+| D-A9 | **Tables 14/15** are caller rows only: validated, rendered, never derived. `flag` comes only from the caller (required for Table 15, optional for Table 14 as in S5) and is never defaulted. 14 `clttx`/`paytx` are matched to the two natures by name. | approve |
+| D-A10 | **HSN and doc_issue** are unaffected by the new tables. | approve; **needs CA** (Q-A11) |
+| D-A11 | **DEC-7 extended** by O8–O14. The (b) key order for new sections is inferred until FA-3. | approve |
+| D-A12 | **`gstr3b` amendment amounts** = revised − original per head/box/POS. Routing follows D-H6 (c). RCM amendments are unmapped. | approve; **needs CA** (Q-A12) |
+| D-A13 | **`gstr3b` 3.1c/3.1e** may hold `GSTR1` entries from Table 8 (sourced split). This amends gstr3b §3.3 / D-H2. | approve |
+| D-A14 | **`gstr3b` advances** are mapped only with `confirmAdvanceMapping` (keys inferred from suffixes; signs sourced). Advance amendments and Tables 14/15 are never mapped. | approve; F3 settles |
+| D-A15 | **`gstr3b` 4C/5B** come from e-commerce marks: `tbl4c` in 3.1a and 3.2 comp/UIN, and `tbl5b` in 3.1a only (mapping M as quoted). | approve |
+| D-A16 | **Versioning:** `@india-gst-kit/gstr1` minor (new input fields, sections, `warnings`); `@india-gst-kit/gstr3b` minor (new ctx flag, new G rows, smaller `notCovered`). | approve |
+
+### 17.15 Source observations and contradictions
+
+| # | Observation | Effect |
+|---|---|---|
+| X1 | **S5 v5.0 removed `etin`** from `b2b`, `b2cl`, `b2cs` and `cdnr`, which S4 had (§4.2). FG-1 still has Tables 4C/5B "operator wise", AC v7.1 (2026) still has `tbl4c`/`tbl5b`, and T still writes `etin`. The API payload cannot mark a 4C/5B supply, and no source says how the portal fills `tbl4c` from a v5.0 save | D-A8 warning; FA-1, FA-4 |
+| X2 | **B2CS `typ "E"`**: allowed by S4 and S5, used in C `b2cs.csv`/`b2csa.csv`, but rejected by the tool's Excel import (`/^(OE)$/`, T §3 b2cs) | never emitted (§17.7) |
+| X3 | **Advances restructured.** FG-1 Table 11 is rate- and POS-wise with no recipient. S4 and C `at.csv` are flat, with POS required. S5 splits by recipient (`at_b2b` needs `rtin`; `at_exp` has **no POS**; `inv_typ` adds `RC`; `at_ecom` is new). An S5 export advance cannot be written in S4 | O10, O11; Q-A3, Q-A4 |
+| X4 | **Signs of advances.** S5 allows negative amounts in all four advance sections. S4 allows them in `at`/`ata` but not in `txpd`/`txpda` (`#nonEmptyCost` ≥ 0). C `at.csv` has a negative sample | O11 |
+| X5 | **Two advance families in AC**, side by side in the same boxes: `tbl11_i_a_1/2`, `tbl11_i_b_1/2`, `tbl11_ii` (which match FG-1 "11 I 11A(1)/(2)…", intra-State with camt/samt, inter-State with iamt), and `tbl11a/b/c/d_{1_2_4,3,5,4_5,1_5}` (undefined suffixes that line up with S5's `b2b`/`exp`/`b2c`/`ecom` split). Feeding both would double-count | D-A14 opt-in, new family only |
+| X6 | AC `tbl11c_*` (amended advances received) is ≥ 0 and `tbl11d_*` ≤ 0. This is not a signed revised − original difference, unlike `tbl9a`/`tbl9c`/`tbl10*` | advance amendments not mapped |
+| X7 | **`flag` required where it is never explained.** `ecom`/`ecoma` require `flag` (`N`/`E`/`D`) in S4 and S5; S4 `supeco` requires it and S5 does not. The values are undefined in every source | D-A9; Q-A1 |
+| X8 | **B2CL amendments cannot change POS.** S5 `b2cla` has only a group `pos`, and C `b2cla.csv` calls it "Original Place Of Supply". S5 `b2ba` and `cdnra` do carry a revised `pos` | `AMENDMENT_POS_CHANGE` |
+| X9 | **Schema quirks.** `ecom.*.inv[].itms` is tuple-form (only item 1 is checked). `cdnra`/`cdnura` items have no `additionalProperties: false` (unlike `cdnr`). `expa` `rt` uses `#nonEmptyCost` (max 99 999 999 999.99). S4 `txpda` has `minItems 1`. S4 `ata`/`txpda` `rt` max is 999.9 | Zod is stricter (strictObject everywhere, every item checked); O12 |
+| X10 | **H is stale.** Its Special Instruction 6 says amendment worksheets are "not being provided … in this first version", while its row 3 lists `b2ba`, `cdnra`, `at` … sheets, and the CSVs exist | H is not used for amendments |
+| X11 | **FG-1 predates Tables 14/15** (and 3.1.1 in FG-3B). H r8 dates Table 15 from Oct 2022 and 15A from Nov 2022, without the form text | Tables 14/15 are caller rows only (D-A9) |
+| X12 | `ecom` (Table 15) carries `stin` = the supplier GSTIN, so it is the **operator's** filing of other taxpayers' supplies. The model's `GstDocument`/`SUPPLIER_MISMATCH` cannot express that | caller rows, not documents |
+
+No source contradicts §1–§16. X1 narrows §12's "e-commerce deferred" note: the deferral is now partly lifted for (b) only.
+
+### 17.16 Open questions
+
+**For the CA**
+1. **Q-A12.** Is a 9A/9C/10 amendment reflected in GSTR-3B as revised − original (D-A12)? Does the same apply to tax amounts?
+2. **Q-A5.** May a 9A amendment move an invoice between sections (B2CL ↔ B2CS, unregistered → registered), and where does it go then?
+3. **Q-A6.** Is there a time limit for 9A/9C/10/11 II amendments that the package should enforce? If so, send the source.
+4. **Q-A9.** May Table 8 amounts be negative?
+5. **Q-A10.** Is the tax on an advance checked as amount × rate, and with what rounding?
+6. **Q-A11.** Do amendments or advances feed Table 12 (HSN)? Do revised invoices count in Table 13 as "Revised Invoice"?
+7. **Q-A7.** Can a reverse-charge or SEZ supply be a 4C supply?
+
+**For the owner / GSTN documentation**
+- **Q-A1.** What do `flag` `N`/`E`/`D` (`#ecomFlag`) and `N`/`M`/`U`/`E`/`D` (`#flag`) mean in a save request?
+- **Q-A2.** Is Table 15 filed only by e-commerce operators? What is the operator's registration type?
+- **Q-A3.** What is `inv_typ "RC"` in `at_b2b`, given that `rchrg` exists?
+- **Q-A4.** What are `at_ecomurp2b` / `at_ecomurp2c` (and the `txpd`/`ata`/`txpda` twins)?
+- **Q-A8.** Is Table 14 (`clttx`) the sum of the supplier's 4C/5B/7 e-commerce supplies?
+- **Q-A13.** Do AC `tbl11c_*`/`tbl11d_*` hold revised or differential figures? Which family (`tbl11_i_*` or `tbl11a–d_*`) does the portal fill for a v5.0 save (X5, X6)?
+- **Q-A14.** How does the portal fill `tbl4c`/`tbl5b` when the v5.0 save has no `etin` (X1)?
+
+### 17.17 Files to attach (to `sources/gstr1/` unless noted)
+
+| # | File | Settles |
+|---|---|---|
+| FA-1 | The **current notified Form GSTR-1** with Tables 4–15 and their instructions, i.e. a CGST Rules Part B (Forms) consolidation **after** Tables 14/15 were inserted. gstcouncil.gov.in and cbic-gst.gov.in are reachable from the build environment | Tables 14/14A/15/15A meaning (D-A9, Q-A2, Q-A8); whether 4C/5B, 7A(2)/7B(2) and 10A(1)/10B(1) still exist (X1, X2); 4F; Table 11 after the S5 split (X3) |
+| FA-2 | The **full "Help Instruction" sheet** of Excel template V2.2: the rows for `b2ba`, `b2cla`, `b2csa`, `cdnra`, `cdnura`, `expa`, `at`, `ata`, `atadj`, `atadja`, `eco`, `ecoa`, `ecob2b` … `ecoaurp2c` (same zip as H) | field rules for amendments, advances and e-commerce sheets (§17.3–§17.8) |
+| FA-3 | **Offline tool 3.2.4 code excerpts** (as `offline-tool/code-excerpts.md`) for `b2ba`, `b2cla`, `b2csa`, `cdnra`, `cdnura`, `expa`, `nil`, `at`, `atadj`, `ata`, `atadja`, `supeco`/`ecom`: the JSON each writes, the `nil` `sply_ty` mapping, the `flag` values written, and the full template key order (`common.js:174-200`) | (b) shapes and key order for the new sections (O9, D-A5, D-A11) |
+| FA-4 | GSTN API documentation (description and sample) for **Save GSTR1 v5.0** from developer.gst.gov.in | `flag` (Q-A1), `RC` (Q-A3), `at_ecom` (Q-A4), `etin` removal (X1, Q-A14) |
+| F3 | (gstr3b §17, already listed) the GSTN advisory on auto-population of GSTR-3B from GSTR-1 | AC suffixes, the two advance families (X5, X6), Table 14/15 routing; would let D-A14 become default-on |
+
+None of these is needed for a list the package **enforces**: the new checks come from S5/S4 patterns and enums, the §3.1 rate list, and FG-1 table structure. So nothing here is a stop condition for the build. Without FA-1/FA-4, Tables 14/15 stay caller rows and 4C stays (b)-only.
+
+### 17.18 `docs/legal-facts.md` rows to add (at build time)
+
+Each row has source `sources/gstr1/…`, retrieved 2026-10-16/18, status UNVERIFIED — needs CA.
+
+| Fact | File |
+|---|---|
+| Amendment shapes `b2ba`/`b2cla`/`expa`/`cdnra`/`cdnura` = S5 (full revised document + original number/date); B2CL amendment keeps original POS | `packages/gstr1/src/amend.ts`, `api-payload.ts` |
+| 9A/9C section follows the original classified under its own period; section/recipient/kind change refused; B2CS amended only via Table 10 (D-A2) | `amend.ts` |
+| Amendment window 07-2017 … period − 1; no statutory limit checked (D-A3) | `amend.ts` |
+| Table 10 `b2csa` rows from caller (revised + original), `typ OE`, signed amounts (D-A4) | `b2csa.ts` |
+| Table 8 `nil` codes `INTRB2B/INTRAB2B/INTRB2C/INTRAB2C` ↔ 8A–8D by name; caller amounts; signed (D-A5) | `nil.ts` |
+| Advances `at`/`txpd`/`ata`/`txpda` S5 split by party; exports `INTER`; `RC` and `at_ecom` not emitted (D-A6); S4 flat merge for (b) (D-A7) | `advances.ts`, `offline-upload.ts` |
+| E-commerce operator GSTIN pattern (S4 `#etin`, `C` at position 14); marks only on b2b R non-RCM and b2cl; not expressible in S5 (D-A8) | `eco.ts` |
+| Tables 14/15 shapes = S5 `supeco`/`supecoa`/`ecom`/`ecoma`; caller rows; `flag` caller-supplied (D-A9) | `eco-tables.ts` |
+| `gstr3b`: G1′/G6′/G11–G15 rows; amendment difference; Table 8 split to 3.1c/3.1e; advances opt-in (D-A12–D-A15) | `packages/gstr3b/src/outward.ts`, `ac-map.ts` |
+
+### 17.19 Changeset plan
+
+- **This spec PR:** no changeset (docs only), as for Tracks A and G.
+- **Build PR:**
+  - `.changeset/gstr1-remaining-tables.md` with `"@india-gst-kit/gstr1": minor`: "Build GSTR-1 Tables 8, 9A, 9C, 10, 11 (advances and their amendments), 14/14A and 15/15A from caller input, and mark 4C/5B e-commerce supplies (offline JSON only; the v5.0 API payload warns). Render results now carry `warnings`."
+  - `.changeset/gstr3b-gstr1-tables.md` with `"@india-gst-kit/gstr3b": minor`: "Derive 3.1 (a)–(c), (e) and 3.2 contributions from GSTR-1 Tables 4C, 5B, 8, 9A, 9C and 10, and optionally Table 11 (`confirmAdvanceMapping`); `notCovered` shrinks accordingly."
+  - `packages/fixtures` (private) gains the synthetic `etin` and the new fixtures.
+  - The §17.18 rows are added to `docs/legal-facts.md`, and the CLAUDE.md `gstr1` layout line is updated ("Track A/A2: GSTR-1 builder").
+
+### 17.20 Stop conditions (build session)
+
+- S5 or S4 contradicts this section somewhere not listed in §17.15 → follow the source and report.
+- A G-row marked **proposal**, or the advance mapping, would have to become default-on or enforced without F3/FA-1 → stop.
+- A Table 14/15 value, a `flag`, or a `nil` code would have to be defaulted rather than taken from the caller → stop.
+- `pnpm check` cannot go green without weakening strictness or lint rules → stop.
