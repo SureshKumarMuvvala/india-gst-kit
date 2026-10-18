@@ -47,7 +47,7 @@ Findings **G1–G10** (`sources/README.md`) are referenced by number. Where a so
   - JWT **signature** verification (einvoice spec §8.4; NIC's signing key is not in `sources/`, G3).
   - Any GSP-specific adapter (only the extension points, §2.3).
   - Other APIs: get EWB details, get EWBs by date, multi-vehicle, regenerate consolidated EWB, TRANSIN lookup, HSN lookup, e-invoice B2C QR, e-invoice cancel-EWB (sandbox only, D-G22).
-  - Error-code descriptions (list not captured, §7.4).
+  - Error-code descriptions: these come from `@india-gst-kit/errors` (§7.4, Track H).
 - **Package rules:** ESM only, named exports, Zod 4 (peer `^4.0.0`), `z.strictObject` for every object we **send**; types are `z.infer`. Money, quantities, numbers-on-the-wire, dates and times are **strings** in memory. Dependencies: `@india-gst-kit/model`, `@india-gst-kit/einvoice`, `@india-gst-kit/ewaybill` (all `workspace:^`), `decimal.js` only if needed. **No new runtime dependencies**, in particular no crypto or HTTP library: `node:crypto` and the platform `fetch` (injectable) only.
 - **No env reading, no hard-coded secrets.** Every credential, key, base URL and the `fetch`, clock, random source and session store are passed in by the caller (§3). The only built-in values are the documented defaults in §3.3, each marked UNVERIFIED.
 
@@ -250,7 +250,7 @@ The sources disagree on key case and types (§13 GD3–GD5). The NIC decoder:
 
 ### 7.2 Error details
 - e-invoice `ErrorDetails` is described as "Base 64 encoded string … JSON array" of `{ ErrorCode, ErrorMessage }` (EI-CNL, EI-GET, …), while EI-AUTH lists the fields inline and every sample shows a placeholder. Accepted forms: array, single object, JSON string, Base64 of JSON. Each becomes `{ code: string, message?: string }`. Unrecognised → one entry `{ code: "UNKNOWN" }` plus `raw`.
-- EWB `error` is `{ "errorCodes": 240 }` in every sample; EI-EWBCNL says "Base 64 encoded string". Accepted: object with `errorCodes` as number or string, or Base64 of such JSON. A string of codes is split on `,` and trimmed, empty parts dropped (§15 V10). Messages: none (the list is not captured).
+- EWB `error` is `{ "errorCodes": 240 }` in every sample; EI-EWBCNL says "Base 64 encoded string". Accepted: object with `errorCodes` as number or string, or Base64 of such JSON. A string of codes is split on `,` and trimmed, empty parts dropped (§15 V10). The portal sends no messages; the official text comes from `@india-gst-kit/errors` (§7.4).
 
 ### 7.3 Result type
 ```ts
@@ -274,8 +274,8 @@ type GspResult<T> =
 
 Functions throw only on programmer errors (wrong argument types, invalid `createGspClient` config).
 
-### 7.4 Error codes are data
-The official error-code lists (`api-error-codes-list.html` on both portals) are **not captured** (§16 F2). v0.1 ships **no** code table. It exports `ErrorCodeInfoSchema = { system, code, message, source, retrieved }` and `describeErrorCode(system, code, table)` which looks up a caller-supplied table; a later build adds the official table as its own file with a `Source`/`Retrieved`/`Status` header and a `docs/legal-facts.md` row. Codes named in `sources/` (G9's 2150/2295, L's 620, the samples' 240) are **not** given meanings in code.
+### 7.4 Error codes are data (amended by Track H, 2026-10-18)
+The official lists are captured (`sources/errors/`, F2) and ship in **`@india-gst-kit/errors`** (spec `docs/specs/errors.md`), each as its own generated, sourced file with a `Source`/`Retrieved`/`Status` header and a `docs/legal-facts.md` row. Meanings come only from that package, whose data is generated from `sources/errors/`. The client decorates every `api` error entry (also inside `auth.cause`) with `system`, `list`, `category` (the library's, not official), `officialMessage`, `userMessage` and `notes` (`decorateApiErrors`, errors spec §8.1); `summarizeGspError` gives one category and message for any `GspError` (errors spec §8.2). `authErrorCodes` stays caller-supplied with an empty default; `SESSION_ERROR_CODES` (X4) is re-exported for opt-in. `ErrorCodeInfoSchema`, `describeErrorCode` and the `errorCodeTable` option (a caller table that overrides `officialMessage`) are deprecated and kept for one minor version (errors D-E11).
 
 ## 8. Operations (v0.1)
 
@@ -504,7 +504,7 @@ A fake GSP provider (test-only: different base URL, extra header, passthrough co
 - **D-G17 Malformed schemas**: apply evident intent (GD15) — `ewbNo` required for vehicle update, `transMode` (not `TransMode`) required for extend, every consolidated item validated, anchored transporter pattern, cancel-IRN `Irn`/`CnlRsn` required. *Recommend: approve.*
 - **D-G18 Numbers**: strings in memory; wire JSON type per source schema (numbers for `ewbNo`, `fromState`, …); responses accept number or string. *Recommend: approve; V14.*
 - **D-G19 GSTIN arguments**: pattern + state code block; mod-36 failure warns only. *Recommend: approve.*
-- **D-G20 Error codes as data**: no shipped table in v0.1; `authErrorCodes` caller-supplied; the official list added later from F2 as its own sourced file. *Recommend: approve.*
+- **D-G20 Error codes as data** (amended 2026-10-18, errors spec §2): the official tables ship in `@india-gst-kit/errors` as generated, sourced files; `gsp` attaches their descriptions to every `api` error entry; `authErrorCodes` stays caller-supplied with an empty default, with `SESSION_ERROR_CODES` for opt-in; `describeErrorCode`/`ErrorCodeInfoSchema` deprecated for one minor. *Accepted.*
 - **D-G21 Session store** injectable, in-memory default, documented as secret-bearing. *Recommend: approve.*
 - **D-G22 e-invoice "Cancel EWB" (sandbox only)** is not implemented; EWB cancel goes through the EWB system (EI-EWBCNL says so for production). *Recommend: approve.*
 - **D-G23 Generate IRN** is sourced from EI-GEN: path `/api/Invoice`, `{ Data }` envelope, response fields as listed there plus the sample's `Remarks`; unknown keys warn. *Accepted (sourced 2026-10-18).*
@@ -532,10 +532,12 @@ Run with the sandbox credentials and the downloaded public keys; record each ans
 - **V15** `sup_gstin`: required for e-commerce operators only; ignored otherwise.
 - **V16** Whether `TransMode` (capital) is also accepted on extend validity.
 - **V17** AppKey size (G10): does a 32-byte AppKey work on both systems, and does a 16-byte one (Java samples)? Is the returned SEK 32 bytes in both cases? Set the default `appKeyBytes` from the answer.
+- **V18** e-invoice code `_3109` (VITAL, "You have exceeded the limit for this operation", same message as 3108): does the portal return the code with the leading underscore (`"_3109"`) or as `"3109"`? `@india-gst-kit/errors` matches only the exact published code; `"3109"` is currently `unknown` (errors spec §12 E3, D-E12).
+- **V19** e-invoice INV 2154 "IRN details are not found": in which situation is it returned? Its published reason/resolution are copies of 2150's duplicate-IRN text; the library categorises it `not-found` by its message (errors spec §12 E2).
 
 ## 16. Files to attach (not in `sources/`)
 - **F1** ~~e-invoice Generate IRN API page~~ — **attached 2026-10-18** as `sources/einvoice/api/v1.03-generate-irn.txt` (EI-GEN).
-- **F2** (still unavailable) **Error-code lists**: `api-error-codes-list.html` from einv-apisandbox.nic.in and from docs.ewaybillgst.gov.in/apidocs (G9). *Needed for the code table and for `authErrorCodes` guidance; not blocking v0.1.*
+- **F2** ~~Error-code lists~~ — **attached 2026-10-18** as `sources/errors/*.json` (findings X1–X8); shipped in `@india-gst-kit/errors` (Track H).
 - **F3** (still unavailable) **API base URLs** (sandbox and production) for both systems, from an official page (e.g. the e-invoice and EWB API onboarding / "API URLs" pages). *Not blocking: the caller passes base URLs; needed for documentation defaults.*
 - **F4** ~~Java sample encryption code~~ — **attached 2026-10-18** as `sources/einvoice/api/java-sample-excerpts.md` (JAVA). It does not settle V5 (whether the EWB `json` is already Base64, JAVA 205) or V9 (no `rek` path in either sample).
 - **F5** The e-invoice **onboarding** and EWB **pre-requisites** pages quoted in G1. *Not blocking.*
@@ -549,7 +551,7 @@ Run with the sandbox credentials and the downloaded public keys; record each ans
 - This spec PR: no changeset (docs only).
 
 ## 18. Deferred
-GSP adapters (F7); signature verification of signed JWTs (needs NIC key, einvoice §8.4); official error-code table (F2); other EWB/e-invoice APIs (get EWB details, by date, multi-vehicle, regenerate consolidated, TRANSIN, HSN, B2C QR); e-invoice cancel-EWB (sandbox only, D-G22); automatic idempotency reconciliation after an unknown POST outcome; persistent session store implementations; rate limiting (no limits are in `sources/`).
+GSP adapters (F7); signature verification of signed JWTs (needs NIC key, einvoice §8.4); other EWB/e-invoice APIs (get EWB details, by date, multi-vehicle, regenerate consolidated, TRANSIN, HSN, B2C QR); e-invoice cancel-EWB (sandbox only, D-G22); automatic idempotency reconciliation after an unknown POST outcome; persistent session store implementations; rate limiting (no limits are in `sources/`).
 
 ## 19. Stop conditions
 As in CLAUDE.md. Specific to this package:
