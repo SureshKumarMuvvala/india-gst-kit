@@ -3,7 +3,13 @@
 // Status: UNVERIFIED — needs CA
 import { z } from "zod";
 import { getAt } from "@india-gst-kit/model";
-import { AC_BOX_PATH, AC_GSTR1_MAP, AC_ITC_PAIRING, AC_ITC_UNPAIRED } from "./ac-map.js";
+import {
+  AC_ADVANCE_MAP,
+  AC_BOX_PATH,
+  AC_GSTR1_MAP,
+  AC_ITC_PAIRING,
+  AC_ITC_UNPAIRED,
+} from "./ac-map.js";
 import { AutoCalcParsedSchema, type AutoCalc } from "./autocalc.js";
 import { BOX_FIELDS, boxObject, isPosBox, posList } from "./boxes.js";
 import { D } from "./decimal.js";
@@ -221,7 +227,9 @@ function detailRows(
   const out: NonNullable<CompareResult["detail"]> = [];
   for (const e of trail) {
     if (e.source !== "GSTR1") continue;
-    const row = AC_GSTR1_MAP.find((r) => r.box === e.box && r.table === e.ref);
+    const row = [...AC_GSTR1_MAP, ...AC_ADVANCE_MAP].find(
+      (r) => r.box === e.box && r.table === e.ref,
+    );
     if (row === undefined) continue;
     const node = at(data, row.acPath);
     let portal: Record<string, string> | null;

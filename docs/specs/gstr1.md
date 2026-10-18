@@ -553,7 +553,7 @@ GSTR-1 has no ship-to or dispatch-from field in S4/S5, and classification uses `
 
 ## 17. Track A2 (draft 2026-10-18): the remaining GSTR-1 tables
 
-Status: **draft for review — spec only**. Nothing in this section is built yet. Decisions D-A1–D-A16 (§17.14) are proposals for the owner, and every one of them is **UNVERIFIED — needs CA**. §1–§16 above stay in force unless this section says otherwise.
+Status: **approved** 2026-10-18 (PR #25; D-A1–D-A16 accepted as recommended, all still **needs CA**). **Build update 2026-10-18:** FA-1 was found as the amending Notification 26/2022-CT; §17.21 records what it settles and changes (it supersedes D-A15 and parts of §17.1, §17.7, §17.8, §17.11). Every decision is **UNVERIFIED — needs CA**. §1–§16 above stay in force unless this section says otherwise.
 
 **Principle (unchanged).** The package **assembles and checks**. It never decides taxability, exemption, nil rating, whether a supply is non-GST, whether an advance is taxable, or whether a supply goes through an e-commerce operator. Every such fact is **caller input**. An amendment always refers to an **original that the caller supplies**; the package never looks up an earlier return.
 
@@ -570,8 +570,8 @@ Status: **draft for review — spec only**. Nothing in this section is built yet
 
 | GSTR-1 table | S5 key(s) | v0.2 status | Basis |
 |---|---|---|---|
-| 4C (B2B through an e-commerce operator, TCS) | `b2b` (no S5 field marks it) | **Partly built.** The caller marks documents (§17.7). (b) writes `etin`; (a) **cannot** say it (§17.15 X1). The `gstr3b` derivation uses the mark | FG-1 4C, Ins. 5(i)(c); S4 `#etin`; T §3 b2b |
-| 5B (B2CL through an e-commerce operator) | `b2cl` (as 4C) | Partly built, as 4C | FG-1 5B |
+| 4C (B2B through an e-commerce operator, TCS) — **omitted from the form by N26/2022 (§17.21)** | `b2b` (no S5 field marks it) | **Partly built.** The caller marks documents (§17.7). (b) writes `etin`; (a) **cannot** say it (§17.15 X1). The `gstr3b` derivation uses the mark | FG-1 4C, Ins. 5(i)(c); S4 `#etin`; T §3 b2b |
+| 5B (B2CL through an e-commerce operator) — **omitted by N26/2022** | `b2cl` (as 4C) | Partly built, as 4C | FG-1 5B |
 | 8 (nil rated, exempted, non-GST) | `nil` | **Built from caller amounts** (§17.5) | FG-1 Table 8; S5 `nil`; C `exemp.csv`; H r233–237 |
 | 9A (amended B2B, B2CL, EXP invoices) | `b2ba`, `b2cla`, `expa` | **Built** (§17.3) | FG-1 Table 9, Ins. 13; S5; C headers; UT |
 | 9C (amended credit/debit notes) | `cdnra`, `cdnura` | **Built** (§17.3) | FG-1 9C, Ins. 13(iii); S5; C headers |
@@ -1025,3 +1025,31 @@ Each row has source `sources/gstr1/…`, retrieved 2026-10-16/18, status UNVERIF
 - A G-row marked **proposal**, or the advance mapping, would have to become default-on or enforced without F3/FA-1 → stop.
 - A Table 14/15 value, a `flag`, or a `nil` code would have to be defaulted rather than taken from the caller → stop.
 - `pnpm check` cannot go green without weakening strictness or lint rules → stop.
+
+### 17.21 Build update (2026-10-18): FA-1 found — Notification 26/2022-CT
+
+**N26** = Notification No. 26/2022 – Central Tax, 26-12-2022, para 21, "In the said rules, in FORM GSTR-1": `sources/gstr1/notification-26-2022-ct.pdf`, excerpt `notification-26-2022-ct-gstr1-excerpt.txt`. It is an **amending notification, not a consolidation**. No CGST Rules consolidation newer than 18-05-2021 was found; the URLs tried are in `sources/gstr1/README.md`. It is in force from its publication in the Gazette. "N26 Ins. n" cites its new table-specific instruction n.
+
+**What N26 settles (now sourced):**
+- **Table 14** is reported by the **supplier**: "(a) Supplies on which e-commerce operator is liable to collect tax u/s 52" and "(b) … liable to pay tax u/s 9(5)". The columns are ECO GSTIN, net value of supplies, IGST, CGST, SGST/UTGST and cess (N26 Ins. 18–19). This matches S5 `supeco.clttx` (a) / `paytx` (b), so the name match of D-A9 is now sourced. 14A(a)/(b) are their amendments (Ins. 20–21) = `clttxa` / `paytxa`, with the original month/quarter and the original ECO GSTIN.
+- **Table 15** is reported by the **operator** (Ins. 22: "ECO shall report details of the supplies made through him/her on which he/she is liable to pay tax u/s 9(5)"). Its rows are "Type of supplier" × "Type of recipient", each Registered or Unregistered. This matches S5 `ecom.b2b` (registered → registered), `b2c` (registered → unregistered), `urp2b`, `urp2c`. 15A(I) amends the rows of registered recipients (`ecoma.b2ba`, `urp2ba`) and 15A(II) those of unregistered recipients (`b2ca`, `urp2ca`). Q-A2 is settled.
+- **9A** = "Amendment of values reported in table 4A, 4B, 5, 6A, 6B and 6C" (Ins. 9). **9C** = amendment of 9B (Ins. 11). **10** = "Amendment of unregistered supplies reported in table 7" (Ins. 12; the period is now "Month/Quarter"). **11(I)A** advances received "net of refund vouchers", **11(I)B** advances adjusted, **11(II)** amendments (Ins. 13–15). §17.3, §17.4 and §17.6 are confirmed as specified.
+- **Table 8**: "Supplies made through E-commerce Operator under section 9(5) shall not be included under exempted supplies of supplier" (Ins. 8). This is informational; Table 8 stays caller input.
+
+**What N26 changes (deviations from §17, following the source):**
+- **Tables 4C and 5B are omitted** (para 21(d), (f)). 4A now covers supplies to registered persons "including supplies made through e-commerce operator attracting TCS u/s 52, but excluding supplies attracting tax on reverse charge basis" (Ins. 1). 5A is "including supplies made through e-commerce operator". Table 7 is substituted without 7A(2)/7B(2), and 10A(1)/10B(1) are omitted.
+  - **X1 explained.** S5 v5.0 dropped `etin` because the form no longer has per-invoice operator rows. Operator-wise totals now go in Table 14(a).
+  - **X2 explained.** The tool's rejection of B2CS `typ "E"` matches the omitted 7A(2)/7B(2).
+  - **D-A15 is superseded.** Marked invoices are ordinary 4A / 5A supplies. `gstr3b` G1′/G6′ are **not built**: a marked invoice feeds `tbl4a` / `tbl5a` like any other. AC `tbl4c`/`tbl5b` stay in `notCovered`; they can only hold periods before the amendment.
+  - **D-A8 is kept as accepted.** The marks still produce `etin` in output (b), because the tool still writes it, and the warning `ECO_NOT_IN_API_SHAPE` in output (a). The warning now records a fact the current form does not ask for per invoice. **Q-A15 (new, owner):** should the warning be dropped, now that 4C/5B no longer exist?
+  - The rule "marks only on b2b R non-RCM and b2cl" (§17.7) is unchanged. N26 Ins. 1–2 keep reverse-charge supplies out of 4A, and 9(5) supplies out of 4A and 4B.
+- **Q-A8** is partly answered. N26 Ins. 18: Table 14(a) = supplies "reported in any table from 4 to 10" that went through an operator collecting TCS. Table 14 stays caller rows (D-A9, unchanged). A cross-check against the marks would cover only b2b/b2cl, so it is not built.
+
+**Still unsourced:** FA-2, FA-3 and FA-4 (deferred by the owner); `flag` values (Q-A1); `RC` (Q-A3); `at_ecom` (Q-A4); the AC suffixes (F3).
+
+**Implementation choices made at build (within the spec):**
+- `Gstr1Return` gains only **optional** keys: `b2ba`, `b2cla`, `expa`, `cdnra`, `cdnura`, `b2csa`, `nil`, `advances`, `supeco`, `ecom`, and `etin` on b2b/b2cl invoices. A v0.1 return still parses unchanged, and so do v0.1 consumers such as `gstr3b`'s fixtures.
+- Table 15 rows carry a caller-supplied `supplyType`: the operator's rows have no supplier state the package could compare with. Their tax heads are checked against it (`TAX_SPLIT`).
+- Reverse-charge `B2B` advances are not mapped into GSTR-3B (`RCM_NOT_MAPPED`), as for RCM invoices and notes (gstr3b Q-H4).
+- An amendment is `AMENDMENT_SECTION_CHANGE` also when a `cdnur` note's type (B2CL ↔ export) changes.
+- New input fields are validated by Zod. A malformed value (an amount with 3 decimals, an unknown key) is a `SCHEMA` issue with its path.

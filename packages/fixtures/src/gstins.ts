@@ -26,6 +26,11 @@ export const GSTINS = {
   /** Karnataka (29) — valid under the model (mod-36) but its 13th character is 0, so it fails the PAN-structured
    *  GSTIN pattern of the GSTR-3B Save schema (Track G, gstr3b spec V4) */
   notPanStructuredKa: "29KKKKK1234K0Z0",
+  /** Karnataka (29) — synthetic e-commerce operator (TCS) GSTIN: 14th character C, as the GSTR-1 `#etin`
+   *  pattern requires (Track A2, gstr1 spec §17.7) */
+  ecoOperatorKa: "29LLLLL5555L1CL",
+  /** Maharashtra (27) — a second synthetic e-commerce operator (TCS) GSTIN (Track A2) */
+  ecoOperatorMh: "27MMMMM6666M1CA",
 } as const;
 
 export const ALLOWED_FIXTURE_GSTINS: readonly string[] = Object.values(GSTINS);

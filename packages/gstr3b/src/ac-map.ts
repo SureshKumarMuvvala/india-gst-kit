@@ -1,14 +1,20 @@
 // Source: https://developer.gst.gov.in/apiportal/taxpayer/returns — "GSTR3B – Get ITC Liability Auto Calc Details" (3183)
 //         v7.1, Draft — sources/gstr3b/GSTR3B - Get ITC Liability Auto Calc Details response_schema v7.1.json (AC):
 //         mapping M = AC key names under r3bautopop.liabitc (README R5; spec §4.2). Row G-numbers: spec §4.1, sourced
-//         from FORM GSTR-1 (sources/gstr1/form-gstr1-excerpt-18052021.txt) except G5 (unmapped).
+//         from FORM GSTR-1 (sources/gstr1/form-gstr1-excerpt-18052021.txt) except G5 (unmapped). Track A2 rows
+//         G11–G14 (spec §22): Table 8 → 3.1c/3.1e, 9A, 9C, 10 (FORM GSTR-1; Notification 26/2022-CT,
+//         sources/gstr1/notification-26-2022-ct-gstr1-excerpt.txt); G15 advances in a separate opt-in map (D-A14):
+//         the tbl11a/b suffixes are undefined in AC (Q-H2), their signs follow FORM GSTR-3B Instruction 1.
 // Retrieved: 2026-10-18
 // Status: UNVERIFIED — needs CA
 import type { AmountKey } from "./return-schema.js";
 import type { BoxId } from "./types.js";
 
 export type AcMapRow = {
-  readonly box: Extract<BoxId, "3.1a" | "3.1b" | "3.2unreg" | "3.2comp" | "3.2uin">;
+  readonly box: Extract<
+    BoxId,
+    "3.1a" | "3.1b" | "3.1c" | "3.1e" | "3.2unreg" | "3.2comp" | "3.2uin"
+  >;
   /** AC det key, e.g. "tbl4a". */
   readonly table: string;
   /** Path under r3bautopop.liabitc. */
@@ -143,9 +149,123 @@ export const AC_GSTR1_MAP: readonly AcMapRow[] = [
     fields: P2,
     fedBy: "G10 cdnur B2CL",
   },
+  // ---- Track A2 (spec §22.2) ----
+  {
+    box: "3.1c",
+    table: "tbl8",
+    acPath: "sup_details.osup_3_1c.det.tbl8",
+    fields: ["taxableValue"],
+    fedBy: "G11 nil rated + exempted",
+  },
+  {
+    box: "3.1e",
+    table: "tbl8",
+    acPath: "sup_details.osup_3_1e.det.tbl8",
+    fields: ["taxableValue"],
+    fedBy: "G11 non-GST",
+  },
+  {
+    box: "3.1a",
+    table: "tbl9a",
+    acPath: "sup_details.osup_3_1a.det.tbl9a",
+    fields: H5,
+    fedBy: "G12 (R, DE, B2CL)",
+  },
+  {
+    box: "3.1a",
+    table: "tbl9c",
+    acPath: "sup_details.osup_3_1a.det.tbl9c",
+    fields: H5,
+    fedBy: "G13 (R, DE, B2CL)",
+  },
+  {
+    box: "3.1a",
+    table: "tbl10a",
+    acPath: "sup_details.osup_3_1a.det.tbl10a",
+    fields: ["taxableValue", "cgst", "sgst", "cess"],
+    fedBy: "G14 INTRA",
+  },
+  {
+    box: "3.1a",
+    table: "tbl10b",
+    acPath: "sup_details.osup_3_1a.det.tbl10b",
+    fields: ZR,
+    fedBy: "G14 INTER",
+  },
+  {
+    box: "3.1b",
+    table: "tbl9a",
+    acPath: "sup_details.osup_3_1b.det.tbl9a",
+    fields: ZR,
+    fedBy: "G12 (SEWP, SEWOP, WPAY, WOPAY)",
+  },
+  {
+    box: "3.1b",
+    table: "tbl9c",
+    acPath: "sup_details.osup_3_1b.det.tbl9c",
+    fields: ZR,
+    fedBy: "G13 (SEWP, SEWOP, EXPWP, EXPWOP)",
+  },
+  ...(["3.2comp", "3.2uin"] as const).flatMap((box) =>
+    (["tbl9a", "tbl9c"] as const).map((table) => ({
+      box,
+      table,
+      acPath: `inter_sup.${box === "3.2comp" ? "osup_comp_3_2" : "osup_uin_3_2"}.det.${table}`,
+      fields: P2,
+      fedBy: `${table === "tbl9a" ? "G12 b2ba" : "G13 cdnra"} R, ${box === "3.2comp" ? "COMPOSITION" : "UIN_HOLDER"}`,
+    })),
+  ),
+  ...(["tbl9a", "tbl9c", "tbl10b"] as const).map((table) => ({
+    box: "3.2unreg" as const,
+    table,
+    acPath: `inter_sup.osup_unreg_3_2.det.${table}`,
+    fields: P2,
+    fedBy: table === "tbl9a" ? "G12 b2cla" : table === "tbl9c" ? "G13 cdnura B2CL" : "G14 INTER",
+  })),
 ];
 
-/** AC det keys that feed these boxes but that `gstr1` cannot produce (spec §4.3); caller input when they apply. */
+/**
+ * G15, advances (spec §22.2, D-A14): applied only with `confirmAdvanceMapping: true`. Received (`tbl11a_*`) adds,
+ * adjusted (`tbl11b_*`) subtracts (FORM GSTR-3B Instruction 1; AC `#negtxamt`). The suffix meanings are inferred.
+ */
+export const AC_ADVANCE_MAP: readonly AcMapRow[] = (["a", "b"] as const).flatMap((ab) => {
+  const what = ab === "a" ? "at (received)" : "txpd (adjusted)";
+  return [
+    {
+      box: "3.1a" as const,
+      table: `tbl11${ab}_1_2_4`,
+      acPath: `sup_details.osup_3_1a.det.tbl11${ab}_1_2_4`,
+      fields: H5,
+      fedBy: `G15 ${what} B2B / B2C`,
+    },
+    {
+      box: "3.1b" as const,
+      table: `tbl11${ab}_3`,
+      acPath: `sup_details.osup_3_1b.det.tbl11${ab}_3`,
+      fields: ZR,
+      fedBy: `G15 ${what} EXPORT`,
+    },
+    {
+      box: "3.2unreg" as const,
+      table: `tbl11${ab}_4_5`,
+      acPath: `inter_sup.osup_unreg_3_2.det.tbl11${ab}_4_5`,
+      fields: P2,
+      fedBy: `G15 ${what} INTER B2C`,
+    },
+    ...(["3.2comp", "3.2uin"] as const).map((box) => ({
+      box,
+      table: `tbl11${ab}_1_5`,
+      acPath: `inter_sup.${box === "3.2comp" ? "osup_comp_3_2" : "osup_uin_3_2"}.det.tbl11${ab}_1_5`,
+      fields: P2,
+      fedBy: `G15 ${what} INTER B2B, ${box === "3.2comp" ? "COMPOSITION" : "UIN_HOLDER"}`,
+    })),
+  ];
+});
+
+/**
+ * AC det keys that feed these boxes but that `gstr1` cannot produce (spec §4.3, §22.3); caller input when they
+ * apply. With `confirmAdvanceMapping` the keys of {@link AC_ADVANCE_MAP} are taken out (spec §22.3).
+ */
 export const AC_NOT_COVERED: Readonly<
   Record<"3.1a" | "3.1b" | "3.1c" | "3.1e" | "3.2unreg" | "3.2comp" | "3.2uin", readonly string[]>
 > = {
@@ -153,10 +273,6 @@ export const AC_NOT_COVERED: Readonly<
     "tbl4c",
     "tbl4f",
     "tbl5b",
-    "tbl9a",
-    "tbl9c",
-    "tbl10a",
-    "tbl10b",
     "tbl11a_1_2_4",
     "tbl11b_1_2_4",
     "tbl11c_1_2_4",
@@ -171,8 +287,6 @@ export const AC_NOT_COVERED: Readonly<
     "ims_9a_9c_dn",
   ],
   "3.1b": [
-    "tbl9a",
-    "tbl9c",
     "tbl9bSezEco",
     "tbl9cSezEco",
     "tbl9bSezEcourp2b",
@@ -201,12 +315,9 @@ export const AC_NOT_COVERED: Readonly<
     "ims_15_b2ba",
     "ims_15_urp2ba",
   ],
-  "3.1c": ["tbl8"],
-  "3.1e": ["tbl8"],
+  "3.1c": [],
+  "3.1e": [],
   "3.2unreg": [
-    "tbl9a",
-    "tbl9c",
-    "tbl10b",
     "tbl11_i_a_2",
     "tbl11_i_b_2",
     "tbl11_ii",
@@ -221,8 +332,6 @@ export const AC_NOT_COVERED: Readonly<
   ],
   "3.2comp": [
     "tbl4c",
-    "tbl9a",
-    "tbl9c",
     "tbl11a_1_5",
     "tbl11b_1_5",
     "tbl11c_1_5",
@@ -234,8 +343,6 @@ export const AC_NOT_COVERED: Readonly<
   ],
   "3.2uin": [
     "tbl4c",
-    "tbl9a",
-    "tbl9c",
     "tbl11a_1_5",
     "tbl11b_1_5",
     "tbl11c_1_5",

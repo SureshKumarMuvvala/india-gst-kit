@@ -19,6 +19,7 @@ export { AutoCalcSchema } from "./autocalc-schema.js";
 export { compareWithAutoCalc, CompareResultSchema, AcBlockSchema } from "./compare.js";
 export type { CompareResult, CompareOptions, AcBlock } from "./compare.js";
 export {
+  AC_ADVANCE_MAP,
   AC_GSTR1_MAP,
   AC_NOT_COVERED,
   AC_BOX_PATH,

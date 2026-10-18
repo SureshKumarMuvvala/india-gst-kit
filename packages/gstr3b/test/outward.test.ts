@@ -445,9 +445,12 @@ describe("AC_GSTR1_MAP and AC_NOT_COVERED against the AC file (spec §4.2–4.3)
   });
 
   it("notCovered = the AC det keys of each box minus the mapped ones (computed independently)", () => {
+    // Track A2 (spec §22.3): 3.1c / 3.1e are now mapped (tbl8, G11), so they join the generic check.
     const boxPath = {
       "3.1a": "sup_details.osup_3_1a",
       "3.1b": "sup_details.osup_3_1b",
+      "3.1c": "sup_details.osup_3_1c",
+      "3.1e": "sup_details.osup_3_1e",
       "3.2unreg": "inter_sup.osup_unreg_3_2",
       "3.2comp": "inter_sup.osup_comp_3_2",
       "3.2uin": "inter_sup.osup_uin_3_2",
@@ -457,12 +460,6 @@ describe("AC_GSTR1_MAP and AC_NOT_COVERED against the AC file (spec §4.2–4.3)
       const mapped = AC_GSTR1_MAP.filter((r) => r.box === box).map((r) => r.table);
       expect([...AC_NOT_COVERED[box as keyof typeof boxPath]].sort(), box).toEqual(
         det.filter((k) => !mapped.includes(k)).sort(),
-      );
-    }
-    for (const box of ["3.1c", "3.1e"] as const) {
-      const p = box === "3.1c" ? "sup_details.osup_3_1c.det" : "sup_details.osup_3_1e.det";
-      expect(AC_NOT_COVERED[box]).toEqual(
-        Object.keys(node(p)["properties"] as Record<string, unknown>),
       );
     }
   });

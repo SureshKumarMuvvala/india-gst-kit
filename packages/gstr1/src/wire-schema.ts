@@ -273,3 +273,415 @@ export const docIssueOffline = () =>
 
 export const fpWire = () => z.string().regex(/^((0[1-9]|1[012])((19|20)\d\d))$/);
 export const gstinWire = () => z.string().regex(GSTIN_PATTERN);
+
+// ---------------------------------------------------------------- Track A2 sections (spec §17)
+// Transcribed from S5 (`b2ba`, `b2cla`, `b2csa`, `cdnra`, `cdnura`, `nil`, `expa`, `at`, `txpd`, `ata`, `txpda`,
+// `ecom`, `ecoma`, `supeco`, `supecoa`) and, for output (b), S4. Keys we never emit (flag where optional, diff_percent,
+// sez_auth, eco_typ, estin, sbpcode/sbnum/sbdt, the `at_ecom` family) are left out, so they are rejected.
+
+/** S5 `#nonEmptyCostAT`: ±99 999 999 999.99 */
+const costAt = () => leaf("-99999999999.99", "99999999999.99", "amount");
+/** S4 `#nonEmptyRate` (`ata`, `txpda`): 0 … 999.9 */
+const rateS4At = () => leaf("0", "999.9", "rate");
+const omon = () => fpWire();
+const splyTy = () => z.enum(["INTER", "INTRA"]);
+const ecoFlag = () => z.enum(["N", "E", "D"]);
+const amendItem = () => z.strictObject({ num: itemNum(1), itm_det: taxDet(rateOpen()) });
+
+/** Sections whose shape is the same in S5 and S4 apart from `etin` and `ntty`. */
+export function makeA2Sections<E extends z.ZodType>(etin: E, ntty: readonly [string, ...string[]]) {
+  const e = etin.optional();
+  return {
+    b2ba: z
+      .array(
+        z.strictObject({
+          ctin: ctin(),
+          inv: z
+            .array(
+              z.strictObject({
+                inum: inum(),
+                idt: date(),
+                oinum: inum(),
+                oidt: date(),
+                val: totalValue(),
+                pos: posForeign(),
+                rchrg: yn(),
+                inv_typ: invTyp(),
+                etin: e,
+                itms: z.array(amendItem()).min(1),
+              }),
+            )
+            .min(1),
+        }),
+      )
+      .optional(),
+    b2cla: z
+      .array(
+        z.strictObject({
+          pos: pos(),
+          inv: z
+            .array(
+              z.strictObject({
+                inum: inum(),
+                idt: date(),
+                oinum: inum(),
+                oidt: date(),
+                val: totalValue(),
+                etin: e,
+                itms: z
+                  .array(z.strictObject({ num: itemNum(1), itm_det: igstDet(rateOpen()) }))
+                  .min(1),
+              }),
+            )
+            .min(1),
+        }),
+      )
+      .optional(),
+    b2csa: z
+      .array(
+        z.strictObject({
+          typ: z.enum(["E", "OE"]),
+          sply_ty: splyTy(),
+          pos: pos(),
+          omon: omon(),
+          etin: e,
+          itms: z
+            .array(
+              z.strictObject({
+                rt: rateOpen(),
+                txval: signedCost(),
+                iamt: signedCost().optional(),
+                camt: signedCost().optional(),
+                samt: signedCost().optional(),
+                csamt: signedCost().optional(),
+              }),
+            )
+            .min(1),
+        }),
+      )
+      .optional(),
+    cdnra: z
+      .array(
+        z.strictObject({
+          ctin: ctin(),
+          nt: z
+            .array(
+              z.strictObject({
+                nt_num: inum(),
+                nt_dt: date(),
+                ont_num: inum(),
+                ont_dt: date(),
+                ntty: z.enum(ntty),
+                val: totalValue(),
+                pos: posForeign(),
+                rchrg: yn(),
+                inv_typ: invTyp(),
+                etin: e,
+                itms: z.array(amendItem()).min(1),
+              }),
+            )
+            .min(1),
+        }),
+      )
+      .optional(),
+    cdnura: z
+      .array(
+        z
+          .strictObject({
+            nt_num: inum(),
+            nt_dt: date(),
+            ont_num: inum(),
+            ont_dt: date(),
+            ntty: z.enum(ntty),
+            val: totalValue(),
+            typ: z.enum(["B2CL", "EXPWP", "EXPWOP"]),
+            pos: pos().optional(),
+            itms: z.array(z.strictObject({ num: itemNum(1), itm_det: igstDet(rateOpen()) })).min(1),
+          })
+          .superRefine((n, ctx) => {
+            if ((n.typ === "B2CL") !== (n.pos !== undefined)) {
+              ctx.addIssue({
+                code: "custom",
+                path: ["pos"],
+                message: "pos is required for B2CL and not allowed for export notes",
+              });
+            }
+          }),
+      )
+      .optional(),
+    nil: z
+      .strictObject({
+        inv: z
+          .array(
+            z.strictObject({
+              sply_ty: z.enum(["INTRB2B", "INTRB2C", "INTRAB2B", "INTRAB2C"]),
+              nil_amt: signedCost(),
+              expt_amt: signedCost(),
+              ngsup_amt: signedCost(),
+            }),
+          )
+          .min(1),
+      })
+      .optional(),
+    expa: z
+      .array(
+        z.strictObject({
+          exp_typ: z.enum(["WOPAY", "WPAY"]),
+          inv: z
+            .array(
+              z.strictObject({
+                inum: inum(),
+                idt: date(),
+                val: totalValue(),
+                oinum: inum(),
+                oidt: date(),
+                itms: z
+                  .array(
+                    z.strictObject({
+                      txval: cost(),
+                      rt: cost(),
+                      iamt: cost().optional(),
+                      csamt: cost().optional(),
+                    }),
+                  )
+                  .min(1),
+              }),
+            )
+            .min(1),
+        }),
+      )
+      .optional(),
+  };
+}
+
+const ecomItm = () =>
+  z.strictObject({
+    num: itemNum(1),
+    itm_det: z.strictObject({
+      rt: rate(),
+      txval: cost(),
+      iamt: cost().optional(),
+      camt: cost().optional(),
+      samt: cost().optional(),
+      csamt: cost().optional(),
+    }),
+  });
+const ecomInv = (amend: boolean) =>
+  z.strictObject({
+    inum: inum(),
+    idt: date(),
+    ...(amend ? { oinum: inum(), oidt: date() } : {}),
+    val: totalValue(),
+    pos: posForeign(),
+    sply_ty: splyTy(),
+    inv_typ: z.enum(["R", "DE", "SEWP", "SEWOP"]),
+    flag: ecoFlag(),
+    itms: z.array(ecomItm()).min(1),
+  });
+const atHeads = () => ({
+  txval: costAt(),
+  iamt: costAt().optional(),
+  camt: costAt().optional(),
+  samt: costAt().optional(),
+  csamt: costAt().optional(),
+});
+const ecomRateRow = () => ({ rt: rate(), ...atHeads() });
+
+/** Table 15 / 15A (S5 = S4 for what we emit, except `b2ca` `itms`, required in S5 only). */
+export function makeEcomSections() {
+  return {
+    ecom: z
+      .strictObject({
+        b2b: z
+          .array(
+            z.strictObject({ stin: ctin(), rtin: ctin(), inv: z.array(ecomInv(false)).min(1) }),
+          )
+          .optional(),
+        urp2b: z
+          .array(z.strictObject({ rtin: ctin(), inv: z.array(ecomInv(false)).min(1) }))
+          .optional(),
+        b2c: z
+          .array(
+            z.strictObject({
+              stin: ctin(),
+              pos: pos(),
+              sply_ty: splyTy(),
+              flag: ecoFlag(),
+              ...ecomRateRow(),
+            }),
+          )
+          .optional(),
+        urp2c: z
+          .array(
+            z.strictObject({ pos: pos(), sply_ty: splyTy(), flag: ecoFlag(), ...ecomRateRow() }),
+          )
+          .optional(),
+      })
+      .optional(),
+    ecoma: z
+      .strictObject({
+        b2ba: z
+          .array(z.strictObject({ stin: ctin(), rtin: ctin(), inv: z.array(ecomInv(true)).min(1) }))
+          .optional(),
+        urp2ba: z
+          .array(z.strictObject({ rtin: ctin(), inv: z.array(ecomInv(true)).min(1) }))
+          .optional(),
+        b2ca: z
+          .array(
+            z.strictObject({
+              pos: pos(),
+              posItms: z
+                .array(
+                  z.strictObject({
+                    stin: ctin(),
+                    ostin: ctin(),
+                    omon: omon(),
+                    sply_ty: splyTy(),
+                    flag: ecoFlag(),
+                    itms: z.array(z.strictObject(ecomRateRow())).min(1),
+                  }),
+                )
+                .min(1),
+            }),
+          )
+          .optional(),
+        urp2ca: z
+          .array(
+            z.strictObject({
+              pos: pos(),
+              omon: omon(),
+              sply_ty: splyTy(),
+              flag: ecoFlag(),
+              itms: z.array(z.strictObject(ecomRateRow())).min(1),
+            }),
+          )
+          .optional(),
+      })
+      .optional(),
+  };
+}
+
+/** Table 14 / 14A. S5: `etin` = `#ctin`, `flag` optional; S4: `etin` loose, `flag` required. */
+export function makeSupecoSections(v: "S5" | "S4") {
+  const etin = () => (v === "S5" ? ctin() : z.string().regex(/^[a-zA-Z0-9._\s]+$/));
+  const flag = v === "S5" ? ecoFlag().optional() : ecoFlag();
+  const row = () => ({
+    etin: etin(),
+    suppval: costAt(),
+    igst: costAt(),
+    cgst: costAt(),
+    sgst: costAt(),
+    cess: costAt().optional(),
+    flag,
+  });
+  const arow = () => ({ oetin: etin(), omon: omon(), ...row() });
+  return {
+    supeco: z
+      .strictObject({
+        clttx: z.array(z.strictObject(row())).optional(),
+        paytx: z.array(z.strictObject(row())).optional(),
+      })
+      .optional(),
+    supecoa: z
+      .strictObject({
+        clttxa: z.array(z.strictObject(arow())).optional(),
+        paytxa: z.array(z.strictObject(arow())).optional(),
+      })
+      .optional(),
+  };
+}
+
+const advItems = (amount: () => z.ZodType, rt: () => z.ZodType) =>
+  z
+    .array(
+      z.strictObject({
+        ad_amt: amount(),
+        iamt: amount().optional(),
+        camt: amount().optional(),
+        samt: amount().optional(),
+        csamt: amount().optional(),
+        rt: rt(),
+      }),
+    )
+    .min(1);
+const advInvTyp = () => z.enum(["R", "RC", "DE", "SEWP", "SEWOP"]);
+
+/** S5 v5.0 advances: objects split by party (spec §17.6). `prefix` is `at`, `txpd`, `ata` or `txpda`. */
+export function advancesApi(amend: boolean) {
+  const it = () => advItems(costAt, rate);
+  const o = amend ? { omon: omon() } : {};
+  return z
+    .strictObject({
+      b2b: z
+        .array(
+          z.strictObject({
+            rtin: ctin(),
+            pos: posForeign(),
+            sply_ty: splyTy(),
+            inv_typ: advInvTyp(),
+            rchrg: yn(),
+            ...(amend
+              ? {
+                  omon: omon(),
+                  opos: posForeign(),
+                  oinv_typ: advInvTyp(),
+                  ortin: ctin(),
+                  orchrg: yn(),
+                }
+              : {}),
+            itms: it(),
+          }),
+        )
+        .optional(),
+      b2c: z
+        .array(
+          z.strictObject({
+            pos: pos(),
+            sply_ty: splyTy(),
+            ...o,
+            ...(amend ? { opos: pos() } : {}),
+            itms: it(),
+          }),
+        )
+        .optional(),
+      exp: z
+        .array(
+          z.strictObject({
+            exp_typ: z.enum(["WOPAY", "WPAY"]),
+            sply_ty: splyTy(),
+            ...o,
+            ...(amend ? { oexp_typ: z.enum(["WOPAY", "WPAY"]) } : {}),
+            itms: it(),
+          }),
+        )
+        .optional(),
+    })
+    .optional();
+}
+
+/** Renames the neutral `b2b`/`b2c`/`exp` keys of {@link advancesApi} to S5's `<prefix>_b2b` … keys. */
+export function advancesApiNamed(prefix: "at" | "txpd" | "ata" | "txpda") {
+  const inner = advancesApi(prefix === "ata" || prefix === "txpda").unwrap();
+  const shape: Record<string, z.ZodType> = {
+    [`${prefix}_b2b`]: inner.shape.b2b,
+    [`${prefix}_b2c`]: inner.shape.b2c,
+    [`${prefix}_exp`]: inner.shape.exp,
+  };
+  return z.strictObject(shape).optional();
+}
+
+/** S4 / tool advances: flat rows `{ pos, sply_ty, [omon], itms }` (spec O10). */
+export function advancesOffline(prefix: "at" | "txpd" | "ata" | "txpda") {
+  const amend = prefix === "ata" || prefix === "txpda";
+  const amount = prefix === "at" || prefix === "ata" ? costAt : cost;
+  const rt = amend ? rateS4At : rate;
+  const arr = z.array(
+    z.strictObject({
+      pos: pos(),
+      sply_ty: splyTy(),
+      ...(amend ? { omon: omon() } : {}),
+      itms: advItems(amount, rt),
+    }),
+  );
+  return (prefix === "txpda" ? arr.min(1) : arr).optional();
+}
