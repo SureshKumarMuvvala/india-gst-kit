@@ -571,3 +571,17 @@ Each row: source URL (the page in the Sources table at the top, under https://ei
 - GSTIN status values and "active only if ACT"; block status U/''/B (`gstin-details.ts`; EI-GSTIN, EI-SYNC, EW-GSTIN).
 - Token lifetime 360 min (60 sandbox), same-token rule, 10-minute force-refresh window (`session.ts`; EI-AUTH, EW-AUTH).
 - Decisions D-G8, D-G13, D-G14, D-G15, one row each, "Design decision" (D-G13–D-G15 also "needs CA").
+
+## 21. Build notes (v0.1 build, 2026-10-18)
+
+Deviations from this spec in the build, all minor:
+- **No `close()`** on the client: there is nothing to release (in-memory state only).
+- **`NicCredentials` has no `gstin`**: the GSTIN is the operation argument and the callback's input.
+- **`GspIssueSchema.severity`** is `"error" | "warning"`: errors appear only inside a `validation` error (§7.3 said warning only).
+- **Extra crypto reasons** `bad-key` and `decrypt-failed` (AES key length, SEK decryption); the NIC codec reports response-side failures as `protocol/decrypt-failed`.
+- **PC5 role**: only `other-party` warns, because the client cannot know whether a transporter is assigned.
+- **Redaction** ignores registered values shorter than 6 characters, so short strings do not garble unrelated text.
+- **`invalidateSession`** is async and calls the credentials callback to learn the user name (part of the cache key).
+- **`fromState`** accepts 1–2 digits in memory (H's data structure sample is `8`) and is written as a JSON integer without a leading zero.
+- **EWB re-auth after a cache loss**: with no cached session, the client cannot know the original login time of a token the server returns again, so it assumes `now + lifetime`. A persistent session store avoids this (§5.5).
+- **Exports added**: `okResult`/`failResult` (for adapter authors), `HeaderNameMapSchema`, `plaintextToJson`, `parseEinvoiceErrors`, `parseEwbErrors`, the request validators `validate*Request`, and `EWB_TRANSPORT_MODES`.
