@@ -1,0 +1,37 @@
+{
+  "name": "@india-gst-kit/gsp",
+  "version": "0.0.0",
+  "description": "Client for the NIC e-invoice (IRP) and e-way bill APIs (India): provider interface, node:crypto login/SEK/AES-ECB, sessions, typed errors.",
+  "license": "MIT",
+  "author": "Suresh Kumar Muvvala",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@india-gst-kit/einvoice": "workspace:^",
+    "@india-gst-kit/ewaybill": "workspace:^",
+    "@india-gst-kit/model": "workspace:^"
+  },
+  "peerDependencies": {
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "zod": "4.5.4"
+  }
+}
