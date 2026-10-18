@@ -1,0 +1,435 @@
+Excerpt: FORM GSTR-1 [See rule 59(1)] with its Instructions, verbatim from pdftotext -layout (poppler) of
+sources/gstr3b/cgst-rules-2017-part-b-forms-18052021.pdf, PDF pages 107-116 (printed pages 100-109).
+URL: https://gstcouncil.gov.in/sites/default/files/2024-04/18052021-cgst-rules-2017-part-b-forms.pdf
+Retrieved 2026-10-18. PDF SHA-256 9b5ae908fae791b25f903795eb5dfcd30485f18d68f6f34b6b30e1a41b1fdafa. Status: UNVERIFIED - needs CA.
+Consolidation as of 18-05-2021: later amendments to the form are NOT included.
+----
+                                             FORM GSTR-1
+                                             [See rule (59(1)]
+
+                             Details of outward supplies of goods or services
+
+                                                                                 Year
+                                                                                 Month
+
+
+1.          GSTIN
+2.    (a)   Legal name of the registered person
+      (b)   Trade name, if any
+3.          Aggregate Turnover in the preceding Financial
+      (a)
+            Year
+      (b)   Aggregate Turnover - April to June, 2017
+
+
+
+
+4. Taxable outward supplies made to registered persons (including UIN-holders)other
+   than supplies covered by Table 6
+                                                                                           (Amount
+                                                                                          in Rs. for
+                                                                                          all Tables)
+
+GSTIN/  Invoice details Rate Taxable              Amount                                  Place of
+ UIN   No. Date Value         value  Integrated Central State /                   Cess     Supply
+                                        Tax      Tax    UT Tax                           (Name of
+                                                                                         State/UT)
+   1      2     3       4      5         6           7          8          9       10         11
+4A. Supplies other than those (i) attracting reverse charge and (ii) supplies made through e-
+commerce operator
+
+
+4B. Supplies attracting tax on reverse charge basis
+
+
+
+4C.    Supplies made through e-commerce operator attracting TCS (operator wise, rate wise)
+GSTIN of e-commerce operator
+
+
+
+
+5. Taxable outward inter-State supplies to un-registered persons where the invoice value
+   is more than Rs 2.5 lakh
+   Place of           Invoice details         Rate      Taxable                Amount
+    Supply          No. Date Value                       Value    Integrated Tax         Cess
+  (State/UT)
+
+
+                                                       101
+       1              2         3     4       5          6         7                      8
+5A. Outward supplies (other than supplies made through e-commerce operator, rate wise)
+
+
+
+5B. Supplies made through e-commerce operator attracting TCS (operator wise, rate wise)
+GSTIN of e-commerce
+operator
+
+
+
+
+6. Zero rated supplies and Deemed Exports 29
+
+GSTI            Invoice         Shippin Integrated Tax  Central Tax        State / UT Tax     Ce
+ N of            details         g bill/                                                      ss
+recipi                          Bill of
+ ent                             export
+           N     Da       Val   N Da Ra Taxa A Ra Taxa A                   Ra   Taxa A
+           o.    te       ue    o. te te      ble mt. te    ble mt         te    ble mt
+                                            value         value                 value
+  1    2    3              4    5     6  7     8     9 10   11    12       13    14   15      16
+6A. Exports
+
+
+
+6B. Supplies made to SEZ unit or SEZ Developer
+
+
+
+6C. Deemed exports
+
+
+
+
+7. Taxable supplies (Net of debit notes and credit notes) to unregistered persons other
+than the supplies covered in Table 5
+
+
+         Rate of tax            Total Taxable                    Amount
+                                    value              Central State Tax/UT Tax Cess
+                                              Integrated
+            1                         2           3
+                                                 Tax      4
+                                                         Tax                 5               6
+ 7A. Intra-State supplies
+ 7A (1). Consolidated rate wise outward supplies [including supplies made through e-commerce
+ operator attracting TCS]
+
+
+
+
+29
+  Substituted vide Notf no. 70/2017-CT dt 21.12.2017
+
+                                                   102
+7A (2). Out of supplies mentioned at 7A(1), value of supplies made through e-Commerce Operators
+attracting TCS(operator wise, rate wise)
+GSTIN of e-commerce operator
+
+
+7B. Inter-State Supplies where invoice value is uptoRs 2.5 Lakh [Rate wise]
+7B (1). Place of Supply (Name of
+State)
+
+7B (2). Out of the supplies mentioned in 7B (1), the supplies made through e-Commerce
+Operators (operator wise, rate wise)
+GSTIN of e-commerce operator
+
+
+
+8. Nil rated, exempted and non GST outward supplies
+
+                 Description                        Nil Rated             Exempted         Non-GST
+                                                    Supplies           (Other than Nil     supplies
+                                                                   rated/non-GST supply)
+                    1                                   2                    3                4
+8A. Inter-State supplies to registered
+persons
+8B. Intra- State supplies to registered
+persons
+8C. Inter-State supplies to unregistered
+persons
+8D. Intra-State supplies to unregistered
+persons
+
+
+
+9. Amendments to taxable outward supply details furnished in returns for earlier tax
+periods in Table 4, 5 and 6 [including debit notes, credit notes, refund vouchers issued
+during current period and amendments thereof]
+
+
+  Details of     Revised details of document or Rate Taxable             Amount              Place of
+    original     details of original Debit/Credit     Value                                   supply
+  document          Notes or refund vouchers
+GSTIN Inv. Inv. GSTIN Invoice Shipping Value                 Integrated Central State / Cess
+       No. Date                      bill                       Tax      Tax UT Tax
+                       No Date No. Date
+   1      2 3      4     5 6 7            8    9  10   11        12       13     14      15     16
+ 9A. If the invoice/Shipping bill details furnished earlier were incorrect
+
+
+ 9B. Debit Notes/Credit Notes/Refund voucher [original]
+
+
+ 9C. Debit Notes/Credit Notes/Refund voucher [amendments thereof]
+
+
+                                                      103
+10. Amendments to taxable outward supplies to unregistered persons furnished in
+    returns for earlier tax periods in Table 7
+         Rate of tax         Total Taxable                             Amount
+                                 value        Integrated       Central   State/UT Tax            Cess
+             1                     2               3
+                                                 Tax             4
+                                                                Tax         UT5Tax                  6
+Tax period for which the details are         <Month>
+being revised
+10A. Intra-State Supplies[including supplies made through e-commerce operator attracting TCS] [Rate wise]
+
+
+ 10A (1). Out of supplies mentioned at 10A, value of supplies made through e-Commerce Operators attracting
+ TCS (operator wise, rate wise)
+ GSTIN of e-commerce operator
+
+ 10B. Inter-State Supplies[including supplies made through e-commerce operator attracting TCS] [Rate wise]
+ Place of Supply (Name of State)
+
+ 10B (1). Out of supplies mentioned at 10B, value of supplies made through e-Commerce Operators attracting
+ TCS (operator wise, rate wise)
+ GSTIN of e-commerce operator
+
+
+
+
+11. Consolidated Statement of Advances Received/Advance adjusted in the current tax period/
+     Amendments of information furnished in earlier tax period
+
+  Rate     Gross Advance Place of                          Amount
+          Received/adjusted supply Integrated Central State/UT                          Cess
+    1              2          (Name
+                                  3 of        4           5         6                     7
+                                             Tax         Tax       Tax
+                              State /UT)
+ I Information for the current tax period
+ 11A. Advance amount received in the tax period for whichUT  Tax has not been issued (tax
+                                                          invoice
+ amount to be added to output tax liability)
+ 11A (1). Intra-State supplies(Rate Wise)
+
+ 11A (2). Inter-State Supplies(Rate Wise)
+
+ 11B. Advance amount received in earlier tax period and adjusted against the supplies being shown
+ in this tax period in Table Nos. 4, 5, 6 and 7
+ 11B (1). Intra-State Supplies (Rate Wise)
+
+ 11B (2). Inter-State Supplies(Rate Wise)
+
+II Amendment of information furnished in Table No. 11[1] in GSTR-1 statement for
+earlier tax periods[Furnish revised information]
+ Month                        Amendment relating to information             11A(1) 11A(2) 11B(1) 11B(2)
+
+
+                                                   104
+                                  furnished in S. No.(select)
+
+
+
+
+12. HSN-wise summary of outward supplies
+
+ Sr. No.      HSN Description UQC Total   [Rate Total                Amount
+                  (Optional if   Quantity   of Taxable
+                                                       Integrated Central State/UT                       Cess
+                    HSN is                Tax]30 Value
+                                                          Tax      Tax      Tax
+                   provided)
+
+       1        2         3          4        5         6        7          8               9   10       11
+
+
+
+
+13. Documents issued during the tax period
+
+     Sr.            Nature of document              Sr. No.           Total      Cancelled      Net issued
+     No.                                          From    To         number
+
+      1                       2                    3         4         5                6            7
+      1    Invoices for outward supply
+           Invoices for inward supply from
+      2
+           unregistered person
+      3    Revised Invoice
+      4    Debit Note
+      5    Credit Note
+      6    Receipt voucher
+      7    Payment Voucher
+      8    Refund voucher
+      9    Delivery Challan for job work
+           Delivery Challan for supply on
+     10
+           approval
+     11    Delivery Challan in case of liquid
+           gas
+     12    Delivery Challan in cases other than
+           by way of supply (excluding at S no.
+           9 to 11)
+
+
+
+
+Verification
+
+I hereby solemnly affirm and declare that the information given herein above is true and
+correct to the best of my knowledge and belief and nothing has been concealed there from
+and in case of any reduction in output tax liability the benefit thereof has been/will be passed
+on to the recipient of supply.
+
+
+
+
+30
+     Substituted vide Notf no.79/2020 – CT dt. 15.10.2020 for the words―Total Value.‖
+
+                                                       105
+                                     Signature
+Place                                  Name
+of Authorised Signatory ….……………………
+
+Date
+Designation /Status……………………………………
+
+
+
+
+                               106
+Instructions –
+1. Terms used:
+                a. GSTIN:      Goods and Services Tax Identification Number
+                b. UIN:        Unique Identity Number
+                c. UQC: Unit Quantity Code
+                d. HSN:        Harmonized System of Nomenclature
+                e. POS:        Place of Supply (Respective State)
+                f. B to B:     From one registered person to another registered person
+                g. B to C:     From registered person to unregistered person
+2.   The details in GSTR-1 should be furnished by 10thof the month succeeding the relevant
+     tax period.
+3.   Aggregate turnover of the taxpayer for the immediate preceding financial year
+     and first quarter of the current financial year shall be reported in the
+     preliminary information in Table 3. This information would be required to be
+     submitted by the taxpayers only in the first year. Quarterly turnover
+     information shall not be captured in subsequent return s. Aggregate turnover
+     shall be auto-populated in subsequent years.
+4.   Invoice-level information pertaining to the tax period should be reported for
+     all supplies as under:
+     (i) For all B to B supplies (whether inter-State or intra-State), invoice level
+           details, rate-wise, should be uploaded in Table 4, including supplies
+           attracting reverse charge and those effected through e -commerce operator.
+           Outwards supply information in these categories are to be furnished
+           separately in the Table.
+     (ii) For all inter-State B to C supplies, where invoice value is more than Rs.
+           2,50,000/- (B to C Large) invoice level details, rate-wise, should be
+           uploaded in Table 5; and
+     (iii) For all B to C supplies (whether inter-State or intra-State) where invoice
+           value is up to Rs. 2,50,000/- State-wise summary of supplies, rate-wise,
+           should be uploaded in Table 7.
+5.   Table 4 capturing information relating to B to B supplies should:
+     (i) be captured in:
+           a. Table 4A for supplies relating to other than reverse charge/ made
+               through e-commerce operator, rate-wise;
+           b. Table 4B for supplies attracting reverse charge, rate -wise; and
+           c. Table 4C relating to supplies effected through e-commerce operator
+               attracting collection of tax at source under section 52 of the Act,
+               operator wise and rate-wise.
+     (ii) Capture Place of Supply (PoS) only if the same is different from the location of the
+           recipient.
+6.   Table 5 to capture information of B to C Large invoices and other information
+     shall be similar to Table 4. The Place of Supply (PoS) column is mandatory in
+     this table.
+7.   Table 6 to capture information related to:
+
+
+                                             107
+    (i) Exports out of India
+    (ii) Supplies to SEZ unit/ and SEZ developer
+    (iii) Deemed Exports
+8. Table 6 needs to capture information about shipping bill and its date. However,
+    if the shipping bill details are not available, Table 6 will still accept the
+    information. The same can be updated through submission of information in
+    relation to amendment Table 9 in the tax period in which the details are
+    available but before claiming any refund / rebate related to the said invoice.
+    The detail of Shipping Bill shall be furnished in 13 digits capturing port code
+    (six digits) followed by number of shipping bill.
+9. Any supply made by SEZ to DTA, without the cover of a bill of entry is
+    required to be reported by SEZ unit in GSTR-1. The supplies made by SEZ on
+    cover of a bill of entry shall be reported by DTA unit in its GSTR -2 as imports
+    in GSTR-2. The liability for payment of IGST in respect of supply of services
+    would, be created from this Table..
+10. In case of export transactions, GSTIN of recipient will not be there. Hence it
+    will remain blank.
+11. Export transactions effected without payment of IGST (under Bond/ Letter of
+    Undertaking (LUT)) needs to be reported under ―0‖ tax amount heading in
+    Table 6A and 6B.
+12. Table 7 to capture information in respect of taxable supply of:
+    (i) B to C supplies (whether inter-State or intra-State)with invoice value
+          uptoRs 2,50,000;
+    (ii) Taxable value net of debit/ credit note raised in a particular tax period and
+          information pertaining to previous tax periods which was not reported
+          earlier, shall be reported in Table 10. Negative value can be mentioned in
+          this table, if required;
+    (iii) Transactions effected through e-commerce operator attracting collection
+          of tax at source under section 52 of the Act to be provided operator wise
+          and rate wise;
+    (iv) Table 7A (1) to capture gross intra-State supplies, rate-wise, including
+          supplies made through e-commerce operator attracting collection of tax at
+          source and Table 7A (2) to capture supplies made through e -commerce
+          operator attracting collection of tax at source out of g ross supplies
+          reported in Table 7A (1);
+    (v) Table 7B (1) to capture gross inter-State supplies including supplies made
+          through e-commerce operator attracting collection of tax at source and
+          Table 7B (2) to capture supplies made through e-commerce operator
+          attracting collection of tax at source out of gross supplies reported in
+          Table 7B (1); and
+    (vi) Table 7B to capture information State wise and rate wise.
+13. Table 9 to capture information of:
+    (i) Amendments of B to B supplies reported in Table 4, B to C Large supplies
+           reported in Table 5 and Supplies involving exports/ SEZ unit or SEZ
+           developer/ deemed exports reported in Table 6;
+    (ii) Information to be captured rate-wise;
+
+
+                                         108
+    (iii) It also captures original information of debit / credit note issued and
+          amendment to it reported in earlier tax periods; While furnishing
+          information the original debit note/credit note, the details of invoice shall
+          be mentioned in the first three columns, While furnishing revision of a
+          debit note/credit note, the details of original debit note/credit note sh all
+          be mentioned in the first three columns of this Table,
+    (iv) Place of Supply (PoS) only if the same is different from the location of the
+          recipient;
+    (v) Any debit/ credit note pertaining to invoices issued before the appointed
+          day under the existing law also to be reported in this table; and
+    (vi) Shipping bill to be provided only in case of exports transactions
+          amendment.
+14. Table 10 is similar to Table 9 but captures amendment information related to B
+    to C supplies and reported in Table 7.
+15. Table 11A captures information related to advances received, rate-wise, in the
+    tax period and tax to be paid thereon along with the respective PoS. It also
+    includes information in Table 11B for adjustment of tax paid on advance
+    received and reported in earlier tax periods against invoi ces issued in the
+    current tax period. The details of information relating to advances would be
+    submitted only if the invoice has not been issued in the same tax period in
+    which the advance was received.
+16. Summary of supplies effected against a particular HSN code to be reported
+    only in summary table. It will be optional for taxpayers having annual turnover
+    uptoRs. 1.50 Cr but they need to provide information about description of
+    goods.
+17. It will be mandatory to report HSN code at two digits level for taxpayers
+    having annual turnover in the preceding year above Rs. 1.50 Cr but uptoRs.
+    5.00 Cr and at four digits level for taxpayers having annual turnover above Rs.
+    5.00 Cr.
+[18. It will be mandatory to specify the number of digits of HSN code for goods or services
+that a class of registered persons shall be required to mention as may be specified in the
+notification issued from time to time under proviso to rule 46 of the said rules.]31
+
+
+
+
+31
+     Inserted vide Notfno. 82/2020-CT dt. 10.11.2020
+
+                                                       109
+110
+

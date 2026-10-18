@@ -1,0 +1,165 @@
+Excerpt: FORM GSTR-3B [See rule 61(5)] with its Instructions, verbatim from pdftotext -layout (poppler) of
+sources/gstr3b/cgst-rules-2017-part-b-forms-18052021.pdf, PDF pages 152-154 (printed pages 146-147).
+URL: https://gstcouncil.gov.in/sites/default/files/2024-04/18052021-cgst-rules-2017-part-b-forms.pdf
+Retrieved 2026-10-18. PDF SHA-256 9b5ae908fae791b25f903795eb5dfcd30485f18d68f6f34b6b30e1a41b1fdafa. Status: UNVERIFIED - needs CA.
+Consolidation as of 18-05-2021: later amendments (e.g. any Table 3.1.1 or 5.1) are NOT included.
+----
+                                                   FORM GSTR-3B
+                                                          [See rule 61(5)]
+
+                                                                                                                Year
+                                                                                                               Month
+
+
+
+
+           1.        GSTIN
+           2.        Legal name of the registered person                     Auto Populated
+
+
+
+
+3.1        Details of Outward Supplies and inward supplies liable to reverse charge
+
+                    Nature of Supplies                         Total Taxable        Integrated       Central     State/UT Tax Cess
+                                                                   value               Tax            Tax
+                              1                                      2                   3              4                5              6
+ (a) Outward taxable supplies (other than zero rated, nil
+ rated and exempted)
+ (b) Outward taxable supplies (zero rated )
+ (c) Other outward supplies (Nil rated, exempted)
+ (d) Inward supplies (liable to reverse charge)
+ (e) Non-GST outward supplies
+
+3.2 Of the supplies shown in 3.1 (a) above, details of inter-State supplies made to unregistered persons,
+    composition taxable persons and UIN holders
+
+                                         Place of Supply
+                                                                   Total Taxable value               Amount of Integrated Tax
+                                           (State/UT)
+               1                                2                            3                                       4
+ Supplies made to Unregistered
+           Persons
+ Supplies made to Composition
+        Taxable Persons
+ Supplies made to UIN holders
+
+      4.    Eligible ITC
+
+                           Details                                Integrated Tax         Central Tax        State/UT Tax         Cess
+                              1                                          2                       3               4                 5
+(A) ITC Available (whether in full or part)
+    (1) Import of goods
+    (2) Import of services
+    (3) Inward supplies liable to reverse charge (other
+        than 1 & 2 above)
+    (4) Inward supplies from ISD
+    (5) All other ITC
+ (B) ITC Reversed
+      (1) As per rules 42 & 43 of CGST Rules
+      (2) Others
+  (C) Net ITC Available (A) – (B)
+  (D) Ineligible ITC
+    (1) As per section 17(5)
+    (2) Others
+
+      5.    Values of exempt, nil-rated and non-GST inward supplies
+
+                           Nature of supplies                                    Inter-State supplies           Intra-State supplies
+                                     1                                                    2                                  3
+
+                                                               146
+ From a supplier under composition scheme, Exempt and Nil rated
+ supply
+ Non GST supply
+
+6.1 Payment of tax
+
+Description            Tax                  Paid through ITC                Tax paid   Tax/Cess   Interest   Late
+                     payable   Integrated   Central    State/UT   Cess     TDS./TCS     paid in              Fee
+                                  Tax       Tax           Tax                            cash
+1                      2           3            4          5       6             7        8          9           10
+Integrated Tax
+Central Tax
+State/UT Tax
+Cess
+
+6.2 TDS/TCS Credit
+
+          Details                      Integrated Tax                    Central Tax              State/UT Tax
+              1                              2                               3                           4
+ TDS
+ TCS
+
+
+Verification (by Authorised signatory)
+I hereby solemnly affirm and declare that the information given herein above is true and
+correct to the best of my knowledge and belief and nothing has been concealed there from.
+
+
+Instructions:
+
+1) Value of Taxable Supplies = Value of invoices + value of Debit Notes – value of credit
+notes + value of advances received for which invoices have not been issued in the same
+month – value of advances adjusted against invoices
+
+2)Details of advances as well as adjustment of same against invoices to be adjusted and not
+shown separately
+3)Amendment in any details to be adjusted and not shown separately.
+
+
+
+
+                                                        147
+                                                                39
+                                          [FORM GSTR-4
+
+                                                [See rule 62]
+     Return for financial year of registered person who has opted for composition levy or
+               availing benefit of notification No. 02/2019- Central Tax (Rate)
+
+
+                                                                             Year
+
+
+1.           GSTIN
+2.     (a)   Legal name of the registered person                             <Auto>
+       (b)   Trade name, if any                                              <Auto>
+3.     (a)   Aggregate turnover in the preceding
+             Financial Year (Auto populated)
+       (b)   ARN                                                <Auto>(after filing)>
+       (c)   Date of ARN                                        <Auto>(after filing)>
+
+
+4. Inward supplies including supplies on which tax is to be paid on reverse charge
+GSTIN         Invoice details    Rate Taxable                   Amount of tax             Place of
+   of                                  value                                               supply
+supplier                                                                                 (Name of
+             No. Date Value                      Integrated Central     State/UT    CESS State/UT)
+                                                    Tax      Tax          Tax
+      1       2     3        4      5       6        7        8              9          10   11
+  4A. Inward supplies received from a registered supplier (other than supplies attracting
+reverse charge)
+
+     4B. Inward supplies received from a registered supplier (attracting reverse charge)
+
+
+     4C. Inward supplies received from an unregistered supplier
+
+     4D. Import of service
+
+
+
+5. Summary of self-assessed liability as per FORM GST CMP-08
+(Net of advances, credit and debit notes and any other adjustment due to amendments
+etc.)
+       Sr.           Description                  Value                    Amount of tax
+
+
+
+
+39
+  Subsituted vide Notf no. 31/2019 – CT dt. 28.06.2019
+
+                                                    148
+
