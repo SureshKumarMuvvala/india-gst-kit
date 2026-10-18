@@ -4,3 +4,4 @@ pnpm-lock.yaml
 sources
 docs
 .changeset
+packages/gstr3b/src/autocalc-shape.ts

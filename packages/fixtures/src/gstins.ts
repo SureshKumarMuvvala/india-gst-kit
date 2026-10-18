@@ -23,6 +23,9 @@ export const GSTINS = {
   spareCh: "04IIIII8888I1ZV",
   /** Tamil Nadu (33) — third-party ship-to consignee (Track E) */
   shipToTn: "33JJJJJ9999J1ZF",
+  /** Karnataka (29) — valid under the model (mod-36) but its 13th character is 0, so it fails the PAN-structured
+   *  GSTIN pattern of the GSTR-3B Save schema (Track G, gstr3b spec V4) */
+  notPanStructuredKa: "29KKKKK1234K0Z0",
 } as const;
 
 export const ALLOWED_FIXTURE_GSTINS: readonly string[] = Object.values(GSTINS);

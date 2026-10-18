@@ -87,3 +87,11 @@ innoextract -s -d out "GST Offline Tool.exe"   # reading only; do not install
 sha256sum out/app/utility/returnStructure.js out/app/service/offline.js out/app/utility/constants.js
 ```
 GSTN replaces the zip in place when it releases a new tool version, so a hash mismatch most likely means a newer release (check `ReleaseNotes.txt`).
+
+## Notified FORM GSTR-1 (F4 of `docs/specs/gstr3b.md`) — fetched 2026-10-18
+
+| File | Origin | Notes | SHA-256 |
+|---|---|---|---|
+| `form-gstr1-excerpt-18052021.txt` | `sources/gstr3b/cgst-rules-2017-part-b-forms-18052021.pdf` (https://gstcouncil.gov.in/sites/default/files/2024-04/18052021-cgst-rules-2017-part-b-forms.pdf, PDF SHA-256 `9b5ae908fae791b25f903795eb5dfcd30485f18d68f6f34b6b30e1a41b1fdafa`), pages 107–116 (printed 100–109): FORM GSTR-1 [See rule 59(1)], Tables 1–13 and Instructions 1–18 | `pdftotext -layout` output, verbatim, with a provenance header. **Consolidation as of 18-05-2021**: later amendments (e.g. Tables 14/15, the B2CL limit change) are not in it. Retrieved 2026-10-18 by the build session; UNVERIFIED — needs CA. | `e0720a5f917a4f0dc3166a2473accd73e946fdec1ea4c50a2376b88edd8e4e47` |
+
+The PDF is stored once, under `sources/gstr3b/`; details and the URLs tried are in `sources/gstr3b/README.md`.

@@ -1,11 +1,12 @@
 # Spec — `@india-gst-kit/gstr3b` (v0.1, Track G)
 
-Status: **draft for review**, 2026-10-18. Spec only: no package code until the decisions in §15 are approved. Every legal or official fact and every decision here is **UNVERIFIED — needs CA** until a chartered accountant signs it off in `docs/legal-facts.md`.
+Status: **approved** 2026-10-18 (PR #20); decisions D-H1–D-H11 accepted as recommended, D-H4–D-H8 still **needs CA**. **Build update 2026-10-18:** sources F1/F4 were fetched (FG below) and the rows they settle are marked "sourced (FG)"; changes are listed in §21. Every legal or official fact and every decision here is **UNVERIFIED — needs CA** until a chartered accountant signs it off in `docs/legal-facts.md`.
 
 Sources. All are under `sources/gstr3b/`. Provenance, dates and SHA-256 are in that folder's README.
 - **SV** = `GSTR3B - Save GSTR3B data request_schema v7.1.json`. This is the GSTN API "GSTR3B – Save GSTR3B data" (2269), **v7.1**, published 23-03-2026, portal status **Draft**. It is **authoritative** for every key, type, pattern and range of the output. Cited as "SV `path`" or "SV `#def`".
 - **AC** = `GSTR3B - Get ITC Liability Auto Calc Details response_schema v7.1.json`. This is "GSTR3B – Get ITC Liability Auto Calc Details" (3183), **v7.1**, published 23-03-2026, **Draft**. It is authoritative for the shape of the portal's auto-calculated figures. Its key names are the **only** source in the repo for which GSTR-1 / GSTR-2B table feeds which GSTR-3B box (R5). Cited as "AC `path`", relative to `r3bautopop.liabitc` unless stated.
 - **R1–R6** = the observations in `sources/gstr3b/README.md`. They are confirmed or corrected in §13.
+- **FG** = the notified forms from the CGST Rules 2017, Part B (Forms), **consolidated as of 18-05-2021**, fetched 2026-10-18 from gstcouncil.gov.in (`sources/gstr3b/cgst-rules-2017-part-b-forms-18052021.pdf`). Cited as "FG-3B" (`sources/gstr3b/form-gstr3b-excerpt-18052021.txt`, FORM GSTR-3B, rule 61(5)) and "FG-1" (`sources/gstr1/form-gstr1-excerpt-18052021.txt`, FORM GSTR-1, rule 59(1)), with "Ins. n" for an instruction. This version **predates** Tables 3.1.1 and 5.1, so it settles nothing about them. Where FG and SV/AC differ, SV/AC (newer, and what the portal accepts) win for shapes; FG is used only for meanings and rules SV/AC do not state.
 - **Packages used:**
   - `@india-gst-kit/gstr1`: `Gstr1Return`; spec `docs/specs/gstr1.md`; GSTR-1 table names from `sources/gstr1/offline-tool/data/uploadtablename.json`, cited as "UT".
   - `@india-gst-kit/recon`: `Gstr2bRecord`, `ReconResult`; spec `docs/specs/recon.md`.
@@ -130,7 +131,9 @@ type Gstr3bReturn = {
 | `5.GST`, `5.NONGST` | `inward_sup.isup_details[ty]` | — | inter, intra | SV `ty` enum |
 | `5.1` | `intr_ltfee.intr_details` | — | 4 heads | SV key |
 
-**Caveat on the labels.** SV has no descriptions that name the return's table numbers. "3.1 (a)" for `osup_det` rests on AC's key names (`osup_3_1a`, …), the matching field sets and R1. The meanings of the codes `IMPG`, `IMPS`, `ISRC`, `ISD`, `OTH`, `RUL`, `GST` and `NONGST` are **not defined** in SV. SV's own descriptions for `ty` say "Identifer if Goods or Services" even for `RUL`/`OTH` (§13 C2). The package therefore uses the codes and never their meanings (Q-H1). File F1 settles this.
+**Labels (updated with FG-3B).** The table rows and their meanings are now sourced from FG-3B: 3.1 (a) outward taxable (other than zero rated, nil rated and exempted), (b) zero rated, (c) nil rated, exempted, (d) inward liable to reverse charge, (e) non-GST outward; 3.2 inter-State supplies to unregistered persons, composition taxable persons and UIN holders; 4(A)(1) import of goods, (2) import of services, (3) inward liable to reverse charge, (4) inward from ISD, (5) all other ITC; 4(B)(1) "as per rules 42 & 43 of CGST Rules", (2) others; 4(C) net ITC = (A) − (B); 4(D)(1) "as per section 17(5)", (2) others; 5 "from a supplier under composition scheme, exempt and nil rated supply" / "non GST supply", inter-State / intra-State.
+
+What is **still not stated** by any source: which SV key or code is which form row. SV has no descriptions naming rows (its `ty` descriptions say "Identifer if Goods or Services" even for `RUL`/`OTH`, §13 C2). The link rests on AC key names (`osup_3_1a`, `itc4a1`, …), the matching field sets, SV's enum order (`IMPG, IMPS, ISRC, ISD, OTH` and `RUL, OTH` follow the form's row order) and R1. The package therefore keeps using the codes as keys (D-H1) and documents the presumed row per code; it never computes anything from a code's meaning (Q-H1). FG-3B's 4(B)(1) wording is the 2021 text; later amendments are not in FG.
 
 ### 3.3 Provenance trail
 
@@ -178,18 +181,18 @@ A GSTR-1 document reaches a 3B box in two steps:
 
 | Row | `Gstr1Return` data | GSTR-1 table (AC key) | Basis |
 |---|---|---|---|
-| G1 | `b2b` invoice, `invoiceType R`, `reverseCharge false` | `tbl4a` | UT "4A, 4B, 6B, 6C"; proposal |
-| G2 | `b2b` invoice, `invoiceType R`, `reverseCharge true` | `tbl4b` | UT; proposal. AC `tbl4b` has only `txval` |
-| G3 | `b2b` invoice, `invoiceType SEWP`/`SEWOP`, `reverseCharge false` | `tbl6b` | UT; H r27 ("SEZ unit/developer"); proposal |
-| G4 | `b2b` invoice, `invoiceType DE`, `reverseCharge false` | `tbl6c` | UT; H r27 ("deemed export"); proposal |
-| G5 | `b2b` invoice, `reverseCharge true`, `invoiceType` ≠ `R` | — | **unmapped**: `RCM_NOT_MAPPED` (Q-H4) |
-| G6 | `b2cl` invoice | `tbl5a` | UT "5A, 5B"; proposal: `gstr1` has no e-commerce data, so we assume 5A (Q-H5) |
-| G7 | `exp` invoice (`WPAY`/`WOPAY`) | `tbl6a` | UT "6A" |
-| G8 | `b2cs` row, `supplyType INTRA` | `tbl7a_1` | UT "7"; by shape, because AC `tbl7a_1` has `camt`/`samt` and no `iamt`; proposal (Q-H6) |
-| G9 | `b2cs` row, `supplyType INTER` | `tbl7b_1` | by shape, because AC `tbl7b_1` has `iamt` and no `camt`/`samt`; proposal (Q-H6) |
-| G10 | `cdnr` note; `cdnur` note | `tbl9b` | UT "9B" |
+| G1 | `b2b` invoice, `invoiceType R`, `reverseCharge false` | `tbl4a` | **sourced (FG)**: FG-1 Table 4 "to registered persons (including UIN-holders) other than supplies covered by Table 6"; 4A "other than those (i) attracting reverse charge and (ii) … through e-commerce operator"; Ins. 5(i)(a). Limitation: `gstr1` holds no e-commerce-operator data, so the caller must not pass 4C supplies (§4.4) |
+| G2 | `b2b` invoice, `invoiceType R`, `reverseCharge true` | `tbl4b` | **sourced (FG)**: FG-1 4B "Supplies attracting tax on reverse charge basis"; Ins. 5(i)(b). AC `tbl4b` has only `txval` |
+| G3 | `b2b` invoice, `invoiceType SEWP`/`SEWOP`, `reverseCharge false` | `tbl6b` | **sourced (FG)**: FG-1 6B "Supplies made to SEZ unit or SEZ Developer"; Ins. 7(ii) |
+| G4 | `b2b` invoice, `invoiceType DE`, `reverseCharge false` | `tbl6c` | **sourced (FG)**: FG-1 6C "Deemed exports"; Ins. 7(iii) |
+| G5 | `b2b` invoice, `reverseCharge true`, `invoiceType` ≠ `R` | — | **unmapped**: `RCM_NOT_MAPPED`. FG-1 puts SEZ/deemed-export supplies in Table 6, which has no reverse-charge row, and excludes them from Table 4; where an RCM one goes is not stated (Q-H4) |
+| G6 | `b2cl` invoice | `tbl5a` | **sourced (FG)**: FG-1 5A "Outward supplies (other than supplies made through e-commerce operator, rate wise)"; 5B is e-commerce only. Same limitation as G1 (Q-H5 settled) |
+| G7 | `exp` invoice (`WPAY`/`WOPAY`) | `tbl6a` | **sourced (FG)**: FG-1 6A "Exports"; Ins. 7(i), 11 (without payment reported with 0 tax) |
+| G8 | `b2cs` row, `supplyType INTRA` | `tbl7a_1` | **sourced (FG)**: FG-1 7A(1) "Consolidated rate wise outward supplies" (intra-State, gross); Ins. 12(iv). AC `tbl7a_1` = 7A(1) (Q-H6 settled) |
+| G9 | `b2cs` row, `supplyType INTER` | `tbl7b_1` | **sourced (FG)**: FG-1 7B(1) (inter-State, gross, by place of supply); Ins. 12(v)–(vi) (Q-H6 settled) |
+| G10 | `cdnr` note; `cdnur` note | `tbl9b` | **sourced (FG)**: FG-1 9B "Debit Notes/Credit Notes/Refund voucher [original]"; Ins. 13(iii). B2CS notes are netted in Table 7 (FG-1 Table 7 "Net of debit notes and credit notes"; gstr1 DEC-2) and never reach G10 |
 
-**Sign (D-H6).** Credit notes (`noteType C`) contribute **negative** amounts and debit notes (`D`) positive ones. AC types the `tbl9b` rows as signed (`#txamt`). It types `tbl11b_*`/`tbl11d_*` as `#negtxamt` (≤ 0), which suggests that AC adds signed rows. **No source states this** (Q-H7).
+**Sign (D-H6) — sourced (FG).** Credit notes (`noteType C`) contribute **negative** amounts and debit notes (`D`) positive ones. FG-3B Ins. 1: "Value of Taxable Supplies = Value of invoices + value of Debit Notes – value of credit notes + …"; Ins. 3: amendments are adjusted, not shown separately. This agrees with AC's signed `tbl9b` and `#negtxamt` `tbl11b_*`/`tbl11d_*`. FG-3B states it for the taxable value; applying the same sign to the tax amounts is our reading (Q-H7, narrowed).
 
 **Amounts.** Each row uses the item amounts `taxableValue`, `igst`, `cgst`, `sgst` and `cess` as `gstr1` holds them. An absent `igst`/`cgst`/`sgst` counts as `0.00`. The document `value` is never used, because AC's `val` has no stated meaning (§13 C10).
 
@@ -232,7 +235,7 @@ All of this follows from M as quoted.
 | `3.1b` | `tbl9a`, `tbl9c`, `tbl9bSezEco`, `tbl9cSezEco`, `tbl9bSezEcourp2b`, `tbl9cSezEcourp2b`, `tbl11a_3`, `tbl11a_5`, `tbl11b_3`, `tbl11b_5`, `tbl11c_3`, `tbl11c_5`, `tbl11d_3`, `tbl11d_5`, `tbl15b2b`, `tbl15urp2b`, `tbl15b2ba`, `tbl15urp2ba`, `ims_9b_cn`, `ims_9c_cn`, `ims_9a_9c_dn`, `ims_9b_cn_eb2b`, `ims_9b_cn_ec2b`, `ims_9c_cn_eb2b`, `ims_9c_cn_ec2b`, `ims_9a_9c_dn_eb2b`, `ims_9a_9c_dn_ec2b`, `ims_15_b2ba`, `ims_15_urp2ba` |
 | `3.2unreg` | `tbl9a`, `tbl9c`, `tbl10b`, `tbl11_i_a_2`, `tbl11_i_b_2`, `tbl11_ii`, `tbl11a_4_5` … `tbl11d_4_5`, `tbl15b2c`, `tbl15urp2c`, `tbl15b2ca`, `tbl15urp2ca` |
 | `3.2comp`, `3.2uin` | `tbl4c`, `tbl9a`, `tbl9c`, `tbl11a_1_5` … `tbl11d_1_5`, `tbl15b2b`, `tbl15urp2b`, `tbl15b2ba`, `tbl15urp2ba` |
-| `3.1c`, `3.1e` | `tbl8` (both boxes). AC does not say how GSTR-1 Table 8 splits between them (Q-H8). `gstr1` has no Table 8. Always caller input. |
+| `3.1c`, `3.1e` | `tbl8` (both boxes). FG-1 Table 8 has three columns (Nil rated, Exempted, Non-GST) and FG-3B labels 3.1 (c) "Nil rated, exempted" and (e) "Non-GST", so the split is by column (Q-H8 settled). `gstr1` has no Table 8, so these stay caller input. |
 | `3.1.1i`, `3.1.1ii` | every key (Tables 14, 15 and the IMS rows). Always caller input. |
 | `3.1d` | fed from GSTR-2B, not GSTR-1 (`isup_3_1d.det.itcavl`, `itcunavl`, `itcavl_cn`). Caller input, or optionally §5. |
 
@@ -324,13 +327,14 @@ Every check below names its source. A check without a source is **not** made; it
 | V5 | 3.2 `pos` matches SV `#state_cd` `^(3[0-8]\|[12][0-9]\|0[1-9]\|97)$` | `POS_NOT_ACCEPTED` | error | SV `#state_cd` (R4) |
 | V6 | 3.2 `pos` is also a model place-of-supply code (`isPlaceOfSupplyCode`): this rejects `25` (withdrawn) and `28` (not in the model's list) | `POS_UNKNOWN` | error | model `states.ts`; D-H5 |
 | V7 | No two 3.2 rows in one list with the same `pos` | `DUPLICATE_POS` | error | design (one row per POS); SV is silent |
-| V8 | 4C vs Σ4A − Σ4B, per head, when the caller supplied 4C | `ITC_NET_DIFFERS` | **warning** | **no source** (D-H7, Q-H9) |
+| V8 | 4C vs Σ4A − Σ4B, per head, when the caller supplied 4C | `ITC_NET_DIFFERS` | **warning** (D-H7 as accepted) | FG-3B 4(C) "Net ITC Available (A) – (B)" |
 | V9 | Caller entries have a non-empty `label` | `CALLER_LABEL_MISSING` | error | §1 principle |
 | V10 | Rendered payload passes `SavePayloadSchema` | `SCHEMA` | error (a bug) | SV |
+| V11 | Σ of all three 3.2 lists ≤ `3.1a`, for `taxableValue` and for `igst` | `T32_EXCEEDS_31A` | **warning** | FG-3B 3.2 "Of the supplies shown in 3.1 (a) above" (added at build, §21) |
 
 **Checks not made** (each is a question in §16):
 - **CGST = SGST** per box. No source in the repo states it (Q-H10).
-- **3.2 ⊆ 3.1 (a)+(b).** Not stated (Q-H11).
+- ~~3.2 ⊆ 3.1 (a)+(b)~~: now V11, against 3.1 (a) only, as FG-3B states.
 - **3.1.1 vs 3.1.** Not stated (Q-H12).
 - **Periods.** No future-period or earliest-period check. SV allows 1900–2099, and the only stated limit is the pattern.
 
@@ -550,6 +554,7 @@ Fixtures must be synthetic and use only GSTINs registered in `packages/fixtures/
 - **C1. No late fee in "5.1".**
   - SV `intr_ltfee` contains only `intr_details` (interest by head). Its name suggests late fee, but SV has no late-fee field.
   - The package models interest only, and late fee is deferred until a source shows where it goes.
+  - FG-3B (2021) does not settle this: it has no 5.1, and interest and late fee appear only as columns of 6.1 "Payment of tax".
 - **C2. Copy-paste descriptions in SV.**
   - `itc_avl.ty`, `itc_rev.ty` and `isup_details.ty` all say "Identifer if Goods or Services"; `itc_inelg.ty` has no description.
   - The `itc_net` fields say "Amount of ITC reversal of …".
@@ -616,11 +621,11 @@ Fixtures must be synthetic and use only GSTINs registered in `packages/fixtures/
 - **D-H5. 3.2 POS: both SV and the model.**
   - SV `#state_cd` **and** `isPlaceOfSupplyCode`. This rejects `25` (withdrawn) and `28` (not in the model), although SV accepts both.
   - *Recommend: approve; **needs CA**.* Are `25`/`28` ever needed in 3.2 for current periods?
-- **D-H6. GSTR-1 derivation rules** (§4). *Recommend: approve (a)–(e), each flagged; **needs CA**, and F4 to source mapping G.*
+- **D-H6. GSTR-1 derivation rules** (§4). *Accepted; **needs CA**. Build update: G1–G4, G6–G10, (b) and (d) are sourced from FG; (c) and (e) remain our design.*
   - (a) Mapping G rows G1–G10 as proposed. G5 and RCM notes are unmapped.
   - (b) Credit notes are negative, debit notes positive.
   - (c) A 9B note follows its invoice type: `R`/`DE`/`B2CL` → `3.1a`; `SEWP`/`SEWOP`/`EXPWP`/`EXPWOP` → `3.1b`. A note goes into 3.2 only if its invoice type's table feeds 3.2 (`R` → 4A; `B2CL` → 5A).
-  - (d) Only IGST items enter 3.2, which has no `camt`/`samt`.
+  - (d) Only IGST items enter 3.2, which has no `camt`/`samt`. Sourced: FG-3B 3.2 covers "inter-State supplies" only.
   - (e) Composition and UIN-holder status comes only from `ctx.recipientTypes`. It is never inferred from a GSTIN.
 - **D-H7. 4C.**
   - 4C is caller input by default. `itcNet: "COMPUTE"` gives Σ4A − Σ4B per head, recorded as `COMPUTED`.
@@ -651,14 +656,14 @@ Fixtures must be synthetic and use only GSTINs registered in `packages/fixtures/
    - What do `itc_rev`/`itc_inelg` `RUL`/`OTH` and `isup_details` `GST`/`NONGST` mean?
    - Do AC `itc4a1`/`itc4a3`/`itc4a4`/`itc4a5`/`itc4b2`/`itc4d2` correspond to `IMPG`/`ISRC`/`ISD`/`OTH`/`itc_rev OTH`/`itc_inelg OTH`?
    - [Codes only; the pairing is opt-in; 4B2/4D2 are unpaired.]
-2. **Q-H7. Sign convention.** Are credit notes and Table 11 adjustments subtracted from the 3.1 / 3.2 boxes? [Yes, as negative entries.]
-3. **Q-H9. 4C formula.** Is 4C = 4A − 4B per head, and may it be negative (SV allows it)? [Warning only.]
+2. **Q-H7. Sign convention.** ~~Are credit notes subtracted?~~ Settled for taxable value by FG-3B Ins. 1. Remaining: is the tax of a credit note subtracted the same way? [Yes, as negative entries.]
+3. **Q-H9. 4C formula.** ~~Is 4C = 4A − 4B?~~ Stated by FG-3B. Remaining: should a mismatch be an error rather than a warning, and may 4C be negative (SV allows it)? [Warning only.]
 4. **Q-H10. CGST = SGST.** Must CGST equal SGST in each 3B box? [Not checked; no source.]
 5. **Q-H4. RCM notes and non-R RCM invoices.** Where do RCM credit/debit notes (9B) go, and RCM SEZ/deemed-export invoices? [Unmapped; caller input.]
 6. **Q-H5. 5A vs 5B.** Is every `b2cl` invoice without an e-commerce operator Table 5A? [Yes, G6.]
 7. **Q-H6. 7A(1) / 7B(1).** Is an intra-state B2CS row Table 7A(1) and an inter-state row 7B(1)? [Yes, by shape.]
-8. **Q-H8. Table 8 split.** How does GSTR-1 Table 8 split between 3.1 (c) and 3.1 (e)? [Caller input.]
-9. **Q-H11 / Q-H12.** Should 3.2 be within 3.1 (a)+(b)? How does 3.1.1 relate to 3.1? [Not checked.]
+8. **Q-H8. Table 8 split.** ~~Settled by FG (by column).~~ Still caller input, because `gstr1` has no Table 8.
+9. **Q-H12.** How does 3.1.1 relate to 3.1? FG predates 3.1.1. [Not checked.] (Q-H11 settled by FG-3B; V11.)
 10. **Q-H14.** D-H4: can a 3B filer hold a non-PAN-structured GSTIN?
 11. **Q-H15. Tolerance.** Is a tolerance against the auto-calculated figures customary, and how large? [Exact.]
 
@@ -673,13 +678,13 @@ Fixtures must be synthetic and use only GSTINs registered in `packages/fixtures/
 
 | # | File | Settles |
 |---|---|---|
-| F1 | The notified **Form GSTR-3B** with its table headings and instructions (CGST Rules, rule 61; PDF from `cbic-gst.gov.in`, which is reachable from the build environment) | Table labels ↔ SV keys (§3.2); the code meanings (Q-H1); 4C formula (Q-H9); 3.2 scope (Q-H11); late fee (Q-H16); CGST = SGST (Q-H10) |
+| F1 | **Fetched 2026-10-18 (FG-3B), 2021 consolidation only — a current version is still needed for 3.1.1, 5.1 and later amendments.** The notified **Form GSTR-3B** with its table headings and instructions (CGST Rules, rule 61; PDF from `cbic-gst.gov.in`, which is reachable from the build environment) | Table labels ↔ SV keys (§3.2); the code meanings (Q-H1); 4C formula (Q-H9); 3.2 scope (Q-H11); late fee (Q-H16); CGST = SGST (Q-H10) |
 | F2 | GSTN API documentation pages (description, sample JSON, error codes) for **Save GSTR3B (2269) v7.1** and **Get ITC Liability Auto Calc (3183) v7.1**, from developer.gst.gov.in | Q-H3, Q-H13, Q-H17; `val` (C10) |
 | F3 | GSTN advisory / FAQ / manual on **auto-population of GSTR-3B from GSTR-1/1A/IFF and GSTR-2B** (tutorial.gst.gov.in or gst.gov.in, captured by hand) | Q-H2, Q-H7; confirms R5 row by row |
-| F4 | The notified **Form GSTR-1** table instructions (4A/4B/4C/5A/5B/6A/6B/6C/7A/7B/9B), to `sources/gstr1/` | Mapping G (§4.1, D-H6) |
+| F4 | **Fetched 2026-10-18 (FG-1), 2021 consolidation.** The notified **Form GSTR-1** table instructions (4A/4B/4C/5A/5B/6A/6B/6C/7A/7B/9B), to `sources/gstr1/` | Mapping G (§4.1, D-H6) |
 | F5 | *(Optional)* The "Validate GSTR3B against AutoCalculated data" (3198) request/response schema | Whether the portal applies a tolerance (Q-H15) |
 
-Without F4, mapping G stays a flagged proposal (D-H6). Without F1–F3, the ITC compare stays opt-in (D-H8). Neither blocks the build of the rest. No list that the package **enforces** depends on F1–F5: V2–V6 come from SV and the model.
+F4 was fetched (FG-1); G1–G4 and G6–G10 are now sourced, G5 stays unmapped. Without F1–F3, the ITC compare stays opt-in (D-H8). Neither blocks the build of the rest. No list that the package **enforces** depends on F1–F5: V2–V6 come from SV and the model.
 
 ## 18. `docs/legal-facts.md` rows to add (at build time)
 
@@ -694,8 +699,9 @@ Each row: source `sources/gstr3b/…` (developer.gst.gov.in, Draft v7.1, retriev
 | 3.2 POS = SV `#state_cd` ∧ model place-of-supply code; 25 and 28 rejected (D-H5) | `validate.ts` |
 | SV `ty` codes `IMPG/IMPS/ISRC/ISD/OTH`, `RUL/OTH`, `GST/NONGST` used as codes, meanings not assumed (D-H1, Q-H1) | `src/return-schema.ts` |
 | GSTR-1 table → 3B box mapping M as stated by AC key names (R5) | `src/ac-map.ts` |
-| Our `gstr1` data → GSTR-1 table mapping G (G1–G10), note signs and routing (D-H6) — proposal pending F4 | `src/outward.ts` |
-| 4C computed as Σ4A − Σ4B only on request; mismatch is a warning (D-H7) | `src/assemble.ts` |
+| Our `gstr1` data → GSTR-1 table mapping G (G1–G4, G6–G10 sourced from FG-1; G5 unmapped), note signs (FG-3B Ins. 1) and routing (D-H6) | `src/outward.ts` |
+| 3.2 is a subset of 3.1 (a), inter-State only (FG-3B); V11 warning | `src/validate.ts` |
+| 4C = 4A − 4B (FG-3B); computed only on request; mismatch is a warning (D-H7) | `src/assemble.ts` |
 | AC block default `liabitc`; tolerance default exact; ITC pairing opt-in (D-H8) | `src/compare.ts` |
 | AC `#pos` allows 96 and empty; portal rows with such POS are not compared (C4) | `src/autocalc-schema.ts` |
 
@@ -713,3 +719,20 @@ Each row: source `sources/gstr3b/…` (developer.gst.gov.in, Draft v7.1, retriev
 - SV or AC contradicts this spec → follow the source, and report it under "Deviations".
 - A G-row (D-H6) or an ITC pairing (D-H8) would have to become **enforced** (an error, not a flagged proposal) without F4 / F1–F3 → stop.
 - `pnpm check` cannot go green without weakening strictness or lint rules → stop.
+
+## 21. Build notes (Track G build, 2026-10-18)
+
+- **Sources fetched.** F1 and F4 were found on gstcouncil.gov.in as the CGST Rules Part B (Forms) consolidated to 18-05-2021 (FG). They settle G1–G4 and G6–G10, the credit-note sign (Q-H7, for taxable value), the Table 8 split (Q-H8), 3.2 scope and subset (Q-H11, D-H6 (d)), the 4C formula (Q-H9, formula only), 5A vs 5B (Q-H5) and 7A(1)/7B(1) (Q-H6). They do **not** settle 3.1.1, 5.1 / late fee (C1), CGST = SGST (Q-H10), the SV code ↔ row link (Q-H1), RCM in Table 6 (G5, Q-H4) or anything about AC's other suffixes (Q-H2). The URLs tried are in `sources/gstr3b/README.md`.
+- **Added check V11** (`T32_EXCEEDS_31A`, warning), because FG-3B states that 3.2 is "of the supplies shown in 3.1 (a)".
+- **Source details the spec missed, now transcribed (AC).**
+  - **C15.** Twelve AC nodes (`inter_sup.osup_unreg_3_2.det.tbl15b2c`, `tbl15urp2c`, `tbl15b2ca`, `tbl15urp2ca` in each block) are `type: "array"` with `properties` and no `items`. As JSON Schema that means "any array"; we read it as an array of those row objects (Ajv and we agree on rows and on rejecting an object).
+  - **C16.** AC has 30 `anyOf` constraints: 3.1 (d) and every `elgitc` box need `det` or `det_q`, and some `det` nodes need one of their rows. AC arrays of POS rows carry `minItems 1` / `maxItems 40` (251 arrays). Both are enforced. The generator (`scripts/gen-autocalc-shape.mjs`) refuses any keyword it does not handle.
+  - **C4, sharpened.** AC `#pos` is unanchored and its group repeats zero or more times, so it matches **every** string; only `maxLength 2` constrains it ("AB" passes Ajv and us).
+  - **C5, more.** Besides the 35 object/array paths, required sets differ too (e.g. `liabitcr1` `osup_3_1b.det.ims_*_eb2b` rows require `camt`/`samt`; `liabitc`'s do not). The shape is transcribed per block, so all of these are encoded.
+- **Deviations from the spec (build).**
+  - `INTRA_ITEM_IN_32` is **info**, not a warning: FG-3B says 3.2 is inter-State only, so leaving an intra-State item out is expected.
+  - `itcNet` takes `{ label, amounts }` (not bare amounts), so a supplied 4C carries a label like every caller figure. 4C cannot be a `CallerEntry` box. With no `itcNet`, 4C stays `0.00` and V8 warns if 4A − 4B ≠ 0.
+  - `notCovered` entries are `"<box>:<AC key>"` strings.
+  - `compareWithAutoCalc` needs `options.trail` for `detail`; `uncompared` rows for `itc4b2`/`itc4d2` carry `portalPath` and no `box`.
+  - `parseSavePayloadJson` / `parseAutoCalcJson` return `{ ok, value?, issues }` with our issue codes (not Zod's result type).
+  - Number literals with an exponent (`1e3`) are rejected although they are valid JSON numbers for SV/AC (spec §2 kept); AC dates get a calendar check AC's pattern does not have.

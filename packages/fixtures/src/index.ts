@@ -7,3 +7,9 @@ export {
   gstr2bFixture,
   gstr2bFixtureText,
 } from "./gstr2b.js";
+export {
+  gstr1ReturnFixture,
+  gstr3bAutoCalcFixture,
+  gstr3bAutoCalcFixtureText,
+  gstr3bExpectedOutward,
+} from "./gstr3b.js";

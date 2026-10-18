@@ -10,6 +10,7 @@ Small, typed building blocks for Indian GST.
 | [`@india-gst-kit/recon`](packages/recon)       | v0.1 — reconcile a purchase register against GSTR-2B                          |
 | [`@india-gst-kit/ewaybill`](packages/ewaybill) | v0.1 — e-way bill request mapping and validation (Generate, by IRN, EwbDtls)  |
 | [`@india-gst-kit/gsp`](packages/gsp)           | v0.1 — NIC e-invoice / e-way bill API client (direct NIC; GSP adapters later) |
+| [`@india-gst-kit/gstr3b`](packages/gstr3b)     | v0.1 — GSTR-3B assembly with provenance, Save v7.1 payload, Auto Calc diff    |
 
 Every legal/official fact in this repo is **UNVERIFIED — needs CA** until signed off in [`docs/legal-facts.md`](docs/legal-facts.md). This is not tax advice.
 

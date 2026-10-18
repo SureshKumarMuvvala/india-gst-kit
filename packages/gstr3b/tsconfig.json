@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "paths": {
+      "@india-gst-kit/model": ["../model/src/index.ts"],
+      "@india-gst-kit/gstr1": ["../gstr1/src/index.ts"],
+      "@india-gst-kit/recon": ["../recon/src/index.ts"],
+      "@india-gst-kit/fixtures": ["../fixtures/src/index.ts"]
+    }
+  },
+  "include": ["src", "test", "vitest.config.ts"]
+}
