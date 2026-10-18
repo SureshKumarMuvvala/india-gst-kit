@@ -41,7 +41,7 @@ export const GSTR1_ISSUE_CODES = [
   "ECO_UNKNOWN_DOCUMENT",
   "TAX_SPLIT",
   "NOT_IN_OFFLINE_SHAPE",
-  /** Warning only (returned in `RenderResult.warnings`), from output (a). */
+  /** Info only (returned in `RenderResult.info`, severity "info"), from output (a) (spec §17.22, Q-A15). */
   "ECO_NOT_IN_API_SHAPE",
 ] as const;
 
@@ -52,16 +52,19 @@ export interface Gstr1Issue {
   message: string;
   documentNumber?: string;
   path?: (string | number)[];
+  /** Absent for errors (and the existing warnings); "info" for notes that need no action (spec §17.22). */
+  severity?: "info";
 }
 
 export function issue(
   code: Gstr1IssueCode,
   message: string,
-  where: { documentNumber?: string; path?: (string | number)[] } = {},
+  where: { documentNumber?: string; path?: (string | number)[]; severity?: "info" } = {},
 ): Gstr1Issue {
   const out: Gstr1Issue = { code, message };
   if (where.documentNumber !== undefined) out.documentNumber = where.documentNumber;
   if (where.path !== undefined) out.path = where.path;
+  if (where.severity !== undefined) out.severity = where.severity;
   return out;
 }
 
@@ -80,7 +83,10 @@ export function periodKey(fp: ReturnPeriod): number {
   return Number(fp.slice(2)) * 100 + Number(fp.slice(0, 2));
 }
 
-/** `warnings` (spec §17.2, D-A8) hold facts the output could not carry while the rest is still correct. */
+/**
+ * `warnings` (spec §17.2, D-A8) hold facts the output could not carry while the rest is still correct; `info`
+ * (spec §17.22) holds notes that need no action, each with `severity: "info"`.
+ */
 export type RenderResult<T> =
-  | { ok: true; value: T; warnings: readonly Gstr1Issue[] }
+  | { ok: true; value: T; warnings: readonly Gstr1Issue[]; info: readonly Gstr1Issue[] }
   | { ok: false; issues: readonly Gstr1Issue[] };

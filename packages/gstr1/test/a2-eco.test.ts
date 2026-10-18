@@ -35,16 +35,22 @@ describe("e-commerce marks (4C / 5B → 4A / 5A since N26; etin in output (b) on
     expect(validateS4(b) || JSON.stringify(validateS4.errors)).toBe(true);
   });
 
-  it("(a) has no etin and returns one ECO_NOT_IN_API_SHAPE warning per marked invoice", () => {
+  it("(a) has no etin and returns one info-level ECO_NOT_IN_API_SHAPE per marked invoice, pointing to Table 14 (Q-A15)", () => {
     const r = toApiSavePayload(ret([b2bInv, b2clInv], { ecoMarks: marks }));
     if (!r.ok) throw new Error("render failed");
     expect(JSON.stringify(r.value)).not.toContain("etin");
-    expect(r.warnings.map((w) => [w.code, w.documentNumber])).toEqual([
-      ["ECO_NOT_IN_API_SHAPE", "M/1"],
-      ["ECO_NOT_IN_API_SHAPE", "M/2"],
+    expect(r.warnings).toEqual([]);
+    expect(r.info.map((w) => [w.code, w.severity, w.documentNumber])).toEqual([
+      ["ECO_NOT_IN_API_SHAPE", "info", "M/1"],
+      ["ECO_NOT_IN_API_SHAPE", "info", "M/2"],
     ]);
+    for (const i of r.info) {
+      expect(i.message).toContain("Table 14");
+      expect(i.message).toContain("26/2022");
+    }
     expect(toApiSavePayload(ret([b2bInv])).ok && toApiSavePayload(ret([b2bInv]))).toMatchObject({
       warnings: [],
+      info: [],
     });
   });
 
