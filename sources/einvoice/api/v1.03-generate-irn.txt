@@ -1,0 +1,110 @@
+=== #overview ===
+Overview
+
+This API is used for registering the invoice and getting the Invoice Registration Number (IRN). The request payload has to be as per the schema specified below.The details of the requests and responses are explained.
+
+The format and details of Generate IRN API request is depicted in following table.
+
+URL
+
+<URL>/api/Invoice
+
+Content-Type
+
+application/json
+
+Method
+
+POST
+
+=== #requestPayload ===
+Request Header
+Attributes	Description
+client_id
+
+client id to be provided by E-Invoice System
+
+client_secret
+
+client secret to be provided by E-Invoice System
+
+Gstin
+
+GSTIN of the authenticated user
+
+user_name
+
+User name of the authenticated user
+
+AuthToken
+
+Authentication token returned by the E-Invoice system
+
+Request Payload
+Attributes	Description
+
+Data
+
+Base 64 encoded string of encrypted invoice JSON using Sek.
+
+=== #responsePayload ===
+Response Payload
+Attributes	Description
+Status	Status of the generate IRN request(values 1-Success and 0- Failure)
+Data	If Status is "1"
+ErrorDetails	If Status is "0"
+InfoDtls	Any additional message to be conveyed would be passed.
+
+If Status is "1"
+
+Data	Base 64 encoded string of decrypted invoice JSON using Sek.
+After decrypting Data the following attributes are obtained as below.
+Attributes	Description
+AckNo	Transaction number
+AckDt	Date and time on which invoice is registered(Date format is "yyyy-MM-dd HH:mm:ss ").
+Irn	SHA256 hash of Gstin, DocDtls.No, DocDtls.Typ, financial year of DoctDtls.Dt
+SignedInvoice	Complete e-Invoice data digitally signed using JSON Web Token(JWT) and JSON Web Signature (JWS) with "SHA256RSA" algorithm
+SignedQRCode	Complete QR- Code data digitally signed using JSON Web Token(JWT) and JSON Web Signature (JWS) with "SHA256RSA" algorithm
+Status	"ACT" for Active and "CNL" for Cancelled
+EwbNo	E Way Bill No. , if E Way Bill is generated
+EwbDt	E Way Bill Date. , if E Way Bill is generated
+EwbValidTill	E Way Bill validity date, if Part B details are provided in the payload
+
+If Status is "0"
+
+ErrorDetails	Base 64 encoded string.
+On decoding ErrorDetails the following attributes from JSON array are obtained as follows.
+ErrorCode	Unique error code
+ErrorMessage	Error Description
+
+=== #responseSampleJSON ===
+Sample JSON (Response)
+ {
+"Status":"1",
+"Data":"<omitted: long sample value, see source page>",
+"ErrorDetails": null,
+"InfoDtls":"<alert message >"
+}
+
+JSON corresponds to the data element of Generate IRN Response(Success) above
+    {
+        "AckNo":112010000002315,
+        "AckDt":"2020-08-05 15:18:00",
+        "Irn":"11f8ef701fe294d4a14aad0b12457e62775d0fdc41a0acf05b74fbb2ddc47acb",
+        "SignedInvoice":"<omitted: long sample value, see source page>",
+        "SignedQRCode":"<omitted: long sample value, see source page>",
+        "Status":"ACT",
+        "EwbNo":191008688443,
+        "EwbDt":"2020-08-05 15:18:00",
+        "EwbValidTill":"2020-08-06 23:59:00",
+        "Remarks":null
+    }
+
+JSON(in case of error)
+
+ {
+"status": "0",
+"Data": null,
+"ErrorDetails":"<Errors JSON >",
+"InfoDtls": "<alert message >"
+}
